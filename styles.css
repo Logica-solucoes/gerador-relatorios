@@ -1,0 +1,181 @@
+/* ── tokens: estrutura shadcn (neutral) + acentos BASF ─────────────────── */
+:root {
+  --background: #ffffff;
+  --foreground: #09090b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --border: #e4e4e7;
+  --card: #ffffff;
+
+  --primary: #004a96;   /* BASF blue  */
+  --accent: #7a9a1f;    /* BASF green escurecido p/ contraste em papel */
+  --accent-soft: #b2d235;
+  --destructive: #c2001a;
+  --radius: 8px;
+}
+
+/* ── paginacao ──────────────────────────────────────────────────────────
+   Margin boxes sao CSS Paged Media: funcionam no WeasyPrint, nao no Chrome.
+   No Chrome o layout aparece igual, so sem numero de pagina / cabecalho. */
+@page {
+  size: A4 portrait;
+  margin: 17mm 14mm 15mm;
+
+  @top-left {
+    content: string(secao);
+    font: 500 8pt Geist, sans-serif;
+    color: #71717a;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 5mm;
+  }
+  @top-right {
+    content: "BASF Sementes · YTD 2026";
+    font: 400 8pt Geist, sans-serif;
+    color: #a1a1aa;
+    margin-bottom: 5mm;
+  }
+  @bottom-right {
+    content: counter(page) " / " counter(pages);
+    font: 500 8pt Geist, sans-serif;
+    color: #71717a;
+    margin-top: 4mm;
+  }
+  @bottom-left {
+    content: "Confidencial — uso interno";
+    font: 400 7.5pt Geist, sans-serif;
+    color: #a1a1aa;
+    margin-top: 4mm;
+  }
+}
+@page :first { @top-left { content: none } @top-right { content: none } }
+
+* { margin: 0; padding: 0; box-sizing: border-box; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+
+body {
+  font-family: Geist, ui-sans-serif, system-ui, sans-serif;
+  font-size: 9.5pt;
+  line-height: 1.5;
+  color: var(--foreground);
+  background: var(--background);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page { break-after: page; }
+.page:last-child { break-after: auto; }
+
+/* ── tipografia ─────────────────────────────────────────────────────────── */
+h1 { font-size: 27pt; font-weight: 600; letter-spacing: -0.03em; line-height: 1.08; }
+h2 {
+  font-size: 15pt; font-weight: 600; letter-spacing: -0.022em;
+  string-set: secao content();      /* alimenta o cabecalho corrido */
+  margin-bottom: 2mm;
+}
+h3 { font-size: 10pt; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 1.5mm; }
+p  { max-width: 62em; }
+p + p { margin-top: 2.5mm; }
+.lead { font-size: 11pt; color: var(--muted-foreground); line-height: 1.55; }
+.muted { color: var(--muted-foreground); }
+.small { font-size: 8pt; line-height: 1.45; }
+strong { font-weight: 600; }
+
+.eyebrow {
+  font-size: 8pt; font-weight: 500; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--primary);
+}
+.rule { height: 3px; width: 46px; background: var(--accent-soft); margin: 4mm 0; }
+
+header.sec { border-bottom: 1px solid var(--border); padding-bottom: 3mm; margin-bottom: 5mm; }
+section + section { margin-top: 6mm; }
+
+/* ── cards ──────────────────────────────────────────────────────────────── */
+.card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  padding: 4mm 4.5mm;
+}
+.row { display: flex; gap: 3.5mm; align-items: stretch; }
+.row > * { flex: 1; min-width: 0; }
+
+/* ── KPI ────────────────────────────────────────────────────────────────── */
+.kpi .label { font-size: 8pt; color: var(--muted-foreground); font-weight: 500; }
+/* nowrap: "R$ 34,85" + unidade não cabia e a unidade caía para a linha de baixo */
+.kpi .value { font-size: 19pt; font-weight: 600; letter-spacing: -0.03em; line-height: 1.15; margin-top: 1mm; white-space: nowrap; }
+.kpi .value .unit { font-size: 11pt; font-weight: 500; color: var(--muted-foreground); margin-left: 1px; }
+.kpi .delta { font-size: 8.5pt; font-weight: 500; margin-top: 0.5mm; }
+.neg { color: var(--destructive); }
+.pos { color: var(--accent); }
+
+/* ── callout ────────────────────────────────────────────────────────────── */
+.callout {
+  border-left: 3px solid var(--accent-soft);
+  background: #fafaf6;
+  padding: 3mm 4mm;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: 9pt;
+}
+.callout.alerta { border-left-color: var(--destructive); background: #fdf6f6; }
+.callout .tag { font-weight: 600; }
+
+/* ── tabelas ────────────────────────────────────────────────────────────── */
+table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+thead th {
+  text-align: left; font-weight: 500; font-size: 7.5pt; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--muted-foreground);
+  padding: 0 2mm 1.5mm; border-bottom: 1px solid var(--border);
+}
+tbody td { padding: 1.7mm 2mm; border-bottom: 1px solid var(--muted); }
+tbody tr:last-child td { border-bottom: none; }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.nome { font-weight: 500; }
+
+/* ── graficos ───────────────────────────────────────────────────────────── */
+figure { margin: 0; }
+figcaption { font-size: 8pt; color: var(--muted-foreground); margin-top: 1.5mm; }
+/* width/height vem dos atributos do SVG — nao sobrescrever, senao a altura descola */
+svg { display: block; }
+svg text, svg tspan { white-space: pre; font-family: Geist, sans-serif; }
+
+/* ── capa ───────────────────────────────────────────────────────────────── */
+/* O rodapé de metadados é ancorado no pé da página por posicionamento absoluto.
+   `margin-top:auto` em flex item é ignorado pelo WeasyPrint (mesma família do
+   bug de margin em flex), e sem âncora a nota flutuava no meio da capa. */
+.capa { position: relative; height: 247mm; }
+.capa .topo { margin-bottom: 22mm; }
+.capa .rodape {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding-top: 5mm; border-top: 1px solid var(--border);
+}
+.capa h1 { font-size: 31pt; }
+
+/* índice da capa: ocupa o vão entre o callout e o rodapé com conteúdo útil */
+.indice { margin-top: 9mm; }
+.indice ol { display: flex; flex-wrap: wrap; list-style: none; margin-top: 3mm; }
+.indice li {
+  width: 50%; font-size: 9pt; padding: 1.6mm 0;
+  border-bottom: 1px solid var(--muted);
+}
+.indice li:nth-child(odd)  { padding-right: 6mm; }
+.indice li:nth-child(even) { padding-left: 6mm; }
+.indice .p {
+  display: inline-block; width: 6mm; color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums; font-size: 8pt;
+}
+.logo { display: flex; align-items: center; gap: 2.5mm; font-weight: 600; font-size: 11pt; letter-spacing: -0.01em; }
+.logo .mark { width: 11px; height: 11px; background: var(--accent-soft); border-radius: 2px; }
+.logo .sub { color: var(--muted-foreground); font-weight: 400; }
+
+/* ── plano de acao ──────────────────────────────────────────────────────── */
+.acao td { vertical-align: top; padding-top: 5mm; padding-bottom: 5mm; }
+.acao .n {
+  width: 6mm; font-weight: 600; color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+.chip {
+  display: inline-block; font-size: 7.5pt; font-weight: 500;
+  padding: 0.6mm 2mm; border-radius: 99px; border: 1px solid var(--border);
+  color: var(--muted-foreground); white-space: nowrap;
+}
+.chip.alta { border-color: #f0c8c8; color: var(--destructive); background: #fdf6f6; }
