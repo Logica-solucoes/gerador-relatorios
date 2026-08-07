@@ -113,13 +113,13 @@ export function documento(d: Dados): string {
   <section class="row" style="margin-top:6mm">
     <div class="card">
       <h3>Export responde por ${pct((Math.abs(exportDelta) / Math.abs(queda)) * 100, 0)} d${subst(n.varFat) === "queda" ? "a queda" : "a alta"}</h3>
-      <p class="small muted">A Nunhems Netherlands — operação intercompany, não mercado —
+      <p class="muted">A Nunhems Netherlands — operação intercompany, não mercado —
       ${exportDelta < 0 ? "encolheu" : "cresceu"} R$ ${mi(Math.abs(exportDelta))} Mi sozinha.
       É o maior componente isolado e não reflete demanda de cliente final brasileiro.</p>
     </div>
     <div class="card">
       <h3>O mercado BR ${brDelta > 0 ? "caiu" : "subiu"} R$ ${mi(Math.abs(brDelta))} Mi</h3>
-      <p class="small muted">Descontado o export, sobra a variação real de mercado: clientes que
+      <p class="muted">Descontado o export, sobra a variação real de mercado: clientes que
       pararam de comprar (R$ ${mi(Math.abs(perdidos.fat))} Mi) e clientes que continuaram
       comprando ${retidoDelta < 0 ? "menos" : "mais"} (R$ ${mi(Math.abs(retidoDelta))} Mi).</p>
     </div>
@@ -149,11 +149,11 @@ export function documento(d: Dados): string {
     </figure>
     <div class="card">
       <h3>O que o preço médio revela</h3>
-      <p class="small muted">No Brasil o volume ${varPct(br25.vol, br26.vol) < 0 ? "caiu" : "subiu"}
+      <p class="muted">No Brasil o volume ${varPct(br25.vol, br26.vol) < 0 ? "caiu" : "subiu"}
       ${sinal(varPct(br25.vol, br26.vol))} e a receita ${sinal(varPct(br25.fat, br26.fat))}.
       O preço médio foi de <strong>R$ ${num(precoBr(br25), 2)}</strong> para
       <strong>R$ ${num(precoBr(br26), 2)}</strong> por mil sementes.</p>
-      <p class="small muted" style="margin-top:2.5mm">${n.textoMix}</p>
+      <p class="muted" style="margin-top:2.5mm">${n.textoMix}</p>
     </div>
   </section>
 
@@ -214,11 +214,11 @@ export function documento(d: Dados): string {
     </figure>
     <div class="card">
       <h3>${n.tituloAquisicao}</h3>
-      <p class="small muted">Saíram <strong>${perdidos.clientes} clientes</strong>
+      <p class="muted">Saíram <strong>${perdidos.clientes} clientes</strong>
       (R$ ${mi(Math.abs(perdidos.fat))} Mi de receita 2025). Entraram
       <strong>${novos.clientes} novos</strong> (R$ ${mi(novos.fat)} Mi) e
       ${reativados.clientes} reativados (R$ ${mi(reativados.fat)} Mi).</p>
-      <p class="small muted" style="margin-top:2.5mm"><strong>${pct((retidos.fat / b.fat) * 100, 0)}
+      <p class="muted" style="margin-top:2.5mm"><strong>${pct((retidos.fat / b.fat) * 100, 0)}
       da receita</strong> vem de clientes que já compravam. ${n.textoAquisicao}</p>
     </div>
   </section>
@@ -263,10 +263,10 @@ export function documento(d: Dados): string {
     </figure>
     <div class="card">
       <h3>Metade da base é intermitente</h3>
-      <p class="small muted"><strong>${umMes.clientes} dos ${num(b.clientes)} clientes ativos</strong>
+      <p class="muted"><strong>${umMes.clientes} dos ${num(b.clientes)} clientes ativos</strong>
       compraram em um único mês do semestre, somando apenas R$ ${mi(umMes.fat)} Mi.
       São relacionamentos transacionais, não contas geridas.</p>
-      <p class="small muted" style="margin-top:2.5mm">No outro extremo, os clientes que compram
+      <p class="muted" style="margin-top:2.5mm">No outro extremo, os clientes que compram
       em 5 ou 6 meses concentram a maior parte da receita. A diferença entre os dois grupos é
       cobertura comercial, não potencial de compra.</p>
     </div>
@@ -296,10 +296,10 @@ export function documento(d: Dados): string {
   <section class="row" style="margin-top:5mm">
     <div class="card">
       <h3>Recuperação estimada: R$ ${mi(d.vazamento.gap_mediana)} Mi</h3>
-      <p class="small muted">É o que entraria se todo cliente que hoje paga <em>abaixo da mediana</em>
+      <p class="muted">É o que entraria se todo cliente que hoje paga <em>abaixo da mediana</em>
       do próprio SKU passasse a pagar a mediana. Estimativa conservadora e deliberada: o teto
       teórico, se todos pagassem o melhor preço, seria R$ ${mi(d.vazamento.gap_maximo)} Mi.</p>
-      <p class="small muted" style="margin-top:2.5mm"><strong>Ressalva:</strong> parte do desconto
+      <p class="muted" style="margin-top:2.5mm"><strong>Ressalva:</strong> parte do desconto
       é legítima — volume, contrato, negociação de safra. O número não é dinheiro roubado, é a
       medida de quanta variação existe sem política de preço formal por trás.</p>
     </div>
@@ -318,7 +318,7 @@ export function documento(d: Dados): string {
             .join("")}
         </tbody>
       </table>
-      <p class="small muted" style="margin-top:2mm">Desvio médio vs. o preço médio de cada item que
+      <p class="muted" style="margin-top:2mm">Desvio médio vs. o preço médio de cada item que
       o cliente compra. Apenas clientes com 5+ linhas e receita acima de R$ 200 mil.</p>
     </div>
   </section>
@@ -338,14 +338,14 @@ export function documento(d: Dados): string {
     </figure>
     <div class="card">
       <h3>O salto está entre 1 e 2</h3>
-      <p class="small muted"><strong>${c1.clientes} dos ${c1.clientes + c2.clientes + (d.culturasPorCliente[2]?.clientes ?? 0)}
+      <p class="muted"><strong>${c1.clientes} dos ${c1.clientes + c2.clientes + (d.culturasPorCliente[2]?.clientes ?? 0)}
       clientes brasileiros</strong> compram uma única cultura, com ticket médio de
       R$ ${num(c1.ticket / 1000)} mil. Quem compra duas tem ticket de
       R$ ${num(c2.ticket / 1000)} mil — <strong>${num(c2.ticket / c1.ticket, 1)}× maior</strong>.</p>
-      <p class="small muted" style="margin-top:2.5mm"><strong>É associação, não causalidade:</strong>
+      <p class="muted" style="margin-top:2.5mm"><strong>É associação, não causalidade:</strong>
       contas maiores naturalmente compram mais itens. O múltiplo não deve ser aplicado como meta
       por cliente.</p>
-      <p class="small muted" style="margin-top:2.5mm">O que o dado sustenta é mais específico —
+      <p class="muted" style="margin-top:2.5mm">O que o dado sustenta é mais específico —
       a lista abaixo mostra contas <em>grandes</em> presas a uma cultura só. Para o porte delas,
       isso é anomalia comercial, não perfil de compra.</p>
     </div>
@@ -403,12 +403,12 @@ export function documento(d: Dados): string {
   <section class="row" style="margin-top:6mm">
     <div class="card">
       <h3 class="neg">R$ ${mi(op.sales_error)} Mi em "SALES ERROR"</h3>
-      <p class="small muted">É o maior motivo isolado de devolução em 2026 — erro de venda, não
+      <p class="muted">É o maior motivo isolado de devolução em 2026 — erro de venda, não
       recusa do cliente. Um problema de processo interno custando mais que muitos clientes inteiros.</p>
     </div>
     <div class="card">
       <h3>${pct(op.fat_apos_req, 0)} faturado após a data pedida</h3>
-      <p class="small muted">Uma em cada cinco notas sai depois da data que o próprio cliente
+      <p class="muted">Uma em cada cinco notas sai depois da data que o próprio cliente
       solicitou. Combinado com ${pct(d.urgencia.at(-1)!.perc, 0)} de pedidos urgentes, indica
       planejamento de demanda quebrado nas duas pontas.</p>
     </div>
@@ -417,12 +417,12 @@ export function documento(d: Dados): string {
   <section class="row" style="margin-top:7mm">
     <div class="card">
       <h3>Portfólio encolheu ${pct((1 - op.itens_total / op.sku_2025) * 100, 0)}</h3>
-      <p class="small muted">De ${num(op.sku_2025)} SKUs em 2025 para ${num(op.itens_total)} em 2026.
+      <p class="muted">De ${num(op.sku_2025)} SKUs em 2025 para ${num(op.itens_total)} em 2026.
       E ${num(op.itens_80pc)} itens concentram 80% da receita — a cauda longa virou custo sem retorno.</p>
     </div>
     <div class="card">
       <h3 class="neg">Um vendedor, ${num(op.cli_vendedor_br90)} clientes</h3>
-      <p class="small muted">O código BR90 atende ${num(op.cli_vendedor_br90)} dos
+      <p class="muted">O código BR90 atende ${num(op.cli_vendedor_br90)} dos
       ${num(op.cli_total)} clientes ativos. Risco de continuidade concentrado em uma pessoa,
       sem redundância de relacionamento.</p>
     </div>
