@@ -1,0 +1,41 @@
+services:
+  relatorio:
+    build: .
+
+    # Credenciais e host vêm do .env (gitignored). Nada de default aqui:
+    # este arquivo é versionado, e um default errado conecta no banco errado
+    # em silêncio.
+    env_file: .env
+
+    # Banco rodando na própria máquina? `localhost` no .env é o container aqui:
+    #   docker compose run -e DB_HOST=host.docker.internal --rm relatorio
+    # Com Azure o .env sozinho basta.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    volumes:
+      - ./out:/app/out
+      # Código montado read-only. Sem isso o `compose run` usa a cópia assada na
+      # imagem e gera o relatório com a versão antiga — falha silenciosa, o PDF
+      # sai plausível e errado. Montado arquivo por arquivo de propósito: montar
+      # o diretório inteiro exporia o .env, que o Bun carrega e sobrescreveria
+      # o DB_HOST vindo daqui.
+      - ./build.ts:/app/build.ts:ro
+      - ./queries.ts:/app/queries.ts:ro
+      - ./report.ts:/app/report.ts:ro
+      - ./pages.ts:/app/pages.ts:ro
+      - ./narrativa.ts:/app/narrativa.ts:ro
+      - ./styles.css:/app/styles.css:ro
+      - ./fonts:/app/fonts:ro
+
+    # Lê o banco e escreve em ./out. Não precisa de nenhuma capability.
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp   # cache do fontconfig (XDG_CACHE_HOME aponta para cá)
+    mem_limit: 1g
+    cpus: 2.0
+
+    # Sem healthcheck: job em batch, roda e sai. O exit code é o sinal.

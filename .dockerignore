@@ -1,0 +1,11 @@
+node_modules
+out
+.git
+*.md
+
+# credenciais entram por env do compose, nunca assadas na imagem.
+# alem do risco, DB_HOST=localhost aqui dentro apontaria pro proprio container.
+.env
+.env.*
+
+relatorio.html
