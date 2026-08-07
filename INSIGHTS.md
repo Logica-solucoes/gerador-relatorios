@@ -8,6 +8,41 @@ Gerado a partir de `basf_vendas` (SQL Server, base `Basf-Relatorio`), recorte **
 2026 vs. 2025** (dados de 2026 até 25/06). Todo valor abaixo é deste recorte, exceto onde a
 página mostra série histórica (2022–2026).
 
+## Do relatório antigo pra este
+
+O relatório anterior era uma apresentação em slides com gráficos bonitos, mas os números não
+tinham sido confirmados contra o banco — e quando confirmei, boa parte não batia:
+
+| Relatório antigo dizia | O banco mostra |
+|---|---|
+| "Março é +50% da receita do trimestre" | Março é 20,7% do semestre — o pico real é maio/junho |
+| Maior cliente: A Sementeira | Maior cliente: Nunhems Netherlands, 8× mais receita, nem citado |
+| Agrícola Famosa "caiu R$ 8,48 Mi" | Comparava o **ano cheio** de 2025 com **4 meses** de 2026 — a cliente está saudável |
+| Tom geral positivo ("pico substancial") | Faturamento do semestre caiu 47% |
+
+Ou seja: não era um problema de design, era um problema de os números não serem os números
+reais. O trabalho aqui não foi "deixar bonito" — foi refazer a análise do zero, direto na base
+de dados, e só depois desenhar em torno do que os dados realmente mostram.
+
+## A ideia central deste relatório
+
+Duas regras guiaram tudo, e as duas existem pra evitar o mesmo erro do relatório antigo — um
+número ou uma frase que parece certa mas não é o que o dado diz:
+
+1. **Todo número vem de uma consulta ao banco, nunca de estimativa solta.** Não existe "isso
+   parece que caiu" — existe "caiu 47,0%, calculado assim". Quando uma estimativa é
+   deliberadamente conservadora (como a recuperação de preço na página 7), o texto diz isso
+   explicitamente e mostra o número mais otimista como referência, não como meta.
+
+2. **O texto muda quando o dado muda.** Se a próxima atualização mostrar receita subindo em vez
+   de caindo, o relatório não vai continuar dizendo "a receita caiu" — a frase é calculada a
+   partir do sinal do número, não escrita à mão de uma vez só. Isso é o que separa este
+   relatório de uma apresentação estática: ele foi feito para ser **regenerado**, não reescrito.
+
+O resultado é um relatório com uma única linha do começo ao fim: a receita caiu quase pela
+metade, aqui está exatamente de onde saiu cada parte da queda, e aqui estão as ações com valor
+e prazo pra reagir — em vez de seis slides desconexos sobre temas diferentes.
+
 ## Tese central
 
 O faturamento do semestre caiu **47,0%** (R$ 65,71 Mi → R$ 34,85 Mi) e o volume caiu quase o
