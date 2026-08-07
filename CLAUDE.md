@@ -21,6 +21,26 @@ sempre usa o código atual — não precisa de `docker compose build` para mudan
 para mudança de dependência ou de Dockerfile. Não remova esses mounts: sem eles o container
 roda a cópia assada na imagem e gera um PDF **plausível e errado**, sem avisar.
 
+## Tamanho da imagem: dois números, um deles engana
+
+`docker images` no CLI atual mostra **DISK USAGE** e **CONTENT SIZE** — são coisas diferentes.
+CONTENT SIZE (confirma com `docker image inspect basf-relatorio --format '{{.Size}}'`) é o
+tamanho real da imagem, hoje ~200MB. DISK USAGE inclui cache de build (BuildKit) acumulado de
+rebuilds anteriores — pode mostrar 800MB+ sem que a imagem tenha mudado. Se o número parecer
+alto, confira `.Size` antes de investigar; cache de build se resolve com `docker builder prune`
+(system-wide, pede confirmação antes de rodar — afeta outros projetos na mesma máquina).
+
+Maior peso real, e o que fazer sobre cada um:
+- **WeasyPrint + Python gerenciado pelo uv** (~174MB): inerente, é o motor de PDF.
+- **Debian base + bun** (~226MB): inerente ao runtime escolhido.
+- **`@azure/*` via `mssql` → `tedious`** (~42MB): dependência **obrigatória** do driver — a
+  Azure AD auth vem embutida no `tedious` mesmo sem usar. Não removível sem trocar de driver.
+- **devDependencies** (`typescript`, `@types/*`): removidas da imagem via
+  `bun install --frozen-lockfile --omit=dev` no Dockerfile — só servem o `tsc --noEmit` local.
+
+`compose.yaml` fixa `image: basf-relatorio:latest`. Sem isso o compose nomeia
+`{pasta}-{serviço}` — como os dois contêm "relatorio", vira `basf-relatorio-relatorio`.
+
 ## Banco
 
 **O alvo de produção é Azure SQL**; o SQL Server local é cópia de trabalho. Setup no README.

@@ -23,8 +23,10 @@ RUN uv tool install weasyprint==69.0 && chmod -R a+rX /opt
 WORKDIR /app
 
 # Deps antes do codigo: mudar um .ts nao invalida o bun install.
+# --omit=dev: typescript/@types/* so servem o `tsc --noEmit` local, ~33MB que
+# nao tem por que ir pra imagem que so roda `bun run build.ts`.
 COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --omit=dev
 
 COPY --chown=bun:bun build.ts queries.ts report.ts pages.ts narrativa.ts styles.css ./
 COPY --chown=bun:bun fonts ./fonts

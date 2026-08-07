@@ -1,6 +1,9 @@
 services:
   relatorio:
     build: .
+    # Sem isso o compose nomeia a imagem "{pasta}-{servico}" — a pasta e' o
+    # servico contendo "relatorio" nos dois, dando basf-relatorio-relatorio.
+    image: basf-relatorio:latest
 
     # Credenciais e host vêm do .env (gitignored). Nada de default aqui:
     # este arquivo é versionado, e um default errado conecta no banco errado
