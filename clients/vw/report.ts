@@ -10,6 +10,8 @@ const COR = {
   red: "#c40c1e",
   grey: "#a1a1aa",
   dark: "#3f3f46",
+  // cinza de rotulo de valor: #a1a1aa fica ilegivel impresso em 8pt
+  rotulo: "#52525b",
 };
 
 /** Nome técnico da feature -> nome que o time de marketing usa. */
@@ -262,14 +264,16 @@ function gImportancia(m: Modelo, height: number, destacar = false) {
     height,
     marginLeft: 176,
     marginRight: 76,
-    marginBottom: 30,
+    // `height` no Plot e o SVG inteiro: aumentar margem aperta a area do
+    // grafico, nao a pagina. Com 30 o rotulo do eixo saia cortado embaixo.
+    marginBottom: 42,
     x: { label: null, grid: true, tickSize: 0, tickFormat: p1 },
     y: { label: null, tickSize: 0, domain: dados.map((r) => r.rot) },
     marks: [
       Plot.barX(dados, { x: "importance_relativa", y: "rot", fill: (r: any) => (destacar && r.campanha ? COR.soft : COR.primary), rx: 2 }),
-      Plot.text(dados, { x: "importance_relativa", y: "rot", text: (r: any) => num(r.importance_acumulada * 100, 0) + "% acum.", dx: 6, textAnchor: "start", fontSize: 8, fill: COR.grey }),
+      Plot.text(dados, { x: "importance_relativa", y: "rot", text: (r: any) => num(r.importance_acumulada * 100, 0) + "% acum.", dx: 6, textAnchor: "start", fontSize: 8.5, fill: COR.rotulo }),
       Plot.ruleX([0], { stroke: "#d4d4d8" }),
-      Plot.axisX({ label: "participação da variável no ganho total do modelo", labelAnchor: "center", labelOffset: 24, labelArrow: "none", tickSize: 0, fontSize: 8.5, tickFormat: p1 }),
+      Plot.axisX({ label: "participação da variável no ganho total do modelo", labelAnchor: "center", labelOffset: 34, labelArrow: "none", tickSize: 0, fontSize: 8.5, tickFormat: p1 }),
     ],
   });
 }
@@ -288,7 +292,7 @@ function gDrill(dd: Modelo["drilldown"][number], height: number) {
     height,
     marginLeft: 172,
     marginRight: 54,
-    marginBottom: 14,
+    marginBottom: 26,
     marginTop: 6,
     x: { label: null, grid: true, tickSize: 0, tickFormat: (v: number) => num(v, 2), domain: [min - (min < 0 ? folga : 0), max + folga] },
     y: { label: null, tickSize: 0, domain: dados.map((r) => r.rot) },
@@ -306,8 +310,8 @@ function gDrill(dd: Modelo["drilldown"][number], height: number) {
           text: (r: any) => num(r.contribuicao_media, 3),
           dx,
           textAnchor: anchor,
-          fontSize: 8,
-          fill: COR.grey,
+          fontSize: 8.5,
+          fill: COR.rotulo,
         }),
       ),
       Plot.ruleX([0], { stroke: COR.dark }),
