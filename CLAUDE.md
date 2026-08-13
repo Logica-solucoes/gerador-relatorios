@@ -8,18 +8,27 @@ Visão geral e decisões de produto estão no `README.md`. Aqui ficam as regras 
 ## Comandos
 
 ```bash
-bun run build.ts                  # HTML (Windows, SQL em localhost) — loop rápido de design
-docker compose run --rm relatorio # HTML + PDF (fluxo real)
-bun test                          # narrativa.ts
+CLIENT=basf bun --env-file=clients/basf/.env run core/build.ts                 # HTML (Windows, SQL em localhost) — loop rápido de design
+docker compose run --rm --env-from-file clients/basf/.env -e CLIENT=basf relatorio  # HTML + PDF (fluxo real)
+bun test                                                                       # narrativa.ts de todos os clientes
 ```
 
-**Loop de iteração:** rode `bun run build.ts`, abra `out/relatorio.html` no Chrome. O container
-só é necessário para o PDF.
+`CLIENT` é obrigatório — sem default de propósito, mesmo motivo do `queries.ts` nunca ter
+default de variável de banco (ver `## Banco`). Troque `basf` por qualquer pasta em `clients/`.
+`--env-file=` (Bun) e `--env-from-file` (compose) são flags diferentes, de ferramentas
+diferentes — não confunda um pelo outro. `clients/_template/` não tem banco: basta
+`CLIENT=_template bun run core/build.ts`, sem `--env-file`.
 
-Os fontes são **montados** no container (`volumes:` em `compose.yaml`), então `compose run`
-sempre usa o código atual — não precisa de `docker compose build` para mudança de código, só
-para mudança de dependência ou de Dockerfile. Não remova esses mounts: sem eles o container
-roda a cópia assada na imagem e gera um PDF **plausível e errado**, sem avisar.
+**Loop de iteração:** rode `CLIENT=basf bun --env-file=clients/basf/.env run core/build.ts`,
+abra `out/basf/relatorio.html` no Chrome. O container só é necessário para o PDF.
+
+**Cliente novo?** Ver `NOVO_CLIENTE.md` na raiz — processo de onboarding via agente de IA.
+
+Os fontes são **montados** no container (`volumes:` em `compose.yaml`, `core/` e `clients/`
+inteiros), então `compose run` sempre usa o código atual — não precisa de `docker compose
+build` para mudança de código, só para mudança de dependência ou de Dockerfile. Não remova
+esses mounts: sem eles o container roda a cópia assada na imagem e gera um PDF **plausível e
+errado**, sem avisar.
 
 ## Tamanho da imagem: dois números, um deles engana
 
@@ -56,8 +65,8 @@ Mudou layout ou gráfico? **Olhe o PDF renderizado.** Não confie em "o HTML par
 metade dos bugs desta base só aparecem no WeasyPrint.
 
 ```bash
-docker compose run --rm --entrypoint pdftoppm relatorio -png -r 100 out/relatorio.pdf out/pg
-# depois leia out/pg-*.png
+docker compose run --rm --entrypoint pdftoppm relatorio -png -r 100 out/basf/relatorio.pdf out/pg
+# depois leia out/pg-*.png (troque basf pelo cliente que você está verificando)
 ```
 
 Se o PDF tiver mais de 10 páginas, algo transbordou — quase sempre altura de gráfico.

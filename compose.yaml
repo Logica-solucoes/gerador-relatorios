@@ -8,10 +8,10 @@ services:
     # Sem env_file fixo: cada cliente tem o proprio .env em clients/<id>/.env.
     # Nada de cliente default de proposito (mesmo motivo do queries.ts nunca
     # ter default de variavel de banco) — informe os dois na hora de rodar:
-    #   docker compose run --rm --env-file clients/basf/.env -e CLIENT=basf relatorio
+    #   docker compose run --rm --env-from-file clients/basf/.env -e CLIENT=basf relatorio
     #
     # Banco rodando na própria máquina? `localhost` no .env é o container aqui:
-    #   docker compose run --rm --env-file clients/basf/.env -e CLIENT=basf -e DB_HOST=host.docker.internal relatorio
+    #   docker compose run --rm --env-from-file clients/basf/.env -e CLIENT=basf -e DB_HOST=host.docker.internal relatorio
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
