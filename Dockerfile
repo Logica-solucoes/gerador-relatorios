@@ -24,7 +24,7 @@ WORKDIR /app
 
 # Deps antes do codigo: mudar um .ts nao invalida o bun install.
 # --omit=dev: typescript/@types/* so servem o `tsc --noEmit` local, ~33MB que
-# nao tem por que ir pra imagem que so roda `bun run build.ts`.
+# nao tem por que ir pra imagem que so roda `bun run core/build.ts`.
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile --omit=dev
 
