@@ -5,7 +5,13 @@
 type Metricas = { auc: number; ks: number; recall_30: number };
 type Faixa = { faixa: number; volume: number; pct_base: number; conversoes: number; taxa_conversao: number };
 type Importancia = { feature: string; importance_relativa: number; importance_acumulada: number };
-type Drilldown = { feature: string; coluna_detalhe: string; top_valores: { valor: string; contribuicao_media: number }[] };
+type Drilldown = {
+  feature: string;
+  coluna_detalhe: string;
+  /** Volume mínimo para um valor entrar no ranking (0,1% do treino, notebook 03). */
+  piso_volume: number;
+  top_valores: { valor: string; contribuicao_media: number; volume: number }[];
+};
 
 /** O bloco de output que os dois modelos compartilham — é o que se repete no relatório. */
 export type Modelo = {

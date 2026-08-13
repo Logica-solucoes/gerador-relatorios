@@ -32,16 +32,38 @@ export function vereditoMeta(d: Pick<Dados, "base">): string {
   return `Meta não atingida: ${p1(r)} contra os ${p1(META_RECALL, 0)} contratados, ${pp(gap)} abaixo.`;
 }
 
+/** Faixa de queda treino→OOT. Título e texto do card saem daqui, não do template. */
+function faixaQueda(m: Modelo) {
+  const q = m.metricas.treino.auc - m.metricas.oot.auc;
+  if (q <= 0.06) return { q, i: 0 } as const;
+  if (q <= 0.12) return { q, i: 1 } as const;
+  return { q, i: 2 } as const;
+}
+
+export function tituloEstabilidade(m: Modelo): string {
+  return ["O modelo se sustenta no tempo", "Há memorização, mas o OOT sustenta o uso", "O treino não se repete no tempo"][faixaQueda(m).i]!;
+}
+
 /** Quanto o modelo perde do treino para o teste no tempo — leitura de overfitting. */
 export function estabilidade(m: Modelo): string {
-  const q = m.metricas.treino.auc - m.metricas.oot.auc;
-  const veredito =
-    q <= 0.06
-      ? "queda pequena: o modelo generalizou, não decorou o treino"
-      : q <= 0.12
-        ? "queda moderada: há alguma memorização do treino, mas o OOT ainda sustenta o uso"
-        : "queda alta: sinal de overfitting, o desempenho no treino não se repete no tempo";
+  const veredito = [
+    "queda pequena: o modelo generalizou, não decorou o treino",
+    "queda moderada: há alguma memorização do treino, mas o OOT ainda sustenta o uso",
+    "queda alta: sinal de overfitting, o desempenho no treino não se repete no tempo",
+  ][faixaQueda(m).i]!;
   return `O AUC cai de ${num(m.metricas.treino.auc, 3)} no treino para ${num(m.metricas.oot.auc, 3)} no OOT — ${veredito}.`;
+}
+
+/** OOS vs OOT: separa "o futuro é difícil" de "o modelo é instável". */
+export function estabilidadeOosOot(m: Modelo): string {
+  const oos = m.metricas.oos.auc;
+  const oot = m.metricas.oot.auc;
+  const entre = Math.abs(oos - oot);
+  const ateOot = Math.abs(m.metricas.treino.auc - oot);
+  const cabeca = `A diferença entre OOS (${num(oos, 3)}) e OOT (${num(oot, 3)}) é de ${pp(entre, 1)}`;
+  return entre < ateOot
+    ? `${cabeca}, bem menor que os ${pp(ateOot, 1)} entre treino e OOT — a perda vem da dificuldade natural de prever o futuro, não de instabilidade do modelo.`
+    : `${cabeca}, maior que os ${pp(ateOot, 1)} entre treino e OOT — o modelo oscila entre períodos, e isso pede investigação antes de subir.`;
 }
 
 /** Quantas vezes a faixa mais quente converte mais que a mais fria. */
@@ -66,25 +88,33 @@ export function drill(dd: Modelo["drilldown"][number]): string {
   const v = dd.top_valores;
   const alto = v[0]!;
   const negativos = v.filter((r) => r.contribuicao_media < 0);
-  const base = `Em ${rotulo(dd.feature).toLowerCase()}, ${alto.valor} é o valor que mais empurra a conversão para cima (${num(alto.contribuicao_media, 3)}).`;
+  const base = `Em ${rotulo(dd.feature).toLowerCase()}, ${alto.valor} é o valor que mais empurra a conversão para cima (${num(alto.contribuicao_media, 3)} sobre ${num(alto.volume)} leads).`;
   if (negativos.length === 0) return `${base} Nenhum dos ${v.length} valores listados derruba a probabilidade.`;
   const pior = negativos[negativos.length - 1]!;
-  return `${base} No outro extremo, ${pior.valor} derruba (${num(pior.contribuicao_media, 3)}) — ${negativos.length} de ${v.length} valores contribuem negativamente.`;
+  return `${base} No outro extremo, ${pior.valor} derruba (${num(pior.contribuicao_media, 3)} sobre ${num(pior.volume)}) — ${negativos.length} de ${v.length} valores contribuem negativamente.`;
 }
 
 /** Cadastro de produto: quantos valores do top são variação do mesmo termo. */
 export function cadastroRepetido(dd: Modelo["drilldown"][number]): string {
-  const chave = (s: string) => s.split(/[\s\-]+/)[0]!.toLowerCase().replace(/[^a-z0-9]/g, "");
-  // guarda a grafia original da primeira ocorrência — "taos" no texto ficava feio
+  // "Novo T-Cross" e "T-Cross" são a mesma família; o hífen fica (senão T-Cross vira "T").
+  const raiz = (s: string) => s.replace(/^nov[oa]\s+/i, "").split(/\s+/)[0]!.replace(/[^\p{L}\p{N}-]/gu, "");
   const cont = new Map<string, { n: number; termo: string }>();
   for (const r of dd.top_valores) {
-    const k = chave(r.valor);
-    const at = cont.get(k) ?? { n: 0, termo: r.valor.split(/[\s\-]+/)[0]! };
-    cont.set(k, { n: at.n + 1, termo: at.termo });
+    const termo = raiz(r.valor);
+    const at = cont.get(termo.toLowerCase()) ?? { n: 0, termo };
+    cont.set(termo.toLowerCase(), { n: at.n + 1, termo: at.termo });
   }
   const { n, termo } = [...cont.values()].sort((a, b) => b.n - a.n)[0]!;
   if (n < 2) return `Os ${dd.top_valores.length} valores listados são distintos entre si — o cadastro de ${dd.coluna_detalhe} está consistente neste recorte.`;
   return `${n} dos ${dd.top_valores.length} valores são variações de "${termo}": o campo ${dd.coluna_detalhe} é texto livre e a mesma família aparece escrita de várias formas. Limpar esse cadastro concentraria o sinal hoje diluído.`;
+}
+
+/** Valor de categoria que é claramente lixo de cadastro (código cru, vazio). */
+export function valorSuspeito(dd: Modelo["drilldown"][number]): string | null {
+  const r = dd.top_valores.find((x) => /^\s*$/.test(x.valor) || /^\d+$/.test(x.valor));
+  if (!r) return null;
+  const rotuloValor = r.valor.trim() === "" ? "em branco" : `"${r.valor}"`;
+  return `${rotulo(dd.feature)} tem um valor ${rotuloValor} com ${num(r.volume)} leads e contribuição ${num(r.contribuicao_media, 3)} — não é um canal, é ausência de cadastro. Vale isolar esses leads: hoje eles entram no modelo como se fossem uma origem legítima.`;
 }
 
 /** Tamanho e perfil do subconjunto do experimento de mídia. */
@@ -143,7 +173,8 @@ export function acoes(d: Dados) {
     {
       titulo: "Padronizar o cadastro de produto",
       prioridade: "média" as const,
-      texto: fam ? cadastroRepetido(fam) : "Sem drill-down de produto neste recorte.",
+      // some do plano quando o cadastro esta limpo — acao sem problema atras nao e acao
+      texto: fam && cadastroRepetido(fam).includes("variações de") ? cadastroRepetido(fam) : null,
     },
     {
       titulo: "Monitorar drift e reprocessar o score",
@@ -151,7 +182,7 @@ export function acoes(d: Dados) {
       texto: `A variável mais importante do modelo é ${rotulo(d.base.importancia_features[0]!.feature).toLowerCase()}, que muda mês a mês. O score precisa ser recalculado na mesma cadência e o AUC no tempo acompanhado contra o ${num(d.base.metricas.oot.auc, 3)} do OOT.`,
     },
   ];
-  return lista;
+  return lista.filter((a): a is typeof a & { texto: string } => a.texto !== null);
 }
 
 /** Quanto das vendas o modelo captura em cada corte de contato — usado na p.2. */

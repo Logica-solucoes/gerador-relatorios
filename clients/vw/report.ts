@@ -291,7 +291,8 @@ function gDrill(dd: Modelo["drilldown"][number], height: number) {
     width: L,
     height,
     marginLeft: 172,
-    marginRight: 54,
+    // margem direita larga: a coluna de volume mora nela, ancorada na moldura
+    marginRight: 104,
     marginBottom: 26,
     marginTop: 6,
     x: { label: null, grid: true, tickSize: 0, tickFormat: (v: number) => num(v, 2), domain: [min - (min < 0 ? folga : 0), max + folga] },
@@ -314,6 +315,17 @@ function gDrill(dd: Modelo["drilldown"][number], height: number) {
           fill: COR.rotulo,
         }),
       ),
+      // Volume numa coluna propria: sem ele o leitor nao sabe se a media veio de
+      // 57 mil leads ou de 2 — foi exatamente o que quebrou a primeira versao.
+      Plot.text(dados, {
+        y: "rot",
+        frameAnchor: "right",
+        text: (r: any) => num(r.volume) + " leads",
+        dx: 96,
+        textAnchor: "end",
+        fontSize: 8,
+        fill: COR.grey,
+      }),
       Plot.ruleX([0], { stroke: COR.dark }),
     ],
   });

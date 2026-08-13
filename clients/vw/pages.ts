@@ -306,11 +306,9 @@ export function documento(d: Dados): string {
 
   <section class="row" style="margin-top:6mm">
     <div class="card">
-      <h3>O modelo se sustenta no tempo</h3>
+      <h3>${n.tituloEstabilidade(b)}</h3>
       <p class="muted">${n.estabilidade(b)}</p>
-      <p class="muted">A diferença entre OOS (${n3(b.metricas.oos.auc)}) e OOT (${n3(b.metricas.oot.auc)})
-      é ainda menor, o que indica que a queda vem da dificuldade natural de prever o futuro, não de
-      instabilidade do modelo.</p>
+      <p class="muted">${n.estabilidadeOosOot(b)}</p>
     </div>
     <div class="card">
       <h3>${n.vereditoMeta(d).split(":")[0]}</h3>
@@ -393,14 +391,14 @@ export function documento(d: Dados): string {
 <div class="page">
   <header class="sec">
     <h2>${secoes[6]}</h2>
-    <p class="muted">Dentro de cada variável importante, quais valores empurram a conversão para cima e quais derrubam. Contribuição SHAP média, conjunto de treino.</p>
+    <p class="muted">Dentro de cada variável importante, quais valores empurram a conversão para cima e quais derrubam. Contribuição SHAP média, conjunto de treino. Só entram valores com pelo menos ${num(b.drilldown[0]!.piso_volume)} leads — sem esse piso, a média de um único lead disputaria o topo com a de dezenas de milhares.</p>
   </header>
 
   ${b.drilldown
     .map(
       (dd, i) => `<section style="margin-top:${i === 0 ? 0 : 5}mm">
     <h3>${rotulo(dd.feature)} · detalhe por ${dd.coluna_detalhe}</h3>
-    ${g.gDrill(dd, dd.top_valores.length > 5 ? 196 : 108)}
+    ${g.gDrill(dd, dd.top_valores.length > 5 ? 182 : 100)}
   </section>`,
     )
     .join("")}
@@ -412,6 +410,7 @@ export function documento(d: Dados): string {
   <div class="callout alerta" style="margin-top:4mm">
     <span class="tag">Achado de cadastro:</span>
     ${n.cadastroRepetido(drills["FamilyProduct"] ?? b.drilldown[0]!)}
+    ${b.drilldown.map((dd) => n.valorSuspeito(dd)).find(Boolean) ?? ""}
   </div>
 </div>
 

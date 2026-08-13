@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import type { Modelo } from "./queries";
-import { cadastroRepetido, drill, estabilidade, manchete, pesoCampanha, subconjunto, vereditoCampanha, vereditoMeta } from "./narrativa";
+import { cadastroRepetido, drill, valorSuspeito, estabilidade, estabilidadeOosOot, tituloEstabilidade, manchete, pesoCampanha, subconjunto, vereditoCampanha, vereditoMeta } from "./narrativa";
 
 const faixas = (taxas: number[]) =>
   taxas.map((t, i) => ({ faixa: i + 1, volume: 1000, pct_base: 0.1, conversoes: Math.round(t * 1000), taxa_conversao: t }));
@@ -29,7 +29,20 @@ test("manchete usa o recall real, não um número fixo", () => {
 
 test("estabilidade distingue generalização de overfitting", () => {
   expect(estabilidade(modelo([0.777, 0.722], 0.6))).toContain("generalizou");
+  expect(estabilidade(modelo([0.789, 0.721], 0.6))).toContain("memorização");
   expect(estabilidade(modelo([0.98, 0.71], 0.6))).toContain("overfitting");
+});
+
+test("titulo do card acompanha a mesma faixa de queda", () => {
+  expect(tituloEstabilidade(modelo([0.777, 0.722], 0.6))).toBe("O modelo se sustenta no tempo");
+  expect(tituloEstabilidade(modelo([0.789, 0.721], 0.6))).toContain("memorização");
+  expect(tituloEstabilidade(modelo([0.98, 0.71], 0.6))).toContain("não se repete");
+});
+
+test("OOS x OOT separa futuro dificil de modelo instavel", () => {
+  // oos fixo em 0,75 no fixture: com OOT 0,721 a distancia ate o treino e maior
+  expect(estabilidadeOosOot(modelo([0.789, 0.721], 0.6))).toContain("bem menor");
+  expect(estabilidadeOosOot(modelo([0.73, 0.60], 0.6))).toContain("oscila entre períodos");
 });
 
 test("veredito do experimento segue o sinal e o tamanho do ganho", () => {
@@ -44,7 +57,8 @@ test("drill-down muda quando não há contribuição negativa", () => {
   const bloco = (vals: number[]) => ({
     feature: "Sub Origem",
     coluna_detalhe: "Sub Origem Nível 2",
-    top_valores: vals.map((v, i) => ({ valor: `V${i}`, contribuicao_media: v })),
+    piso_volume: 1100,
+    top_valores: vals.map((v, i) => ({ valor: `V${i}`, contribuicao_media: v, volume: 5000 })),
   });
   expect(drill(bloco([0.3, 0.1, -0.05]))).toContain("derruba");
   expect(drill(bloco([0.3, 0.1, 0.05]))).toContain("Nenhum dos 3");
@@ -54,10 +68,24 @@ test("cadastro repetido só acusa quando o termo se repete", () => {
   const bloco = (vals: string[]) => ({
     feature: "FamilyProduct",
     coluna_detalhe: "Descrição do Veículo",
-    top_valores: vals.map((valor) => ({ valor, contribuicao_media: 0.4 })),
+    piso_volume: 1100,
+    top_valores: vals.map((valor) => ({ valor, contribuicao_media: 0.4, volume: 5000 })),
   });
   expect(cadastroRepetido(bloco(["Taos", "TAOS", "Taos Highline", "Polo"]))).toContain("3 dos 4");
   expect(cadastroRepetido(bloco(["Polo", "Virtus", "Amarok"]))).toContain("consistente");
+  // "Novo T-Cross" e "T-Cross" sao a mesma familia; o hifen nao pode virar corte de token
+  expect(cadastroRepetido(bloco(["Novo T-Cross", "T-Cross", "T-Cross Sense 200", "Nivus"]))).toContain('variações de "T-Cross"');
+});
+
+test("valor suspeito acusa codigo cru como categoria, e so ele", () => {
+  const bloco = (vals: string[]) => ({
+    feature: "Sub Origem",
+    coluna_detalhe: "Sub Origem Nível 2",
+    piso_volume: 1100,
+    top_valores: vals.map((valor) => ({ valor, contribuicao_media: -0.34, volume: 17503 })),
+  });
+  expect(valorSuspeito(bloco(["WhatsApp", "0", "Test Drive"]))).toContain("17.503 leads");
+  expect(valorSuspeito(bloco(["WhatsApp", "Test Drive"]))).toBeNull();
 });
 
 test("subconjunto compara a conversão do recorte com a da base", () => {

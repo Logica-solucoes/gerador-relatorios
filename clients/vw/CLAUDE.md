@@ -44,10 +44,22 @@ pode deixar "ver página 7" apontando para o lugar errado.
   era de uma execução antiga, antes de a base ser consolidada em `report1783970681632`.
 - `importancia_features` já vem filtrada por ganho > 0 — daí "12 das 25 colunas", não "12
   features existem".
-- Drill-down é contribuição SHAP média **no conjunto de treino**, não no OOT.
-- `Descrição do Veículo` é texto livre com cadastro sujo (Taos/TAOS/"Taos Highline!Automática
-  de 8 velocidades…" como valores distintos). Isso é tratado como achado do relatório, não
-  escondido — ver `cadastroRepetido()` em `narrativa.ts`.
+- Drill-down é contribuição SHAP média **no conjunto de treino**, não no OOT, e tem **piso de
+  volume de 0,1% do treino** (`piso_volume` no export). Sem o piso, `tabela_drilldown` fazia
+  `groupby().mean().head(10)` e a média de 1 lead disputava o topo com a média de 57 mil: a
+  primeira versão do relatório publicou `TAOS` (2 leads) e `Novo T-Cross - Sense TSI Automático
+  Nacional` (1 lead) acima de `Test Drive` (50 mil). Todo valor traz seu `volume`, e o gráfico
+  mostra esse número — é o que deixa a média auditável.
+- **O export é reproduzível desde 13/08/2026.** `optuna.create_study` rodava sem seed, então
+  cada execução achava hiperparâmetros diferentes e não dava para reconstruir o modelo de um
+  JSON antigo. Agora usa `TPESampler(seed=42)`. Re-exportar move as métricas (foi de AUC OOT
+  0,7215 para 0,7207 na primeira re-execução) — isso é esperado, não bug.
+- `Descrição do Veículo` é texto livre: com o piso, o topo vira `T-Cross`/`Novo T-Cross`/
+  `T-Cross Sense…` — mesma família escrita de várias formas. Tratado como achado do relatório,
+  não escondido — ver `cadastroRepetido()` em `narrativa.ts`, que descarta o prefixo "Novo" e
+  **não** corta no hífen (senão `T-Cross` vira `T`).
+- `Sub Origem Nível 2` tem um valor literal `"0"` com 17,5 mil leads e contribuição negativa
+  forte — é ausência de cadastro entrando no modelo como se fosse canal. `valorSuspeito()` acusa.
 
 ## Insumos
 
