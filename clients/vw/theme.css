@@ -1,0 +1,33 @@
+/* Paleta Volkswagen sobre o CSS base (core/styles.base.css). */
+:root {
+  --primary: #001e50;      /* VW Dark Blue */
+  --accent: #0073c4;       /* VW Light Blue escurecido p/ contraste em papel */
+  --accent-soft: #7fd8ff;
+  --destructive: #c40c1e;
+}
+
+@page {
+  @top-right { content: "Volkswagen · Lead Scoring · 2022–2026"; }
+}
+
+/* Faixa de aviso dos dois modelos independentes — repetida no capítulo de mídia. */
+.aviso {
+  border: 1px solid #f0c8c8;
+  border-left: 3px solid var(--destructive);
+  background: #fdf6f6;
+  border-radius: var(--radius);
+  padding: 3.5mm 4mm;
+  font-size: 9pt;
+}
+.aviso .tag { font-weight: 600; color: var(--destructive); }
+
+/* Tabela de colunas da base: nome de coluna é código, não prosa. */
+.cols code {
+  font-family: ui-monospace, monospace;
+  font-size: 7.5pt;
+  background: var(--muted);
+  border-radius: 3px;
+  padding: 0.3mm 1.2mm;
+  white-space: nowrap;
+}
+.cols td { line-height: 2; }
