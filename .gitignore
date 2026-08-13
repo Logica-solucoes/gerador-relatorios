@@ -6,6 +6,9 @@ out
 dist
 *.tgz
 
+# insumos brutos de cliente (nunca versionados — ver NOVO_CLIENTE.md)
+_intake
+
 # code coverage
 coverage
 *.lcov

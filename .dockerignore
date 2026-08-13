@@ -7,5 +7,7 @@ out
 # alem do risco, DB_HOST=localhost aqui dentro apontaria pro proprio container.
 .env
 .env.*
+clients/*/.env
+clients/*/_intake
 
 relatorio.html
