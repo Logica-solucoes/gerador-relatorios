@@ -5,31 +5,26 @@ services:
     # servico contendo "relatorio" nos dois, dando basf-relatorio-relatorio.
     image: basf-relatorio:latest
 
-    # Credenciais e host vêm do .env (gitignored). Nada de default aqui:
-    # este arquivo é versionado, e um default errado conecta no banco errado
-    # em silêncio.
-    env_file: .env
-
+    # Sem env_file fixo: cada cliente tem o proprio .env em clients/<id>/.env.
+    # Nada de cliente default de proposito (mesmo motivo do queries.ts nunca
+    # ter default de variavel de banco) — informe os dois na hora de rodar:
+    #   docker compose run --rm --env-file clients/basf/.env -e CLIENT=basf relatorio
+    #
     # Banco rodando na própria máquina? `localhost` no .env é o container aqui:
-    #   docker compose run -e DB_HOST=host.docker.internal --rm relatorio
-    # Com Azure o .env sozinho basta.
+    #   docker compose run --rm --env-file clients/basf/.env -e CLIENT=basf -e DB_HOST=host.docker.internal relatorio
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
     volumes:
       - ./out:/app/out
-      # Código montado read-only. Sem isso o `compose run` usa a cópia assada na
-      # imagem e gera o relatório com a versão antiga — falha silenciosa, o PDF
-      # sai plausível e errado. Montado arquivo por arquivo de propósito: montar
-      # o diretório inteiro exporia o .env, que o Bun carrega e sobrescreveria
-      # o DB_HOST vindo daqui.
-      - ./build.ts:/app/build.ts:ro
-      - ./queries.ts:/app/queries.ts:ro
-      - ./report.ts:/app/report.ts:ro
-      - ./pages.ts:/app/pages.ts:ro
-      - ./narrativa.ts:/app/narrativa.ts:ro
-      - ./styles.css:/app/styles.css:ro
-      - ./fonts:/app/fonts:ro
+      # Código montado read-only, por diretório inteiro. Sem isso o `compose
+      # run` usa a cópia assada na imagem e gera o relatório com a versão
+      # antiga — falha silenciosa, o PDF sai plausível e errado. Montar o
+      # diretório inteiro (em vez de arquivo por arquivo) é seguro aqui: o
+      # .env de cada cliente fica dentro de clients/<id>/, fora do cwd do
+      # processo (/app), então o auto-load do Bun não o pega.
+      - ./core:/app/core:ro
+      - ./clients:/app/clients:ro
 
     # Lê o banco e escreve em ./out. Não precisa de nenhuma capability.
     cap_drop: [ALL]
