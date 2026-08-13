@@ -2,7 +2,8 @@
 
 Motor de relatórios executivos em PDF (A4). Bun + Observable Plot (SSR via linkedom) → HTML
 estático → WeasyPrint → PDF. `core/` é o motor; cada `clients/<id>/` é um cliente. Hoje:
-`basf` (10 páginas, SQL Server) e `_template` (esqueleto, sem banco).
+`basf` (10 páginas, SQL Server), `vw` (11 páginas, JSON de modelo em `_intake/`, sem banco) e
+`_template` (esqueleto, sem banco).
 
 Visão geral e decisões de produto estão no `README.md`. Aqui ficam as regras de trabalho.
 
