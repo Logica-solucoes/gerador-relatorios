@@ -22,10 +22,13 @@
 .aviso .tag { font-weight: 600; color: var(--destructive); }
 
 /* Tabela de colunas da base: nome de coluna é código, não prosa. */
+/* Contraste: com --muted (#f4f4f5) o chip sumia no papel. Fundo mais fechado e
+   texto na cor do corpo, nao herdando o cinza da celula. */
 .cols code {
   font-family: ui-monospace, monospace;
   font-size: 7.5pt;
-  background: var(--muted);
+  color: var(--foreground);
+  background: #e7eaee;
   border-radius: 3px;
   padding: 0.3mm 1.2mm;
   white-space: nowrap;

@@ -9,7 +9,7 @@ export const titulo = "Volkswagen — Lead Scoring: relatório do modelo";
 /** Meio-dia UTC: sem hora fixa, "2026-07-13" vira 12/07 no fuso de São Paulo. */
 const dia = (s: string) => dt(s.slice(0, 10) + "T12:00:00Z");
 const p1 = (v: number, d = 1) => pct(v * 100, d);
-const n3 = (v: number) => num(v, 3).replace("0,", ",");
+const n3 = (v: number) => num(v, 3);
 
 /** KPI sem comparação temporal — aqui não há ano anterior, só o valor e o contexto. */
 function kpi(label: string, valor: string, unidade: string, nota: string) {

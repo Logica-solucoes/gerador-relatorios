@@ -136,15 +136,17 @@ function gGanho(series: { nome: string; modelo: Modelo; cor: string }[], height:
       fill: s.cor,
     }),
     Plot.dot([ganho(s.modelo.faixas_score)[3]!], { x: "pctBase", y: "pctConv", fill: s.cor, r: 4 }),
+    // A esquerda da linha de 30% e acima do ponto o espaco esta sempre vazio (a
+    // curva vem de baixo). A direita ela passa por cima do rotulo. Com duas
+    // series, a de baixo desce e vai pra direita, no vao entre as curvas e a
+    // diagonal — dx/dy/textAnchor sao constantes, entao e uma marca por serie.
     Plot.text([ganho(s.modelo.faixas_score)[3]!], {
       x: "pctBase",
       y: "pctConv",
       text: (r: any) => pct(r.pctConv * 100, 1),
-      dx: 9,
-      // serie unica: rotulo acima da curva. Duas series: a de baixo recebe o
-      // rotulo abaixo, senao ele cai em cima do ponto da outra.
-      dy: series.length === 1 ? -9 : i === 0 ? 16 : -17,
-      textAnchor: "start",
+      ...(series.length > 1 && i === 0
+        ? { dx: 10, dy: 16, textAnchor: "start" as const }
+        : { dx: -9, dy: -9, textAnchor: "end" as const }),
       fontSize: 10,
       fontWeight: 600,
       fill: s.cor,
@@ -203,7 +205,17 @@ function gMetricas(m: Modelo, height = 300) {
     color: { domain: conj.map(([, n]) => n), range: ["#c7d0dd", COR.accent, COR.primary] },
     marks: [
       Plot.barY(linhas, { fx: "metrica", x: "conjunto", y: "v", fill: "conjunto", rx: 2 }),
-      Plot.text(linhas, { fx: "metrica", x: "conjunto", y: "v", text: (r: any) => num(r.v, 3).replace("0,", ","), dy: -8, fontSize: 8.5, fontWeight: 600, fill: COR.dark }),
+      Plot.text(linhas, {
+        fx: "metrica",
+        x: "conjunto",
+        y: "v",
+        text: (r: any) => num(r.v, 3),
+        dy: 13,
+        fontSize: 8.5,
+        fontWeight: 600,
+        // dentro da barra: fora dela o valor do OOT caia em cima da linha de meta
+        fill: (r: any) => (r.conjunto === "Treino" ? COR.dark : "white"),
+      }),
       Plot.ruleY([{ metrica: "Recall@30%", v: META_RECALL }], { fx: "metrica", y: "v", stroke: COR.red, strokeDasharray: "3,3" }),
       Plot.text([{ metrica: "Recall@30%", v: META_RECALL }], { fx: "metrica", y: "v", // dy folgado: com -6 o rotulo caia em cima do valor da barra do OOT, que fica
       // logo abaixo da meta.
@@ -265,6 +277,12 @@ function gImportancia(m: Modelo, height: number, destacar = false) {
 /** Drill-down SHAP: que valor da variável empurra a conversão pra cima ou pra baixo. */
 function gDrill(dd: Modelo["drilldown"][number], height: number) {
   const dados = rotulosUnicos(dd.top_valores, 32);
+  // Folga no dominio: sem ela a barra mais negativa encosta na moldura e o
+  // rotulo dela cai por cima do nome da categoria, do lado de fora.
+  const vals = dados.map((r) => r.contribuicao_media);
+  const min = Math.min(0, ...vals);
+  const max = Math.max(0, ...vals);
+  const folga = (max - min) * 0.12;
   return plot({
     width: L,
     height,
@@ -272,19 +290,26 @@ function gDrill(dd: Modelo["drilldown"][number], height: number) {
     marginRight: 54,
     marginBottom: 14,
     marginTop: 6,
-    x: { label: null, grid: true, tickSize: 0, tickFormat: (v: number) => num(v, 2) },
+    x: { label: null, grid: true, tickSize: 0, tickFormat: (v: number) => num(v, 2), domain: [min - (min < 0 ? folga : 0), max + folga] },
     y: { label: null, tickSize: 0, domain: dados.map((r) => r.rot) },
     marks: [
       Plot.barX(dados, { x: "contribuicao_media", y: "rot", fill: (r: any) => (r.contribuicao_media < 0 ? COR.red : COR.accent), rx: 2 }),
-      Plot.text(dados, {
-        x: "contribuicao_media",
-        y: "rot",
-        text: (r: any) => num(r.contribuicao_media, 3).replace("0,", ","),
-        dx: 6,
-        textAnchor: "start",
-        fontSize: 8,
-        fill: COR.grey,
-      }),
+      // Duas marcas porque dx/textAnchor sao constantes: com uma so, o rotulo do
+      // valor negativo cai dentro da propria barra vermelha.
+      ...([
+        [dados.filter((r) => r.contribuicao_media >= 0), 6, "start"],
+        [dados.filter((r) => r.contribuicao_media < 0), -6, "end"],
+      ] as const).map(([linhas, dx, anchor]) =>
+        Plot.text(linhas, {
+          x: "contribuicao_media",
+          y: "rot",
+          text: (r: any) => num(r.contribuicao_media, 3),
+          dx,
+          textAnchor: anchor,
+          fontSize: 8,
+          fill: COR.grey,
+        }),
+      ),
       Plot.ruleX([0], { stroke: COR.dark }),
     ],
   });
