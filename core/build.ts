@@ -19,7 +19,7 @@ export async function gerar(client: string) {
   const pool = await conectar();
   console.log(`→ [${client}] carregando dados…`);
   const dados = await carregar(pool);
-  await pool.close();
+  await pool?.close(); // cliente sem banco (CSV, planilha) devolve null em conectar()
 
   console.log(`→ [${client}] renderizando gráficos e páginas…`);
   const theme = await Bun.file(`clients/${client}/theme.css`).text();
