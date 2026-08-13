@@ -1,0 +1,11 @@
+/* TEMPLATE — troque os valores abaixo pela paleta do cliente novo. */
+:root {
+  --primary: #3b82f6;
+  --accent: #3b82f6;
+  --accent-soft: #93c5fd;
+  --destructive: #dc2626;
+}
+
+@page {
+  @top-right { content: "Cliente Template"; }
+}
