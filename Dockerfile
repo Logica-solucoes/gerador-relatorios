@@ -28,8 +28,8 @@ WORKDIR /app
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile --omit=dev
 
-COPY --chown=bun:bun build.ts queries.ts report.ts pages.ts narrativa.ts styles.css ./
-COPY --chown=bun:bun fonts ./fonts
+COPY --chown=bun:bun core ./core
+COPY --chown=bun:bun clients ./clients
 RUN mkdir -p /app/out && chown bun:bun /app/out
 
 # Cache do fontconfig em /tmp (tmpfs no compose): com rootfs read-only qualquer
@@ -39,4 +39,4 @@ ENV HOME=/home/bun \
 USER bun
 
 # Sem HEALTHCHECK de proposito: job em batch que roda e sai — o exit code e' o sinal.
-CMD ["bun", "run", "build.ts"]
+CMD ["bun", "run", "core/build.ts"]
