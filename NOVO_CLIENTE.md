@@ -113,10 +113,10 @@ Depois do brief aprovado:
   desta base só aparecem no WeasyPrint, nunca confie só no HTML no Chrome.
 - Meça preenchimento de página com o script do `CLAUDE.md` (generalizado pro número de páginas
   do cliente novo, não necessariamente 10 como a BASF). Alvo: 88–99% por página.
-- **Datas mudam com o fuso da máquina.** `dt()` formata no fuso local do processo — o mesmo
-  relatório gerado no Windows (UTC−3) e no container (UTC) pode divergir um dia em colunas de
-  data. O container é a fonte da verdade; não persiga isso como bug ao comparar um build local
-  com o do container.
+- **Datas usam fuso fixo.** `dt()` em `core/report.ts` formata sempre em `America/Sao_Paulo`
+  (`timeZone` explícito no `Intl.DateTimeFormat`), justamente para o mesmo relatório sair igual
+  gerado no Windows ou no container. Novo `dt()`/formatador de data que você escrever num
+  cliente precisa do mesmo cuidado, senão a data muda com a máquina que rodou o build.
 
 ## Geração ≠ envio
 
