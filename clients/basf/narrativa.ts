@@ -9,7 +9,7 @@
  * dados, ela pertence a este arquivo.
  */
 import type { Dados } from "./queries";
-import { mi, pct, sinal } from "./report";
+import { mi, pct, sinal } from "../../core/report";
 
 // ── vocabulário direcional ────────────────────────────────────────────────
 export const verbo = (n: number) => (n < 0 ? "caiu" : n > 0 ? "subiu" : "ficou estável");

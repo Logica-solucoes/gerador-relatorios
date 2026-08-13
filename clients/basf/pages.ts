@@ -1,6 +1,9 @@
 import type { Dados } from "./queries";
-import { graficos as g, mi, num, pct, sinal, curto, dt, varPct, CULTURA, culturaVariacao } from "./report";
+import { graficos as g, CULTURA, culturaVariacao } from "./report";
+import { mi, num, pct, sinal, curto, dt, varPct } from "../../core/report";
 import { narrar, subst, metaCobertura, prioridadeAcao } from "./narrativa";
+
+export const titulo = "BASF Sementes — Diagnóstico Executivo YTD 2026";
 
 const hoje = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
