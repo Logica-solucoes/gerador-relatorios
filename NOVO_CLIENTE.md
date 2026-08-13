@@ -14,8 +14,9 @@ Uma pasta `clients/<id>/` com:
 - `report.ts` — exporta `graficos` (objeto de funções de gráfico) e qualquer paleta/mapeamento
   de negócio (`COR`, categorias, etc). Importa `plot`, `L` e os formatadores genéricos de
   `../../core/report`.
-- `narrativa.ts` — texto derivado dos dados (nunca hardcoded — ver `CLAUDE.md`, "Texto vs.
-  dados"). Importa formatadores de `../../core/report`.
+- `narrativa.ts` — texto derivado dos dados (nunca hardcoded — ver `README.md`, "Texto vs.
+  dados", e o precedente em `clients/basf/CLAUDE.md`). Importa formatadores de
+  `../../core/report`.
 - `narrativa.test.ts` — prova que a prosa muda quando os dados mudam.
 - `pages.ts` — exporta `documento(dados)` (HTML) e `titulo` (string do `<title>`).
 - `theme.css` — variáveis de cor (`--primary`, `--accent`, `--accent-soft`, `--destructive`)

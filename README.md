@@ -1,6 +1,8 @@
-# Relatório BASF Sementes — Diagnóstico YTD
+# Relatórios executivos em PDF
 
-Gera um PDF A4 executivo (10 páginas) a partir do SQL Server, sem browser.
+Motor que gera PDF A4 executivo a partir dos dados do cliente, sem browser. `core/` é o motor,
+cada `clients/<id>/` é um cliente. O cliente de referência é a **BASF Sementes** (diagnóstico
+YTD, 10 páginas, SQL Server) — é dela que fala o resto deste README.
 
 ## Rodar
 
@@ -42,7 +44,7 @@ boxes, que o WeasyPrint suporta e o Chrome não. O resto renderiza igual.
 Relatório recorrente não pode ter conclusão hardcoded: se na próxima rodada a receita subir,
 "a receita caiu pela metade" vira mentira ao lado de um número que diz o contrário.
 
-Toda **afirmação** é derivada em `narrativa.ts`:
+Toda **afirmação** é derivada em `clients/basf/narrativa.ts`:
 
 | Hardcoded seria | O que é gerado |
 |---|---|
@@ -70,7 +72,7 @@ bun test   # prova que a prosa vira quando os dados viram
   amplitude de portfólio; aplicá-lo por cliente produzia números que os próprios dados
   contradizem — os maiores mono-cultura já faturam bem acima da média bi-cultura.
 
-Recorte em `YTD_MES` / `ANO` / `ANO_ANT` no topo de `queries.ts`. Hoje jan–jun, 2026 vs 2025
+Recorte em `YTD_MES` / `ANO` / `ANO_ANT` no topo de `clients/basf/queries.ts`. Hoje jan–jun, 2026 vs 2025
 (dados até 25/06/2026).
 
 Convenções de código e armadilhas de renderização: `CLAUDE.md`.

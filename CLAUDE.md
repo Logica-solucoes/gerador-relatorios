@@ -1,7 +1,8 @@
 # CLAUDE.md
 
-Relatório executivo em PDF (A4, 10 páginas) gerado a partir do SQL Server `Basf-Relatorio`.
-Bun + Observable Plot (SSR via linkedom) → HTML estático → WeasyPrint → PDF.
+Motor de relatórios executivos em PDF (A4). Bun + Observable Plot (SSR via linkedom) → HTML
+estático → WeasyPrint → PDF. `core/` é o motor; cada `clients/<id>/` é um cliente. Hoje:
+`basf` (10 páginas, SQL Server) e `_template` (esqueleto, sem banco).
 
 Visão geral e decisões de produto estão no `README.md`. Aqui ficam as regras de trabalho.
 
@@ -57,7 +58,7 @@ Maior peso real, e o que fazer sobre cada um:
 Duas coisas que não podem regredir: `queries.ts` **não** tem default para nenhuma variável
 (conectar no banco errado em silêncio é pior que quebrar), e `DB_TRUST_CERT` só existe para
 cert self-signed local — ligado contra a Azure remove a proteção contra MITM. `encrypt` é
-sempre `true`. `.env` está no `.dockerignore`; não remova.
+sempre `true`. `clients/*/.env` está no `.dockerignore`; não remova.
 
 ## Verificação — obrigatória
 
@@ -73,7 +74,7 @@ Se o PDF tiver mais de 10 páginas, algo transbordou — quase sempre altura de 
 
 ### Medir preenchimento em vez de chutar
 
-As alturas dos gráficos em `report.ts` são calibradas para cada página chegar perto do fim da
+As alturas dos gráficos em `clients/<id>/report.ts` são calibradas para cada página chegar perto do fim da
 área útil (~1111px a 100dpi). Mexeu em altura? Meça, não olhe no olho:
 
 ```powershell
@@ -90,7 +91,7 @@ Alvo: 88–99%. Abaixo de 85% sobra vão visível; acima de 99% a página parte 
 ## Armadilhas do WeasyPrint (todas já custaram tempo)
 
 - **Não executa JavaScript.** Gráficos são SSR. Não introduza nada que dependa de runtime.
-- **Ignora `width`/`height` como atributo em SVG inline.** `plot()` em `report.ts` repete os dois
+- **Ignora `width`/`height` como atributo em SVG inline.** `plot()` em `core/report.ts` repete os dois
   como CSS e remove o `<style>` que o Plot injeta (`height:auto`). Sem isso todo gráfico vira um
   bloco quadrado e o PDF dobra de tamanho.
 - **Ignora `margin` em flex item.** Não use `display:flex` em card com vários `<p>` — eles colam.
