@@ -5,11 +5,14 @@ Gera um PDF A4 executivo (10 páginas) a partir do SQL Server, sem browser.
 ## Rodar
 
 ```bash
-cp .env.example .env      # e preencha
-docker compose run --rm relatorio
-# → out/relatorio.html  (estático, zero <script>)
-# → out/relatorio.pdf   (A4 retrato, numerado)
+cp clients/basf/.env.example clients/basf/.env      # e preencha
+docker compose run --rm --env-from-file clients/basf/.env -e CLIENT=basf relatorio
+# → out/basf/relatorio.html  (estático, zero <script>)
+# → out/basf/relatorio.pdf   (A4 retrato, numerado)
 ```
+
+Repositório agora serve vários clientes (`clients/<id>/`) a partir do mesmo motor
+(`core/`). Cliente novo? Ver `NOVO_CLIENTE.md`.
 
 Sem defaults no código: variável faltando falha na hora, em vez de conectar no banco errado.
 
@@ -19,7 +22,7 @@ verdade. Só instância local com cert self-signed precisa de `=true`.
 Banco na própria máquina? `localhost` no `.env` é o próprio container:
 
 ```bash
-docker compose run -e DB_HOST=host.docker.internal --rm relatorio
+docker compose run --rm --env-from-file clients/basf/.env -e CLIENT=basf -e DB_HOST=host.docker.internal relatorio
 ```
 
 ## Iterar no design
@@ -27,8 +30,8 @@ docker compose run -e DB_HOST=host.docker.internal --rm relatorio
 O container só é necessário para o PDF:
 
 ```bash
-bun run build.ts          # gera out/relatorio.html
-start out/relatorio.html  # Chrome, reload instantâneo
+CLIENT=basf bun --env-file=clients/basf/.env run core/build.ts   # gera out/basf/relatorio.html
+start out/basf/relatorio.html                                    # Chrome, reload instantâneo
 ```
 
 No Chrome o número de página e o cabeçalho corrido não aparecem — são CSS Paged Media margin
