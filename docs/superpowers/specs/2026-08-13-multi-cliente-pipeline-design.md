@@ -31,13 +31,14 @@ cliente novo via agente de IA (`NOVO_CLIENTE.md`, ver seção própria abaixo). 
 ```
 core/                          # motor compartilhado (client-agnostic)
 ├── build.ts                    # gerar(client): importa módulos do cliente, gera html/pdf
-├── report.ts                   # helpers de plot/SSR
+├── report.ts                   # só plot() (SSR) + formatadores (mi, num, pct, sinal, dt, varPct, curto)
 ├── styles.base.css             # CSS base com var(--accent) etc
 └── fonts/
 
 clients/
 ├── basf/
 │   ├── queries.ts               # migrado do root, sem mudança de lógica
+│   ├── report.ts                # COR (paleta dos gráficos), CULTURA, graficos/gXxx — migrado do root
 │   ├── narrativa.ts
 │   ├── narrativa.test.ts
 │   ├── pages.ts
@@ -46,6 +47,7 @@ clients/
 │   └── .env.example
 └── _template/                   # esqueleto pra copiar em cliente novo
     ├── queries.ts                # com TODOs, dados mock
+    ├── report.ts                 # COR mock + 1 gráfico de exemplo
     ├── narrativa.ts
     ├── narrativa.test.ts
     ├── pages.ts
@@ -60,22 +62,47 @@ out/<client>/relatorio.html, relatorio.pdf
 
 ## Contrato cliente ↔ motor
 
-`core/build.ts` importa dinamicamente `clients/${CLIENT}/queries.ts` (precisa exportar
-`conectar`, `carregar`) e `clients/${CLIENT}/pages.ts` (precisa exportar `documento`) — é o
-mesmo contrato que já existe hoje entre `build.ts`, `queries.ts` e `pages.ts`, só descrito
+`core/build.ts` importa dinamicamente, de `clients/${CLIENT}/`:
+- `queries.ts` (precisa exportar `conectar`, `carregar`)
+- `pages.ts` (precisa exportar `documento`)
+
+e concatena `clients/${CLIENT}/theme.css` + `core/styles.base.css` no HTML final. É o mesmo
+contrato que já existe hoje entre `build.ts`, `queries.ts` e `pages.ts`, só descrito
 explicitamente, não um `interface` TypeScript novo. Formalizar um tipo compartilhado fica pra
 quando um terceiro cliente real expuser o que de fato varia — hoje seria abstração sem
 segundo uso comprovado (o `_template` conta como prova de forma, não de tipo).
+
+`pages.ts` do cliente importa o `report.ts` do próprio cliente (gráficos), que por sua vez
+importa `plot()` e os formatadores de `core/report.ts` — mesma cadeia de import que existe
+hoje (`pages.ts` → `report.ts`), só que agora `report.ts` também é por cliente. `build.ts` não
+importa `report.ts` diretamente em nenhum dos dois níveis.
 
 `build.ts` deixa de ser só um script top-level e exporta uma função `gerar(client: string)`.
 O script CLI vira uma casca fina que lê `CLIENT` do ambiente e chama `gerar`. Isso custa quase
 nada agora e evita reescrever a orquestração quando a API existir de verdade.
 
-## CSS / paleta por cliente
+## Cor por cliente: dois lugares, sem sincronização automática
 
-`core/styles.base.css` usa `var(--accent)`, `var(--accent-2)` etc onde hoje há cor fixa. Cada
-`clients/<id>/theme.css` só define os valores dessas variáveis. O build concatena
-`theme.css` do cliente + `styles.base.css` (nessa ordem, pra variável do cliente valer).
+O que muda entre clientes é sobretudo a paleta — mas a paleta tem dois consumidores diferentes
+hoje, e cada um continua com sua própria cópia dos valores (achado durante o desenho: o
+`styles.css` atual já duplica os mesmos hex do `report.ts` à mão, então isso não é regressão,
+é o padrão já existente formalizado por cliente):
+
+- **CSS** (`clients/<id>/theme.css`) — `core/styles.base.css` usa `var(--accent)`,
+  `var(--primary)` etc onde hoje há cor fixa; cada `theme.css` só define os valores dessas
+  variáveis. O build concatena `theme.css` do cliente + `styles.base.css` (nessa ordem, pra
+  variável do cliente valer). Também é onde mora o `@top-right { content: "..." }` do `@page`
+  com o nome do cliente/período no cabeçalho impresso (hoje hardcoded "BASF Sementes · YTD
+  2026" em `styles.css`) — `core/styles.base.css` declara a estrutura do `@page` (tamanho,
+  margem, `@bottom-right` com contador, `@top-left` com `string(secao)`) sem `content` no
+  `@top-right`; o `theme.css` do cliente sobrescreve só essa propriedade.
+- **Gráficos** (`clients/<id>/report.ts`) — `COR` é um objeto TS simples (hex string) usado
+  como `fill`/`stroke` nas specs do Plot, porque isso vira atributo de apresentação no SVG, não
+  CSS. Cada cliente define o próprio `COR` com os mesmos ~5 tons do `theme.css`.
+
+Sem geração automática de um a partir do outro — são ~5 valores, editar os dois na mão ao
+criar cliente novo é mais simples que um passo de build extra pra manter sincronizado. Revisar
+se algum dia isso realmente doer (cliente com paleta grande, ou os dois arquivos divergindo).
 
 ## Env / segredos por cliente
 
@@ -124,9 +151,12 @@ manual entre os dois.
 ## Migração da BASF (resumo, detalhado no plano de implementação)
 
 - Mover `queries.ts`, `narrativa.ts`, `narrativa.test.ts`, `pages.ts` pra `clients/basf/`.
-- Extrair paleta atual de `styles.css` pra `clients/basf/theme.css`; o resto vira
-  `core/styles.base.css`.
-- Mover `build.ts`, `report.ts`, `fonts/` pra `core/`.
+- Dividir `report.ts`: `plot()` + formatadores vão pra `core/report.ts`; `COR`, `CULTURA`,
+  `graficos`, `culturaVariacao` e todo `gXxx` vão pra `clients/basf/report.ts`.
+- Extrair paleta atual (`:root { --primary/--accent/--accent-soft/--destructive }`) de
+  `styles.css` pra `clients/basf/theme.css`, junto com o `content` do `@top-right` ("BASF
+  Sementes · YTD 2026"); o resto vira `core/styles.base.css`.
+- Mover `build.ts`, `fonts/` pra `core/`.
 - Mover `.env` atual pra `clients/basf/.env` (e `.env.example`).
 - Atualizar `Dockerfile` e `compose.yaml` pros novos caminhos e mounts de diretório.
 - Atualizar `CLAUDE.md`/`README.md` pra refletir a nova estrutura (comandos, caminhos,
@@ -175,10 +205,10 @@ fontes possíveis, em qualquer combinação:
 4. **Brief de descoberta** — documento curto (regras de negócio levantadas + rascunho de
    divisão de páginas/narrativa) que o humano aprova **antes** de qualquer código ser escrito.
    Mesmo padrão spec-first usado neste próprio design.
-5. **Implementação** — `clients/<id>/{queries,narrativa,pages}.ts`, `narrativa.test.ts`,
-   `theme.css`, seguindo o contrato do `core` (`conectar`/`carregar`/`documento`) e as regras já
-   documentadas no `CLAUDE.md` (texto vs. dado sempre derivado com teste, armadilhas WeasyPrint,
-   armadilhas Plot).
+5. **Implementação** — `clients/<id>/{queries,report,narrativa,pages}.ts`, `narrativa.test.ts`,
+   `theme.css`, seguindo o contrato do `core` (`conectar`/`carregar`/`documento`, `report.ts` do
+   cliente com sua paleta `COR` própria) e as regras já documentadas no `CLAUDE.md` (texto vs.
+   dado sempre derivado com teste, armadilhas WeasyPrint, armadilhas Plot).
 6. **Verificação** — `bun test`, `build.ts`, renderizar PDF, medir preenchimento de página
    (mesmo script do `CLAUDE.md`, generalizado pro número de páginas daquele cliente em vez de
    fixar 10 como a BASF).
