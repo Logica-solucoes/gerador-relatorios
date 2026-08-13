@@ -56,6 +56,8 @@ ${documento(dados)}
 
 if (import.meta.main) {
   const client = process.env.CLIENT;
-  if (!client) throw new Error("CLIENT não definida. Ex: CLIENT=basf bun run core/build.ts");
+  // O .env vive em clients/<id>/, fora do cwd — o auto-load do Bun nao o pega,
+  // dai o --env-file explicito. Sem ele a falha e' um DB_HOST ausente confuso.
+  if (!client) throw new Error("CLIENT não definida. Ex: CLIENT=basf bun --env-file=clients/basf/.env run core/build.ts");
   await gerar(client);
 }
