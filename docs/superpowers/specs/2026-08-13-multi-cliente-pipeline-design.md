@@ -131,6 +131,9 @@ manual entre os dois.
 - Atualizar `Dockerfile` e `compose.yaml` pros novos caminhos e mounts de diretório.
 - Atualizar `CLAUDE.md`/`README.md` pra refletir a nova estrutura (comandos, caminhos,
   a armadilha de mount que deixa de existir).
+- Apagar `out/relatorio.html` e `out/relatorio.pdf` (artefato de build antigo, não versionado —
+  `out` já está no `.gitignore` e continua cobrindo `out/<client>/` sem mudança nenhuma; o build
+  novo escreve em `out/basf/` e deixa os arquivos da raiz órfãos).
 
 ## Onboarding de cliente novo via agente de IA
 
