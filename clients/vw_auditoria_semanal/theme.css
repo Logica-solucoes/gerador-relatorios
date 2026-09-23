@@ -1,0 +1,128 @@
+/* Paleta Volkswagen sobre o CSS base (core/styles.base.css). Mesma dos outros
+   dois relatórios VW — os três circulam no mesmo time.
+
+   Este é o relatório semanal: duas páginas, densidade alta, sem capa e sem
+   índice. Tudo aqui existe para caber em A4 sem partir — mexer em padding ou
+   font-size de qualquer bloco abaixo estoura a página. Meça antes (ver
+   CLAUDE.md da raiz, "Medir preenchimento em vez de chutar"). */
+:root {
+  --primary: #001e50;      /* VW Dark Blue */
+  --accent: #0073c4;       /* VW Light Blue escurecido p/ contraste em papel */
+  --accent-soft: #7fd8ff;
+  --destructive: #c40c1e;
+  --bom: #0073c4;
+  --ruim: #c40c1e;
+}
+
+@page {
+  @top-right { content: "Volkswagen · Auditoria semanal · " counter(page); }
+  /* sem @top-left: não há <h2> nestas páginas para alimentar string(secao) */
+}
+
+/* ── cabeçalho de página ──────────────────────────────────────────────────
+   Duas páginas independentes, cada uma com o próprio cabeçalho: o relatório
+   circula impresso e as folhas se separam. */
+.capa-semanal {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 2.5mm;
+  margin-bottom: 4mm;
+}
+.capa-semanal .periodo { font-size: 8.5pt; text-align: right; line-height: 1.4; }
+/* nowrap: "Auditoria de Leads" quebrava em duas linhas e desalinhava o
+   cabeçalho inteiro, porque o flex aperta o item da esquerda primeiro. */
+.capa-semanal .logo { white-space: nowrap; }
+
+.titulo-semanal { font-size: 20pt; margin-bottom: 1.5mm; }
+.sub { font-size: 8.5pt; line-height: 1.45; max-width: 100%; }
+
+/* ── KPI ──────────────────────────────────────────────────────────────────
+   O delta é irmão de .value, não filho: .value é nowrap no core, e a seta
+   dentro dele empurrava o número para fora do card em rótulo longo. */
+.kpi .label { line-height: 1.25; min-height: 2.4em; }
+.kpi .value { font-size: 17pt; }
+.kpi .delta { font-size: 8pt; font-weight: 600; display: block; margin-top: 0.5mm; }
+.kpi .delta.flat { color: var(--muted-foreground); }
+
+/* ── bom / ruim ───────────────────────────────────────────────────────────
+   Borda esquerda colorida em vez de fundo chapado: impresso, fundo colorido
+   em bloco desse tamanho come toner e escurece o texto. */
+.card.bom  { border-left: 3px solid var(--bom); }
+.card.ruim { border-left: 3px solid var(--ruim); }
+.card.bom h3  { color: var(--bom); }
+.card.ruim h3 { color: var(--ruim); }
+
+.bullets { list-style: none; margin-top: 1.5mm; }
+.bullets li {
+  font-size: 8.5pt;
+  line-height: 1.4;
+  padding-left: 3.5mm;
+  position: relative;
+  margin-top: 1.3mm;
+}
+/* bullet desenhado com ::before e position:absolute — list-style-position e
+   text-indent dão resultados diferentes no WeasyPrint e no Chrome. */
+.bullets li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 1.5mm;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+/* ── tabelas compactas ────────────────────────────────────────────────────
+   Três tabelas dividem as duas páginas com quatro gráficos. Com o padding
+   padrão do core (1.7mm) a segunda página parte. */
+.compacta { font-size: 8pt; }
+.compacta thead th { font-size: 7pt; padding-bottom: 1mm; }
+.compacta tbody td { padding: 1.15mm 1.6mm; }
+/* Recorte abaixo do piso de amostra: cinza em vez de sumir do relatório.
+   Esconder tiraria a lição de que aquele número não sustenta leitura. */
+.compacta tr.fraca td { color: var(--muted-foreground); }
+.compacta .aviso-n { color: var(--destructive); font-weight: 600; }
+.compacta .tag-nova { color: var(--destructive); font-size: 6.5pt; font-weight: 600; text-transform: uppercase; }
+
+/* ── legenda ──────────────────────────────────────────────────────────────
+   HTML e não a nativa do Plot: a nativa injeta um <style> extra que o plot()
+   do core não limpa, e o SVG sai sem altura no WeasyPrint. */
+.legenda { font-size: 8pt; color: var(--muted-foreground); margin-top: 1.5mm; }
+.legenda .item { white-space: nowrap; margin-right: 4mm; }
+.legenda .sw {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  margin-right: 1.5mm;
+  vertical-align: baseline;
+}
+
+/* ── o que aprendi ────────────────────────────────────────────────────────
+   Block com borda, não flex nem grid: os dois quebram com <p> dentro no
+   WeasyPrint, e margin em flex item é ignorada (ver CLAUDE.md da raiz). */
+.aprendi { margin-top: 1.5mm; }
+.aprendi .item {
+  border-left: 2px solid var(--accent-soft);
+  padding: 0 0 0 3mm;
+  margin-bottom: 1.8mm;
+  font-size: 8.5pt;
+  line-height: 1.42;
+}
+.aprendi .item:last-child { margin-bottom: 0; }
+
+/* Rodapé de cada página: ancorado no fluxo, não absoluto — as duas páginas têm
+   altura de conteúdo variável (o número de bullets depende do dado). */
+.rodape-semanal {
+  margin-top: 4mm;
+  padding-top: 2.5mm;
+  border-top: 1px solid var(--border);
+  line-height: 1.4;
+}
+
+figcaption { margin-top: 1.2mm; line-height: 1.4; }
+section + section { margin-top: 3.5mm; }
+h3 { font-size: 9.5pt; }
