@@ -156,7 +156,12 @@ svg text, svg tspan { white-space: pre; font-family: Geist, sans-serif; }
   font-variant-numeric: tabular-nums; font-size: 8pt;
 }
 .logo { display: flex; align-items: center; gap: 2.5mm; font-weight: 600; font-size: 11pt; letter-spacing: -0.01em; }
-.logo .mark { width: 11px; height: 11px; background: var(--accent-soft); border-radius: 2px; }
+/* a imagem da logo Dash entra via build.ts (base64), igual as fontes.
+   flex-shrink:0 porque, com .logo dentro de outro flex (capa semanal), o
+   WeasyPrint encolhia o span vazio a zero e a logo sumia. */
+.logo .mark { width: 5mm; height: 5mm; flex-shrink: 0; background: center / contain no-repeat; }
+/* logo Sala de Performance (vw*): tem texto, abaixo de ~9mm fica ilegivel */
+.logo .mark.vw { width: 14.5mm; height: 9mm; }
 .logo .sub { color: var(--muted-foreground); font-weight: 400; }
 
 /* ── plano de acao ──────────────────────────────────────────────────────── */

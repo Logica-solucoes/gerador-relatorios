@@ -11,6 +11,12 @@ async function fontes() {
   return faces.join("\n");
 }
 
+async function logos() {
+  const b64 = async (f: string) => Buffer.from(await Bun.file(f).arrayBuffer()).toString("base64");
+  return `.logo .mark{background-image:url(data:image/png;base64,${await b64("core/dash.png")})}
+.logo .mark.vw{background-image:url(data:image/png;base64,${await b64("core/vw.png")})}`;
+}
+
 /** Gera HTML (e PDF, se weasyprint estiver disponível) pra um cliente. */
 export async function gerar(client: string) {
   const { conectar, carregar } = await import(`../clients/${client}/queries.ts`);
@@ -22,6 +28,10 @@ export async function gerar(client: string) {
   await pool?.close(); // cliente sem banco (CSV, planilha) devolve null em conectar()
 
   console.log(`→ [${client}] renderizando gráficos e páginas…`);
+  // base primeiro, theme depois: com especificidade igual quem vem por último
+  // vence, e é o theme do cliente que tem de sobrescrever. Na ordem inversa
+  // `.capa .rodape` do theme era silenciosamente ignorado pelo `.capa .rodape`
+  // da base — o rodapé da capa saía desenhado por cima do índice, sem erro.
   const theme = await Bun.file(`clients/${client}/theme.css`).text();
   const base = await Bun.file("core/styles.base.css").text();
   const html = `<!doctype html>
@@ -31,8 +41,9 @@ export async function gerar(client: string) {
 <title>${titulo}</title>
 <style>
 ${await fontes()}
-${theme}
 ${base}
+${await logos()}
+${theme}
 </style>
 </head>
 <body>
