@@ -1,0 +1,100 @@
+/* Paleta Volkswagen sobre o CSS base (core/styles.base.css). Mesma do relatório
+   de Lead Scoring — os dois documentos circulam juntos no mesmo time. */
+:root {
+  --primary: #001e50;      /* VW Dark Blue */
+  --accent: #0073c4;       /* VW Light Blue escurecido p/ contraste em papel */
+  --accent-soft: #7fd8ff;
+  --destructive: #c40c1e;
+}
+
+@page {
+  @top-right { content: "Volkswagen · Auditoria de Leads · " counter(page); }
+}
+
+/* Os três tipos de bloco explicativo. São a espinha do relatório: cada gráfico
+   tem "como ler" (neutro), "o que aparece aqui" (derivado do dado) e, onde o
+   gráfico engana, "cuidado" (vermelho). Cores distintas porque o leitor precisa
+   distinguir regra de leitura de achado do período. */
+/* O .callout do core não tem margin-top: quem vem depois de um `.row`, de uma
+   tabela ou de um gráfico colava no elemento acima. Aqui todo callout ganha
+   respiro, e a pilha callout-sobre-callout continua mais fechada que o resto. */
+.callout { font-size: 9pt; margin-top: 4mm; }
+.callout + .callout { margin-top: 3mm; }
+.callout.achado {
+  border-left-color: var(--primary);
+  background: #f4f7fb;
+}
+.callout.achado .tag { color: var(--primary); }
+.callout.alerta .tag { color: var(--destructive); }
+
+/* Rótulo de KPI em duas linhas ("Perdidas para a concorrência") empurrava só
+   aquele valor para baixo e desalinhava a fileira inteira. Duas linhas de altura
+   fixa: card de rótulo curto sobra espaço, e os números ficam na mesma linha. */
+.kpi .label { line-height: 1.25; min-height: 2.5em; }
+
+/* Legenda em HTML (ver `legenda()` em report.ts — a nativa do Plot quebra a
+   altura do SVG no WeasyPrint). Sem flex: margin em flex item é ignorada. */
+.legenda {
+  font-size: 8pt;
+  color: var(--muted-foreground);
+  margin-top: 1.5mm;
+  line-height: 1.9;
+}
+/* nowrap por item: sem isso "Desisti de comprar" quebra entre o quadradinho e o
+   texto, e a legenda vira duas linhas desalinhadas. */
+.legenda .item { white-space: nowrap; margin-right: 4mm; }
+.legenda .sw {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  margin-right: 1.5mm;
+  vertical-align: baseline;
+}
+
+/* Fluxo em 4 blocos da página "o que é a auditoria". Block, não flex nem grid:
+   os dois quebram com <p> dentro no WeasyPrint. A numeração é o que dá a leitura
+   sequencial sem depender de seta desenhada. */
+.fluxo { margin-top: 3mm; }
+.passo {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 3mm 4mm;
+  margin-bottom: 2.5mm;
+}
+.passo .n {
+  display: inline-block;
+  width: 5mm;
+  font-weight: 700;
+  color: var(--accent);
+}
+.passo p { margin-top: 1mm; margin-left: 5mm; }
+
+/* Tabela das perguntas: a primeira coluna é fala do cliente, então vira itálico
+   e ganha metade da largura. */
+.perguntas td:first-child { width: 38%; font-style: italic; }
+.perguntas td { vertical-align: top; padding-top: 4.4mm; padding-bottom: 4.4mm; }
+
+/* Os 4 passos do cálculo de perdas dividem a página com dois blocos de KPI e uma
+   tabela por regional — com os 5mm de respiro do .acao do core a página parte. */
+.acao.passos td { padding-top: 2.6mm; padding-bottom: 2.6mm; }
+
+/* Mesma cara da tabela de perguntas, mas linha curta: esta divide a página com
+   dois blocos de KPI e um callout — com o respiro de .perguntas a página parte. */
+.cartoes td:first-child { width: 42%; font-style: italic; }
+.cartoes td { vertical-align: top; padding-top: 1.1mm; padding-bottom: 1.1mm; }
+
+/* Glossário: 16 verbetes numa página só com a linha mais apertada que a das
+   outras tabelas. Se folgar isso, a página parte em duas. */
+.glos td { padding-top: 2.4mm; padding-bottom: 2.4mm; }
+
+/* Capa: 19 seções no índice enchem a página sozinhas. O `.rodape` do core é
+   ancorado com position:absolute, então não é empurrado por nada — com o índice
+   crescido ele saía desenhado POR CIMA das últimas linhas, sem quebrar o build.
+   Aqui a capa volta a fluir e o rodapé cai naturalmente no pé. */
+.capa { height: auto; }
+.capa .rodape { position: static; margin-top: 6mm; }
+.capa .topo { margin-bottom: 11mm; }
+.indice { margin-top: 5mm; }
+.indice li { padding-top: 0.8mm; padding-bottom: 0.8mm; }
