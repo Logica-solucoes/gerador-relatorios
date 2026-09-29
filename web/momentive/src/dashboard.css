@@ -1,0 +1,341 @@
+/* ===========================================================================
+   Dashboard Momentive — exportação · BFM Transportes
+
+   Tudo escopado sob .mtv para conviver com o CSS do portal Aurelia.
+   Nada aqui toca em `body`/`html`: o hospedeiro define o próprio fundo.
+   =========================================================================== */
+.mtv {
+  /* --- paleta: navy BFM (#2C4870) preservado como âncora ------------------ */
+  --navy-900: #162438;   /* oklch(.258 .043 257) — hero                     */
+  --navy-700: #22375A;
+  --navy:     #2C4870;   /* oklch(.399 .076 257) — marca BFM, série FCL     */
+  --navy-400: #4D6991;
+
+  /* Sistema de DUAS cores: navy estrutura, laranja é o contraponto.
+     O laranja é cor de CATEGORIA (LCL nos gráficos por modal, trânsito no
+     ciclo), não mais só marca de alerta — travá-lo em "alerta" deixava o dash
+     monocromático. LCL e trânsito nunca aparecem no mesmo gráfico: o ciclo é
+     exclusivo de FCL, então não há ambiguidade.                             */
+  --et-espera:    #B4C6DA;
+  --et-estufagem: #162438;
+  --et-transito:  #CC7C2F;
+
+  --accent:      #CC7C2F;  /* laranja BFM — série LCL, trânsito, fills      */
+  --accent-ink:  #9A5817;  /* mesma cor escurecida p/ TEXTO pequeno (5,6:1) */
+  --accent-bg:   #FBEAD6;
+  --accent-line: #E8C9A4;
+
+  --bg:      #FAFBFC;   /* near-white puxado p/ o hue da marca, não p/ creme */
+  --surface: #FFFFFF;
+  --panel:   #F2F4F7;   /* segunda camada neutra: cabeçalhos, thead         */
+
+  --ink:   #111C2E;     /* 16,5:1                                            */
+  --muted: #55637A;     /*  5,9:1                                            */
+  --faint: #66717F;     /*  4,8:1 — labels pequenos ainda passam AA          */
+
+  --border: #E3E7ED;
+  --border-strong: #D5DBE4;
+
+  /* --- hero: cores sobre o navy escuro ------------------------------------
+     O hero tem DUAS zonas de scrim (ver --scrim). Cada cor abaixo foi conferida
+     contra o pior caso possível: uma foto totalmente branca por baixo.       */
+  --hero-topo:   #D8E2EE;   /* crumb e período — vivem na zona da foto: 4,8:1 */
+  --hero-num:    #FFFFFF;   /* 14,4:1 */
+  --hero-label:  #9DB0CC;   /*  6,5:1 */
+  --hero-sub:    #8398B5;   /*  4,9:1 */
+  --hero-pior:   #E8A765;   /*  6,9:1 — só quando o indicador piorou         */
+  --hero-linha:  rgba(255,255,255,.14);
+
+  /* --- imagem de fundo do hero -------------------------------------------
+     Para ligar a foto, o host sobrescreve o background-image reusando o scrim:
+
+         .mtv-hero { background-image: var(--scrim), url("/assets/porto.jpg"); }
+
+     A url fica NA FOLHA DO HOST, de propósito. Não a coloque dentro de uma
+     custom property (`--img: url(...)`): o Chromium resolve url() de variável
+     relativa à folha que CONSOME a variável — aqui, este arquivo — e não à que
+     declara. Um caminho relativo escrito no host viraria `src/…` e daria 404
+     silencioso, com o hero renderizando navy chapado e nenhum erro no console.
+
+     Sem override, sobra só o gradiente sobre --navy-900: o dash não quebra.
+
+     O scrim tem duas zonas, e a divisão não é estética:
+       0–70px    (70–78%) — crumb, título e período. Texto grande ou clarinho
+                            o bastante para a régua daqui. A foto aparece.
+       112px+    (99–100%) — a linha de KPIs: texto pequeno, régua de 4,5:1.
+                            Vira navy sólido; o dado nunca disputa com a foto.
+
+     As paradas são em PIXELS, não em porcentagem, de propósito. Em % elas
+     escorregam quando o hero muda de altura (KPI quebrando linha no mobile,
+     título em duas linhas) e a faixa de KPIs cai numa zona clara — foi
+     exatamente o que reprovou na primeira medição. O bloco do título tem
+     altura fixa (~112px), então ancorar nele é estável.
+
+     Se você clarear a base para "ver mais foto", o texto pequeno reprova AA na
+     primeira foto com céu claro. Meça antes: renderize o hero com
+     `color: transparent` e compare o pixel mais claro de cada banda de texto. */
+  --scrim: linear-gradient(180deg,
+             rgba(22,36,56,.70) 0,
+             rgba(22,36,56,.78) 70px,
+             rgba(22,36,56,.99) 112px,
+             rgba(22,36,56,1)  140px);
+
+  --coluna: 1500px;   /* largura útil; a faixa escura sangra, o conteúdo não */
+  --r: 10px;
+  --shadow: 0 1px 2px rgba(17,28,46,.04), 0 1px 3px rgba(17,28,46,.06);
+  --ease: cubic-bezier(.22,1,.36,1);
+
+  /* escala de tipo fixa (product register: nada de clamp fluido) */
+  --t-micro: .6875rem;  /* 11px */
+  --t-sm:    .8125rem;  /* 13px */
+  --t-base:  .875rem;   /* 14px */
+  --t-lg:    1.0625rem;
+  --t-xl:    1.5rem;
+  --t-num:   2.25rem;   /* KPI no hero: é a âncora da página                */
+
+  /* z-index semântico */
+  --z-sticky: 10;
+  --z-tooltip: 40;
+
+  font-family: Geist, ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--t-base);
+  font-feature-settings: "tnum" 1, "cv05" 1;  /* tabular por padrão: é um dash de números */
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+.mtv *, .mtv *::before, .mtv *::after { box-sizing: border-box; }
+.mtv :focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; border-radius: 4px; }
+.mtv-hero :focus-visible { outline-color: #fff; }
+
+/* ─── hero ────────────────────────────────────────────────────────────────── */
+.mtv-hero {
+  background-color: var(--navy-900);          /* fallback se a imagem falhar */
+  background-image: var(--scrim);          /* o host acrescenta a foto — ver acima */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: #fff;
+  padding: 20px 28px 0;
+}
+.mtv-hero__inner { max-width: var(--coluna); margin-inline: auto; }
+
+.mtv-hero__row { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.mtv-crumb { font-size: var(--t-micro); color: var(--hero-topo); margin-bottom: 7px; }
+.mtv-crumb b { color: #fff; font-weight: 500; }
+.mtv-hero h1 { margin: 0; font-size: var(--t-xl); font-weight: 600; letter-spacing: -.02em; }
+.mtv-hero__meta { font-size: var(--t-sm); color: var(--hero-topo); margin-top: 5px; }
+
+/* Segmented control — afford padrão, não reinventado.
+   O fundo é navy translúcido, não branco: o controle fica na zona da foto e
+   um véu claro somava luz justo onde o rótulo inativo precisa de 4,5:1.     */
+.mtv-seg { display: inline-flex; background: rgba(22,36,56,.55); border-radius: 8px; padding: 3px; gap: 2px; }
+.mtv-seg button {
+  font: inherit; font-size: var(--t-sm); font-weight: 500;
+  color: var(--hero-topo); background: none; border: 0; cursor: pointer;
+  padding: 6px 15px; border-radius: 6px;
+  transition: background 160ms var(--ease), color 160ms var(--ease);
+}
+.mtv-seg button:hover { background: rgba(255,255,255,.12); color: #fff; }
+.mtv-seg button:active { transform: translateY(.5px); }
+.mtv-seg button[aria-pressed="true"] { background: #fff; color: var(--navy-900); font-weight: 600; }
+
+/* --- KPIs dentro do hero ------------------------------------------------- */
+/* Ficam na faixa escura, não em cards brancos: é o que ancora a página e
+   quebra o ritmo de seis retângulos iguais empilhados.                      */
+.mtv-kpis { display: flex; flex-wrap: wrap; margin-top: 22px; }
+.mtv-kpi { flex: 1 1 220px; padding: 0 24px 22px; border-left: 1px solid var(--hero-linha); }
+.mtv-kpi:first-child { border-left: 0; padding-left: 0; }
+.mtv-kpi__k { font-size: var(--t-micro); font-weight: 500; color: var(--hero-label); }
+.mtv-kpi__v {
+  font-size: var(--t-num); font-weight: 600; letter-spacing: -.03em;
+  line-height: 1.1; margin-top: 6px; color: var(--hero-num);
+  display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap;
+}
+.mtv-kpi__v small { font-size: var(--t-base); font-weight: 500; color: var(--hero-label); letter-spacing: 0; }
+.mtv-kpi__sub { font-size: var(--t-micro); color: var(--hero-sub); margin-top: 4px; }
+.mtv-kpi svg { display: block; margin-top: 11px; overflow: visible; }
+
+/* Delta mês a mês. Laranja só quando piorou — coerente com "laranja = olhe aqui".
+   Melhora não precisa chamar atenção, então fica neutra.                     */
+.mtv-delta { font-size: var(--t-sm); font-weight: 500; letter-spacing: 0; color: var(--hero-label); white-space: nowrap; }
+.mtv-delta--pior { color: var(--hero-pior); }
+
+/* ─── corpo ───────────────────────────────────────────────────────────────── */
+.mtv-body {
+  padding: 24px 28px 40px; display: flex; flex-direction: column; gap: 20px;
+  max-width: var(--coluna); margin-inline: auto;   /* sem o auto, cola na esquerda em tela larga */
+}
+
+/* --- seções --------------------------------------------------------------- */
+.mtv-sec { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--shadow); }
+.mtv-sec__hd { padding: 16px 22px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+.mtv-sec__hd h2 { margin: 0; font-size: var(--t-lg); font-weight: 600; letter-spacing: -.014em; }
+.mtv-sec__hd p { margin: 4px 0 0; font-size: var(--t-sm); color: var(--muted); max-width: 78ch; text-wrap: pretty; }
+.mtv-sec__bd { padding: 16px 22px 20px; }
+
+/* Contexto é secundário: título menor, menos respiro. A hierarquia é o que
+   impede a página de virar uma pilha de caixas de peso idêntico.            */
+.mtv-sec--ctx .mtv-sec__hd { padding: 13px 18px 11px; }
+.mtv-sec--ctx .mtv-sec__hd h2 { font-size: var(--t-base); }
+.mtv-sec--ctx .mtv-sec__bd { padding: 12px 18px 16px; }
+/* min(400px, 100%), não 400px cru: com o container mais estreito que 400px
+   (mobile, ou o dash embutido num painel estreito do Aurelia) um mínimo fixo
+   força a track a ficar maior que o pai e a página ganha scroll horizontal
+   inteiro — os dois gráficos desta grade eram cortados na lateral. */
+.mtv-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr)); gap: 20px; }
+
+/* Tira do ciclo: onde o tempo do ciclo inteiro é gasto, em % */
+.mtv-tira { display: flex; height: 30px; border-radius: 6px; overflow: hidden; margin-bottom: 4px; }
+.mtv-tira span {
+  display: flex; align-items: center; justify-content: center;
+  font-size: var(--t-micro); font-weight: 600; white-space: nowrap; overflow: hidden;
+}
+.mtv-tira__leg { display: flex; gap: 18px; flex-wrap: wrap; font-size: var(--t-micro); color: var(--muted); margin-bottom: 16px; }
+.mtv-tira__leg span { display: inline-flex; align-items: center; gap: 6px; }
+.mtv-tira__leg i { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+
+/* legenda */
+.mtv-leg { display: flex; gap: 16px; flex-wrap: wrap; font-size: var(--t-micro); color: var(--muted); }
+.mtv-leg span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.mtv-leg i { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.mtv-leg i.sq { border-radius: 2px; }
+.mtv-leg i.dash { width: 14px; height: 0; border-radius: 0; border-top: 1.5px dashed var(--navy-400); }
+
+/* --- estado vazio que ensina --------------------------------------------- */
+.mtv-empty { padding: 44px 24px; text-align: center; }
+.mtv-empty strong { display: block; font-size: var(--t-base); font-weight: 600; margin-bottom: 6px; }
+.mtv-empty p { margin: 0 auto; font-size: var(--t-sm); color: var(--muted); max-width: 52ch; text-wrap: pretty; }
+
+/* --- tabela --------------------------------------------------------------- */
+.mtv-tw { max-height: 480px; overflow: auto; border-radius: 0 0 var(--r) var(--r); }
+.mtv-tb { width: 100%; border-collapse: collapse; font-size: var(--t-sm); }
+.mtv-tb th {
+  position: sticky; top: 0; z-index: var(--z-sticky);
+  background: var(--panel); color: var(--faint);
+  font-size: var(--t-micro); font-weight: 600; text-align: left;
+  padding: 9px 16px; white-space: nowrap;
+  border-bottom: 1px solid var(--border-strong);
+}
+.mtv-tb th.n, .mtv-tb td.n { text-align: right; }
+.mtv-tb td { padding: 9px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; white-space: nowrap; }
+.mtv-tb tbody tr { transition: background 120ms var(--ease); }
+.mtv-tb tbody tr:hover { background: #F7F9FB; }
+.mtv-tb tbody tr:last-child td { border-bottom: 0; }
+.mtv-mono { font-family: "Geist Mono", ui-monospace, SFMono-Regular, monospace; font-size: var(--t-micro); color: var(--muted); }
+.mtv-tb .ref { font-weight: 500; color: var(--ink); }
+
+/* chips */
+.mtv-chip { display: inline-block; font-size: var(--t-micro); font-weight: 500; padding: 2px 7px; border-radius: 4px; line-height: 1.5; }
+/* Os chips espelham a cor da série no gráfico: quem viu laranja no beeswarm
+   reconhece LCL na tabela sem reler a legenda. IMO se separa pelo peso — é
+   sólido e raro (2 registros), não outro matiz.                             */
+.mtv-chip--fcl { background: #E7ECF4; color: var(--navy); }
+.mtv-chip--lcl { background: var(--accent-bg); color: var(--accent-ink); }
+.mtv-chip--imo { background: var(--accent-ink); color: #fff; font-weight: 600; }
+.mtv-flag {
+  border: 0; background: none; padding: 0; margin-left: 6px; cursor: help;
+  font: inherit; font-size: var(--t-micro); font-weight: 600; color: var(--accent-ink);
+}
+.mtv-dim { color: var(--faint); }
+
+/* --- nota de ajuste ------------------------------------------------------- */
+.mtv-nota {
+  border: 1px solid var(--accent-line); background: var(--accent-bg);
+  border-radius: var(--r); padding: 13px 16px; font-size: var(--t-sm); color: #6E3F0F;
+}
+.mtv-nota strong { color: var(--accent-ink); font-weight: 600; }
+.mtv-nota ul { margin: 7px 0 0; padding-left: 18px; }
+.mtv-nota li { margin-top: 3px; text-wrap: pretty; }
+.mtv-nota code { font-family: "Geist Mono", ui-monospace, monospace; font-size: var(--t-micro); }
+
+.mtv-foot { font-size: var(--t-micro); color: var(--faint); text-wrap: pretty; }
+
+/* Plot injeta seu próprio figure; neutraliza margem e deixa o svg respirar */
+.mtv figure { margin: 0; }
+.mtv .chart { min-height: 40px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mtv *, .mtv *::before, .mtv *::after { transition-duration: 1ms !important; animation-duration: 1ms !important; }
+}
+@media (max-width: 640px) {
+  .mtv-hero, .mtv-body { padding-left: 16px; padding-right: 16px; }
+  .mtv-hero { padding-top: 16px; }
+  .mtv-hero__row { gap: 14px; }
+  .mtv-hero h1 { font-size: 1.25rem; }
+
+  /* flex-basis 220px "encolhe" em vez de quebrar linha num container de
+     ~340px — cabiam 2 por linha espremidos e o número cortava o delta ao
+     lado. Empilhado, cada KPI usa a largura toda e o número tem onde respirar. */
+  .mtv-kpis { flex-direction: column; margin-top: 18px; }
+  .mtv-kpi { flex-basis: auto; border-left: 0; border-top: 1px solid var(--hero-linha); padding: 14px 0; }
+  .mtv-kpi:first-child { border-top: 0; padding-top: 0; }
+
+  .mtv-body { gap: 16px; padding-top: 18px; }
+  .mtv-sec__hd, .mtv-sec--ctx .mtv-sec__hd { padding: 13px 16px 11px; }
+  .mtv-sec__bd, .mtv-sec--ctx .mtv-sec__bd { padding: 12px 14px 16px; }
+
+  /* Tabela: rolagem horizontal já é o padrão certo pra tabela densa (ver
+     CLAUDE.md — "Density" é permissão de product register), só falta o
+     momentum scroll do iOS pra não travar em Safari. */
+  .mtv-tw { -webkit-overflow-scrolling: touch; }
+}
+
+/* ===========================================================================
+   Impressão / PDF
+   O PDF sai do Chromium (`--print-to-pdf`), não do WeasyPrint do `core/`: esta
+   tela é renderizada em JS e o WeasyPrint não executa JS — geraria página em
+   branco. Paisagem porque o dash é largo; retrato encolheria demais.
+   =========================================================================== */
+@page { size: A4 landscape; margin: 9mm; }
+
+@media print {
+  /* Sem isto o Chromium descarta fundo do hero e cor das barras. */
+  .mtv, .mtv * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  /* `min-height: 100vh` vira altura-de-página na impressão: o .mtv pintava um
+     retângulo branco vazio depois do rodapé, na última folha. */
+  .mtv { background: #fff; font-size: 12px; min-height: auto; }
+  /* A foto não vai para o papel — vira mancha e come tinta. O scrim fica. */
+  .mtv-hero { --img: none; padding: 12px 14px 0; }
+  .mtv-body { padding: 0; gap: 12px; max-width: none; }
+
+  /* Controle interativo não existe no papel. */
+  .mtv-seg { display: none; }
+
+  /* A tabela rola na tela; no papel precisa imprimir as 70 linhas. */
+  .mtv-tw { max-height: none; overflow: visible; }
+  .mtv-tb thead { display: table-header-group; }   /* repete o cabeçalho a cada página */
+  .mtv-tb tr { break-inside: avoid; }
+  .mtv-tb th { position: static; }                 /* sticky vira artefato na impressão */
+
+  /* Um SVG não se parte entre páginas: cada seção com gráfico é atômica. Quando
+     não cabe no que resta da folha, ela inteira desce — sobra branco no pé, que
+     é o comportamento certo PARA GRÁFICO. Não generalize essa regra para a
+     tabela (ver .mtv-sec--tabela abaixo): lá o "não caber inteiro" é a regra, não
+     a exceção, e break-inside:avoid num bloco garantidamente maior que a página
+     produz o comportamento oposto do esperado — o Chromium não consegue evitar
+     quebrar, mas ao tentar deixa metade da folha em branco em vez de preencher
+     com linha. Isso produzia 5 páginas quase vazias antes desta seção existir. */
+  .mtv-sec, .mtv-grid2, .mtv-nota, .mtv-kpis { break-inside: avoid; }
+  .mtv-sec { box-shadow: none; }
+  .mtv-sec__hd { break-after: avoid; }
+  /* O ciclo e a secao mais alta do dash: comeca em folha propria para ter a
+     pagina inteira disponivel. Sem isto ele nasce no meio de uma folha, nao
+     cabe no que sobra, e a quebra cai entre a tira de proporcao e as barras. */
+  .mtv-sec--ciclo { break-before: page; }
+  .mtv-sec--ciclo .mtv-sec__hd { padding: 12px 16px 10px; }
+  .mtv-sec--ciclo .mtv-sec__bd { padding: 12px 16px; }
+
+  /* A tabela é a única seção que tem permissão de flutuar livre: sem o card
+     fechado (borda/sombra/canto), o Chromium empacota linha após linha até
+     encher cada folha de verdade, continuando direto onde o gráfico anterior
+     parou — em vez de pular pra uma folha nova só pra caber o cabeçalho. */
+  .mtv-sec--tabela { border: 0; break-inside: auto; }
+  .mtv-sec--tabela .mtv-sec__hd { padding: 0 0 8px; border-bottom: 2px solid var(--border-strong); }
+  .mtv-sec--tabela .mtv-tw { border-radius: 0; }
+  .mtv-tb th, .mtv-tb td { padding: 5px 12px; }   /* mais denso que a tela: mais linha por folha */
+
+  .mtv-foot { margin-top: 10px; }
+}

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Momentive · Exportação · BFM Transportes</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="src/dashboard.css">
+
+<!-- Só o preview precisa disso: o Aurelia já resolve a fonte pelo build dele. -->
+<style>
+  body { margin: 0; background: #FAFBFC; }
+  /* Para ligar uma foto no hero, descomente e aponte para a imagem real.
+     A url mora aqui, na folha do host, e nao dentro de uma custom property
+     — o porque esta comentado em src/dashboard.css.
+  .mtv-hero { background-image: var(--scrim), url("/assets/porto.jpg"); } */
+  @media print { body { background: #fff; } }
+</style>
+</head>
+<body>
+  <div id="app"></div>
+  <script src="dist/preview.js"></script>
+</body>
+</html>

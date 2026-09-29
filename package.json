@@ -3,13 +3,19 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "dash:momentive": "bun build web/momentive/src/preview.ts --outdir web/momentive/dist --target browser --minify",
+    "dash:momentive:file": "bun run web/momentive/build-standalone.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/d3-array": "^3.2.2",
     "@types/mssql": "^12.3.0",
     "typescript": "^5"
   },
   "dependencies": {
     "@observablehq/plot": "^0.6.17",
+    "d3-array": "^3.2.4",
     "linkedom": "^0.18.13",
     "mssql": "^12.7.0"
   }
