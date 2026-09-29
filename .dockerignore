@@ -11,3 +11,9 @@ clients/*/.env
 clients/*/_intake
 
 relatorio.html
+
+web
+docs
+scripts
+env
+.serena

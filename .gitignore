@@ -36,3 +36,12 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # Finder (MacOS) folder config
 .DS_Store
 
+
+# ferramenta local (Serena)
+.serena/
+
+# env de produção por cliente (servidor HTTP) — nunca versionado
+env/
+
+# build de dashboard web
+web/*/dist/
