@@ -44,7 +44,7 @@ A imagem hoje não builda de um clone limpo: `core/build.ts` lê `core/dash.png`
 - Modify: `.gitignore`, `.dockerignore`
 - Commit: tudo que está pendente, em grupos
 
-- [ ] **Step 1: ignorar o que não é projeto**
+- [x] **Step 1: ignorar o que não é projeto**
 
 Adicionar ao fim de `.gitignore`:
 
@@ -69,12 +69,12 @@ env
 .serena
 ```
 
-- [ ] **Step 2: conferir que nenhum `.env` entra**
+- [x] **Step 2: conferir que nenhum `.env` entra**
 
 Run: `git status --short --untracked-files=all | grep -i "\.env$"`
 Expected: nenhuma linha (só `.env.example` pode aparecer).
 
-- [ ] **Step 3: commits em grupos**
+- [x] **Step 3: commits em grupos**
 
 ```bash
 git add .gitignore .dockerignore
@@ -98,7 +98,7 @@ git commit -m "docs: registra vw_auditoria e vw_auditoria_semanal no CLAUDE.md"
 
 Antes de cada `commit`, `git diff --cached --stat` para conferir que o grupo tem só o que o título diz. Se `clients/vw/` misturar mudanças claramente independentes, dividir.
 
-- [ ] **Step 4: conferir**
+- [x] **Step 4: conferir**
 
 Run: `git status --short`
 Expected: vazio.
@@ -116,7 +116,7 @@ Padrão já publicado à mão no portal em 22/09: título `Relatório Semanal Au
 - Create: `clients/vw_auditoria_semanal/publicar.ts`
 - Test: `clients/vw_auditoria_semanal/publicar.test.ts`
 
-- [ ] **Step 1: teste que falha**
+- [x] **Step 1: teste que falha**
 
 `clients/vw_auditoria_semanal/publicar.test.ts`:
 
@@ -150,12 +150,12 @@ test("duplicado exige título e referência iguais", () => {
 });
 ```
 
-- [ ] **Step 2: rodar e ver falhar**
+- [x] **Step 2: rodar e ver falhar**
 
 Run: `bun test clients/vw_auditoria_semanal/publicar.test.ts`
 Expected: FAIL — `Cannot find module './publicar'`.
 
-- [ ] **Step 3: implementação mínima**
+- [x] **Step 3: implementação mínima**
 
 `clients/vw_auditoria_semanal/publicar.ts`:
 
@@ -177,12 +177,12 @@ export const jaPublicado = (lista: Campos[], c: Campos) =>
   lista.some((r) => r.titulo === c.titulo && r.referencia === c.referencia);
 ```
 
-- [ ] **Step 4: rodar e ver passar**
+- [x] **Step 4: rodar e ver passar**
 
 Run: `bun test clients/vw_auditoria_semanal/publicar.test.ts`
 Expected: 4 pass.
 
-- [ ] **Step 5: commit**
+- [x] **Step 5: commit**
 
 ```bash
 git add clients/vw_auditoria_semanal/publicar.ts clients/vw_auditoria_semanal/publicar.test.ts
@@ -200,7 +200,7 @@ API do portal (`RelatorioController.cs` do repo VwAuditoria): erro vem com **HTT
 - Modify: `core/build.ts` (bloco `if (import.meta.main)` no fim do arquivo)
 - Modify: `clients/vw_auditoria_semanal/.env.example`
 
-- [ ] **Step 1: `publicar()`**
+- [x] **Step 1: `publicar()`**
 
 Acrescentar em `clients/vw_auditoria_semanal/publicar.ts` (import no topo do arquivo):
 
@@ -252,7 +252,7 @@ export async function publicar(pdf: string) {
 }
 ```
 
-- [ ] **Step 2: `--publicar` no CLI**
+- [x] **Step 2: `--publicar` no CLI**
 
 Em `core/build.ts`, substituir o bloco final:
 
@@ -286,7 +286,7 @@ if (import.meta.main) {
 }
 ```
 
-- [ ] **Step 3: `.env.example`**
+- [x] **Step 3: `.env.example`**
 
 Acrescentar ao fim de `clients/vw_auditoria_semanal/.env.example`:
 
@@ -297,7 +297,7 @@ PORTAL_LOGIN=
 PORTAL_SENHA=
 ```
 
-- [ ] **Step 4: tipos e testes**
+- [x] **Step 4: tipos e testes**
 
 Run: `bunx tsc --noEmit`
 Expected: sem erros.
@@ -308,7 +308,7 @@ Expected: tudo passa.
 Run (sem publicar, confere que o fluxo local não mudou): `CLIENT=_template bun run core/build.ts`
 Expected: `✓ out/_template/relatorio.html`, sem nenhuma linha de portal.
 
-- [ ] **Step 5: commit**
+- [x] **Step 5: commit**
 
 ```bash
 git add clients/vw_auditoria_semanal/publicar.ts clients/vw_auditoria_semanal/.env.example core/build.ts
@@ -325,7 +325,7 @@ git commit -m "feat(vw_auditoria_semanal): publica o pdf no portal com --publica
 
 Rotas: `GET /saude` → 200. `POST /gerar/:client` com `Authorization: Bearer <token>` e corpo opcional `{"hoje":"AAAA-MM-DD"}`. 401 sem token certo; 404 se `clients/<id>` ou `env/<id>.env` não existem; 400 `hoje` malformado; 409 se o cliente já está rodando; 200/500 conforme o subprocesso.
 
-- [ ] **Step 1: teste que falha**
+- [x] **Step 1: teste que falha**
 
 `core/server.test.ts`:
 
@@ -395,12 +395,12 @@ test("segunda chamada concorrente do mesmo cliente é 409", async () => {
 });
 ```
 
-- [ ] **Step 2: rodar e ver falhar**
+- [x] **Step 2: rodar e ver falhar**
 
 Run: `bun test core/server.test.ts`
 Expected: FAIL — `Cannot find module './server'`.
 
-- [ ] **Step 3: implementação**
+- [x] **Step 3: implementação**
 
 `core/server.ts`:
 
@@ -465,7 +465,7 @@ if (import.meta.main) {
 }
 ```
 
-- [ ] **Step 4: rodar e ver passar**
+- [x] **Step 4: rodar e ver passar**
 
 Run: `bun test core/server.test.ts`
 Expected: 7 pass.
@@ -473,7 +473,7 @@ Expected: 7 pass.
 Run: `bunx tsc --noEmit`
 Expected: sem erros.
 
-- [ ] **Step 5: fumaça real (sem banco, sem portal)**
+- [x] **Step 5: fumaça real (sem banco, sem portal)**
 
 ```bash
 mkdir -p env && : > env/_template.env
@@ -485,7 +485,7 @@ kill %1; rm env/_template.env
 
 Expected: `{"ok":false,"log":"...--publicar sem PDF..."}` (fora do container não há weasyprint; o `_template` gera o HTML e a flag falha como deveria). Isso prova subprocesso + env isolado + log de volta.
 
-- [ ] **Step 6: commit**
+- [x] **Step 6: commit**
 
 ```bash
 git add core/server.ts core/server.test.ts
@@ -503,7 +503,7 @@ git commit -m "feat(core): servidor http que gera e publica por cliente, com env
 - Modify: `CLAUDE.md` (seção "Tamanho da imagem")
 - Create: `scripts/imagem.sh`
 
-- [ ] **Step 1: Dockerfile**
+- [x] **Step 1: Dockerfile**
 
 Trocar as duas últimas linhas:
 
@@ -520,7 +520,7 @@ por:
 CMD ["bun", "run", "core/server.ts"]
 ```
 
-- [ ] **Step 2: compose.yaml de desenvolvimento**
+- [x] **Step 2: compose.yaml de desenvolvimento**
 
 - `image: basf-relatorio:latest` → `image: gerador-relatorios:latest`; ajustar o comentário acima (a pasta não se chama mais igual ao serviço; o motivo de fixar continua: sem isso vira `{pasta}-relatorio`).
 - Logo abaixo de `image:`, acrescentar:
@@ -530,12 +530,12 @@ CMD ["bun", "run", "core/server.ts"]
     command: ["bun", "run", "core/build.ts"]
 ```
 
-- [ ] **Step 3: package.json**
+- [x] **Step 3: package.json**
 
 - `"name": "basf-relatorio"` → `"name": "gerador-relatorios"`.
 - Em `"scripts"`, acrescentar `"imagem": "bash scripts/imagem.sh"`.
 
-- [ ] **Step 4: `scripts/imagem.sh`**
+- [x] **Step 4: `scripts/imagem.sh`**
 
 ```bash
 #!/usr/bin/env bash
@@ -553,11 +553,11 @@ docker push "$repo:gerador-relatorios-$v"
 docker push "$repo:gerador-relatorios-latest"
 ```
 
-- [ ] **Step 5: CLAUDE.md**
+- [x] **Step 5: CLAUDE.md**
 
 Na seção "Tamanho da imagem", trocar `basf-relatorio` por `gerador-relatorios` nas duas menções (o `docker image inspect` e o parágrafo do `compose.yaml` que fixa `image:`).
 
-- [ ] **Step 6: conferir que o fluxo local não mudou**
+- [x] **Step 6: conferir que o fluxo local não mudou**
 
 Run: `docker compose build && docker compose run --rm -e CLIENT=_template relatorio`
 Expected: `✓ out/_template/relatorio.pdf`.
@@ -565,7 +565,7 @@ Expected: `✓ out/_template/relatorio.pdf`.
 Run: `docker image inspect gerador-relatorios --format '{{.Config.Cmd}}'`
 Expected: `[bun run core/server.ts]`.
 
-- [ ] **Step 7: commit**
+- [x] **Step 7: commit**
 
 ```bash
 git add Dockerfile compose.yaml package.json scripts/imagem.sh CLAUDE.md
@@ -582,7 +582,7 @@ git commit -m "chore: imagem sobe o servidor, renomeia para gerador-relatorios e
 - Modify: `CLAUDE.md` (nova seção depois de `## Comandos`)
 - Modify: `clients/vw_auditoria_semanal/CLAUDE.md` (nova seção depois de `## Comando`)
 
-- [ ] **Step 1: `deploy/compose.yaml`**
+- [x] **Step 1: `deploy/compose.yaml`**
 
 ```yaml
 # Produção: servidor do n8n. Copie esta pasta para /opt/gerador-relatorios/ (ver README.md).
@@ -616,7 +616,7 @@ networks:
     name: ${N8N_NETWORK:?defina N8N_NETWORK no .env ao lado (docker network ls)}
 ```
 
-- [ ] **Step 2: `deploy/README.md`**
+- [x] **Step 2: `deploy/README.md`**
 
 ````markdown
 # Deploy — servidor do n8n
@@ -679,7 +679,7 @@ Mesmo POST com `{"hoje":"AAAA-MM-DD"}` de um dia da semana **seguinte** à que s
 Semana já publicada (mesmo título e referência) é pulada — para republicar, apague no portal antes.
 ````
 
-- [ ] **Step 3: CLAUDE.md da raiz**
+- [x] **Step 3: CLAUDE.md da raiz**
 
 Depois do bloco de `## Comandos`, antes de `## Tamanho da imagem`, acrescentar:
 
@@ -693,7 +693,7 @@ sem esse arquivo não publica. Deploy, verificação e atualização: `deploy/RE
 Publicar imagem: `bun run imagem <versão>` (recusa com git sujo).
 ```
 
-- [ ] **Step 4: CLAUDE.md do semanal**
+- [x] **Step 4: CLAUDE.md do semanal**
 
 Depois da seção `## Comando`, acrescentar:
 
@@ -707,7 +707,7 @@ que já era publicado à mão. N e o mês saem do **domingo** da semana lida: 28
 repetir a chamada. O portal devolve erro com HTTP 200 e `status: 1`; `publicar.ts` checa o corpo.
 ```
 
-- [ ] **Step 5: commit**
+- [x] **Step 5: commit**
 
 ```bash
 git add deploy/ CLAUDE.md clients/vw_auditoria_semanal/CLAUDE.md
@@ -722,7 +722,7 @@ git commit -m "docs: deploy do gerador no servidor do n8n"
 
 A semana 14–20/09 já foi publicada à mão com exatamente `Relatório Semanal Auditoria - Semana 3` / `Setembro/2026`. Rodar com `HOJE=2026-09-22` exercita login + listagem + duplicado **sem enviar nada**.
 
-- [ ] **Step 1: PDF + publicar em modo duplicado**
+- [x] **Step 1: PDF + publicar em modo duplicado**
 
 ```bash
 docker compose run --rm --env-from-file clients/vw_auditoria_semanal/.env \
@@ -732,7 +732,7 @@ docker compose run --rm --env-from-file clients/vw_auditoria_semanal/.env \
 
 Expected: `✓ out/vw_auditoria_semanal/relatorio.pdf` e `· já publicado: Relatório Semanal Auditoria - Semana 3 · Setembro/2026`. Nada novo em `GET https://vwauditoria.azurewebsites.net/api/relatorio`.
 
-- [ ] **Step 2: PDF continua com 3 páginas**
+- [x] **Step 2: PDF continua com 3 páginas**
 
 ```bash
 docker compose run --rm --entrypoint pdfinfo relatorio out/vw_auditoria_semanal/relatorio.pdf | grep Pages
@@ -740,12 +740,12 @@ docker compose run --rm --entrypoint pdfinfo relatorio out/vw_auditoria_semanal/
 
 Expected: `Pages: 3`.
 
-- [ ] **Step 3: credencial errada falha alto**
+- [x] **Step 3: credencial errada falha alto**
 
 Mesmo comando do Step 1 com `-e PORTAL_SENHA=errada`.
 Expected: exit code ≠ 0 e mensagem `portal /api/login: HTTP 200 ...` (ou equivalente com o erro do portal).
 
-- [ ] **Step 4: `bun test` e `bunx tsc --noEmit`**
+- [x] **Step 4: `bun test` e `bunx tsc --noEmit`**
 
 Expected: tudo verde.
 
@@ -766,12 +766,12 @@ O primeiro envio real fica para a Task 9, já do servidor — publicar daqui cri
 Numa sessão nova do Claude Code (as ferramentas do n8n-mcp só carregam em sessão nova):
 
 - [ ] Credencial **Header Auth** `Gerador relatórios`: header `Authorization`, valor `Bearer <GERADOR_TOKEN>`.
-- [ ] Conferir se existe credencial SMTP no n8n; se não, criar (dados do usuário).
+- [x] E-mail de falha pela credencial `Microsoft Outlook account` que já existe no n8n (decidido em 29/09) — não criar SMTP.
 - [ ] Workflow `VW — Auditoria semanal → portal`:
   1. **Schedule Trigger**: toda segunda, 06:00. Settings do workflow: timezone `America/Sao_Paulo`.
   2. **HTTP Request**: `POST http://gerador:3000/gerar/vw_auditoria_semanal`, auth pela credencial acima, body JSON `{"hoje": "{{ $now.setZone('America/Sao_Paulo').toFormat('yyyy-MM-dd') }}"}`, timeout 360000 ms, "Never Error" em response (para o IF ver o 500), "On Error: Continue" (para timeout/rede).
   3. **IF** `{{ $json.ok }}` é `true` → fim.
-  4. **Send Email** (ramo falso): para `alexandrescarano@gmail.com, rodrigo.otavio@seudash.com.br`, assunto `Falha no relatório semanal VW`, corpo com `{{ $json.log ?? $json.error?.message }}`.
+  4. **Microsoft Outlook → Send** (ramo falso, credencial `Microsoft Outlook account`): para `alexandrescarano@gmail.com, rodrigo.otavio@seudash.com.br`, assunto `Falha no relatório semanal VW`, corpo com `{{ $json.log ?? $json.error?.message }}`.
 - [ ] Rodar manualmente uma vez: gera e publica a semana corrente de verdade. Conferir no portal (título, referência, PDF abre).
 - [ ] Rodar manualmente de novo: deve responder `já publicado`.
 - [ ] Forçar falha (trocar o token na credencial por um errado), rodar, conferir que o e-mail chega; desfazer.
