@@ -56,7 +56,7 @@ ${documento(dados)}
 
   if (Bun.which("weasyprint")) {
     console.log(`→ [${client}] gerando PDF…`);
-    const p = Bun.spawn(["weasyprint", `out/${client}/relatorio.html`, `out/${client}/relatorio.pdf`], { stderr: "inherit" });
+    const p = Bun.spawn(["weasyprint", `out/${client}/relatorio.html`, `out/${client}/relatorio.pdf`], { stderr: "inherit", timeout: 4 * 60_000 });
     if ((await p.exited) !== 0) throw new Error("weasyprint falhou");
     const pdfSize = (await Bun.file(`out/${client}/relatorio.pdf`).stat()).size;
     console.log(`✓ out/${client}/relatorio.pdf (${(pdfSize / 1024).toFixed(0)} KB)`);

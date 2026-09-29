@@ -34,8 +34,9 @@ export function app(token: string, rodar: Rodar = rodarBuild) {
     if (!existsSync(`clients/${client}`) || !existsSync(`env/${client}.env`))
       return Response.json({ ok: false, log: `cliente sem pasta ou sem env: ${client}` }, { status: 404 });
 
-    const { hoje } = (await req.json().catch(() => ({}))) as { hoje?: string };
-    if (hoje !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(hoje))
+    const hoje: string | undefined = ((await req.json().catch(() => null)) as any)?.hoje;
+    // toJSON: o Date aceita 2026-02-31 e vira 03/03 — publicaria a semana errada.
+    if (hoje !== undefined && !(/^\d{4}-\d{2}-\d{2}$/.test(hoje) && new Date(hoje + "T12:00:00Z").toJSON()?.startsWith(hoje)))
       return Response.json({ ok: false, log: `hoje inválido: ${hoje}` }, { status: 400 });
 
     if (rodando.has(client)) return Response.json({ ok: false, log: "já em execução" }, { status: 409 });

@@ -3,6 +3,8 @@ services:
   gerador:
     image: logicasolucoesanaliticas/logicaprivado:gerador-relatorios-latest
     restart: unless-stopped
+    # O bun vira PID 1 e não recolhe o weasyprint órfão de um build que estourou o timeout.
+    init: true
     environment:
       GERADOR_TOKEN: ${GERADOR_TOKEN:?defina GERADOR_TOKEN no .env ao lado}
       TZ: America/Sao_Paulo

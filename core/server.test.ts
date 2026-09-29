@@ -27,8 +27,10 @@ test("cliente sem pasta ou sem env é 404", async () => {
 });
 
 test("hoje malformado é 400", async () => {
-  const r = await app("t", ok)(req("/gerar/_template", { body: JSON.stringify({ hoje: "22/09/2026" }) }));
-  expect(r.status).toBe(400);
+  const f = app("t", ok);
+  for (const hoje of ["22/09/2026", "2026-02-31", "2026-13-01"])
+    expect((await f(req("/gerar/_template", { body: JSON.stringify({ hoje }) }))).status).toBe(400);
+  expect((await f(req("/gerar/_template", { body: "null" }))).status).toBe(200);
 });
 
 test("repassa cliente e hoje; 200 quando o processo termina bem", async () => {
