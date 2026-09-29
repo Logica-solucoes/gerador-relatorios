@@ -1,9 +1,11 @@
 services:
   relatorio:
     build: .
-    # Sem isso o compose nomeia a imagem "{pasta}-{servico}" — a pasta e' o
-    # servico contendo "relatorio" nos dois, dando basf-relatorio-relatorio.
-    image: basf-relatorio:latest
+    # Sem isso o compose nomeia a imagem "{pasta}-{servico}" (Gerador-Relatorios-relatorio);
+    # fixar deixa o nome estável para o docker image inspect e para o script de push.
+    image: gerador-relatorios:latest
+    # A imagem sobe o servidor HTTP por padrão; aqui continua sendo job que roda e sai.
+    command: ["bun", "run", "core/build.ts"]
 
     # Sem env_file fixo: cada cliente tem o proprio .env em clients/<id>/.env.
     # Nada de cliente default de proposito (mesmo motivo do queries.ts nunca

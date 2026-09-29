@@ -1,9 +1,10 @@
 {
-  "name": "basf-relatorio",
+  "name": "gerador-relatorios",
   "module": "index.ts",
   "type": "module",
   "private": true,
   "scripts": {
+    "imagem": "bash scripts/imagem.sh",
     "dash:momentive": "bun build web/momentive/src/preview.ts --outdir web/momentive/dist --target browser --minify",
     "dash:momentive:file": "bun run web/momentive/build-standalone.ts"
   },

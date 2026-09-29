@@ -38,5 +38,6 @@ ENV HOME=/home/bun \
     XDG_CACHE_HOME=/tmp/.cache
 USER bun
 
-# Sem HEALTHCHECK de proposito: job em batch que roda e sai — o exit code e' o sinal.
-CMD ["bun", "run", "core/build.ts"]
+# Em produção fica no ar esperando o n8n (deploy/compose.yaml). O compose de
+# desenvolvimento troca por core/build.ts via `command:`.
+CMD ["bun", "run", "core/server.ts"]

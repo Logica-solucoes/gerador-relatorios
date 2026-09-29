@@ -40,7 +40,7 @@ errado**, sem avisar.
 ## Tamanho da imagem: dois números, um deles engana
 
 `docker images` no CLI atual mostra **DISK USAGE** e **CONTENT SIZE** — são coisas diferentes.
-CONTENT SIZE (confirma com `docker image inspect basf-relatorio --format '{{.Size}}'`) é o
+CONTENT SIZE (confirma com `docker image inspect gerador-relatorios --format '{{.Size}}'`) é o
 tamanho real da imagem, hoje ~200MB. DISK USAGE inclui cache de build (BuildKit) acumulado de
 rebuilds anteriores — pode mostrar 800MB+ sem que a imagem tenha mudado. Se o número parecer
 alto, confira `.Size` antes de investigar; cache de build se resolve com `docker builder prune`
@@ -54,8 +54,8 @@ Maior peso real, e o que fazer sobre cada um:
 - **devDependencies** (`typescript`, `@types/*`): removidas da imagem via
   `bun install --frozen-lockfile --omit=dev` no Dockerfile — só servem o `tsc --noEmit` local.
 
-`compose.yaml` fixa `image: basf-relatorio:latest`. Sem isso o compose nomeia
-`{pasta}-{serviço}` — como os dois contêm "relatorio", vira `basf-relatorio-relatorio`.
+`compose.yaml` fixa `image: gerador-relatorios:latest`. Sem isso o compose nomeia
+`{pasta}-{serviço}` (`gerador-relatorios-relatorio`), e o `docker image inspect` e o script de push perdem o nome estável.
 
 ## Banco
 
