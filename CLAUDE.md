@@ -2,8 +2,11 @@
 
 Motor de relatórios executivos em PDF (A4). Bun + Observable Plot (SSR via linkedom) → HTML
 estático → WeasyPrint → PDF. `core/` é o motor; cada `clients/<id>/` é um cliente. Hoje:
-`basf` (10 páginas, SQL Server), `vw` (11 páginas, JSON de modelo em `_intake/`, sem banco) e
-`_template` (esqueleto, sem banco).
+`basf` (10 páginas, SQL Server), `vw` (15 páginas, JSON de modelo em `_intake/`, sem banco),
+`vw_auditoria` (21 páginas, SQL Server — banco `LogicaChatBot`, o mesmo do dashboard de auditoria),
+`vw_auditoria_semanal` (3 páginas, mesmo banco do `vw_auditoria` — acompanhamento operacional
+semanal: última semana fechada contra a anterior + acumulado do mês, recortados pela **data da
+auditoria**, não do lead; roda sozinho toda semana) e `_template` (esqueleto, sem banco).
 
 Visão geral e decisões de produto estão no `README.md`. Aqui ficam as regras de trabalho.
 
@@ -18,7 +21,9 @@ bun test                                                                       #
 `CLIENT` é obrigatório — sem default de propósito, mesmo motivo do `queries.ts` nunca ter
 default de variável de banco (ver `## Banco`). Troque `basf` por qualquer pasta em `clients/`.
 `--env-file=` (Bun) e `--env-from-file` (compose) são flags diferentes, de ferramentas
-diferentes — não confunda um pelo outro. `clients/_template/` não tem banco: basta
+diferentes — não confunda um pelo outro. Cliente cujo banco roda na própria máquina (é o caso do
+`vw_auditoria`) precisa de `-e DB_HOST=host.docker.internal` no `compose run`: `localhost` dentro
+do container é o container. `clients/_template/` não tem banco: basta
 `CLIENT=_template bun run core/build.ts`, sem `--env-file`.
 
 **Loop de iteração:** rode `CLIENT=basf bun --env-file=clients/basf/.env run core/build.ts`,
@@ -108,6 +113,10 @@ Alvo: 88–99%. Abaixo de 85% sobra vão visível; acima de 99% a página parte 
 - Barra em escala log não tem baseline — vira retângulo flutuante. Use ponto, ou mude a métrica.
 - Barras agrupadas: `fx` para facetar, não empilhar no mesmo `x`.
 - Rótulo à direita da última marca precisa de `marginRight` que caiba nele, senão corta.
+- `tickFormat` é chamado como `(valor, index)`. Um helper de formatação com segundo parâmetro
+  opcional (ex: `(v, d = 1) => ...`) recebe o `index` do tick nesse parâmetro — decimais crescem
+  tick a tick (0, 1, 2, 3...) em vez de ficar fixo. Formatter passado a `tickFormat` precisa
+  aceitar exatamente um parâmetro.
 
 ## Não faça
 
