@@ -1,6 +1,6 @@
 import * as Plot from "@observablehq/plot";
 import type { Dados, Modelo } from "./queries";
-import { ganho, META_RECALL } from "./queries";
+import { capturaEm, faixaExibida, ganho, TAXA_ATENDIMENTO } from "./queries";
 import { plot, L, num, pct, curto } from "../../core/report";
 
 const COR = {
@@ -26,6 +26,7 @@ export const LABEL: Record<string, string> = {
   QTD_LEADS_CLIENTE: "Leads anteriores do cliente",
   Regional: "Regional",
   "Sub Origem Nível 2": "Sub-canal de origem",
+  "DN - Nome Fantasia": "Concessionária",
   FLAG_TROCA: "Tem veículo para troca",
   FLAG_FORA_HORARIO: "Chegou fora do horário",
   "Product Service": "Produto/serviço da campanha",
@@ -39,6 +40,16 @@ export const LABEL: Record<string, string> = {
 export const COLS_CAMPANHA = ["Product Service", "NOM_AUDIENCE_SEGMENT_TACTIC", "Supplier Publisher", "NOM_FORMAT", "Funnel Stage"];
 
 export const rotulo = (f: string) => LABEL[f] ?? f;
+
+/**
+ * Rótulo do recorte de um drill-down. O notebook grava pares concatenados
+ * ("Sub Origem › Sub Origem Nível 2"); aqui cada lado passa pelo LABEL.
+ */
+export const rotuloRecorte = (coluna: string) =>
+  coluna
+    .split("›")
+    .map((s) => rotulo(s.trim()))
+    .join(" › ");
 
 /**
  * Datas do split temporal, derivadas do fim do período (notebook 03:
@@ -116,16 +127,20 @@ function gSplit(d: Dados, height = 200) {
 }
 
 /** Curva de ganho acumulado: quanto das vendas o time captura contactando os N%
- *  de maior score. A diagonal é a discagem sem modelo. */
-function gGanho(series: { nome: string; modelo: Modelo; cor: string }[], height: number) {
+ *  de maior score. A diagonal é a discagem sem modelo.
+ *
+ *  `corte` marca o ponto de operação — por padrão os 45% de taxa de atendimento
+ *  medidos na auditoria, que é o corte que o time já pratica hoje. */
+function gGanho(series: { nome: string; modelo: Modelo; cor: string }[], height: number, corte = TAXA_ATENDIMENTO) {
   const pontos = series.flatMap((s) => ganho(s.modelo.faixas_score).map((p) => ({ ...p, nome: s.nome })));
   const aleatorio = [
     { pctBase: 0, pctConv: 0 },
     { pctBase: 1, pctConv: 1 },
   ];
+  const noCorte = (s: { modelo: Modelo }) => ({ pctBase: corte, pctConv: capturaEm(s.modelo.faixas_score, corte) });
 
-  // Legenda no canto e rótulo do corte de 30% escalonados por série: `dy` é
-  // constante, não canal — duas séries no mesmo mark sairiam sobrepostas.
+  // Legenda no canto e rótulo do corte escalonados por série: `dy` é constante,
+  // não canal — duas séries no mesmo mark sairiam sobrepostas.
   const porSerie = series.flatMap((s, i) => [
     Plot.text([{ nome: s.nome }], {
       frameAnchor: "top-left",
@@ -137,12 +152,12 @@ function gGanho(series: { nome: string; modelo: Modelo; cor: string }[], height:
       fontWeight: 600,
       fill: s.cor,
     }),
-    Plot.dot([ganho(s.modelo.faixas_score)[3]!], { x: "pctBase", y: "pctConv", fill: s.cor, r: 4 }),
-    // A esquerda da linha de 30% e acima do ponto o espaco esta sempre vazio (a
+    Plot.dot([noCorte(s)], { x: "pctBase", y: "pctConv", fill: s.cor, r: 4 }),
+    // A esquerda da linha de corte e acima do ponto o espaco esta sempre vazio (a
     // curva vem de baixo). A direita ela passa por cima do rotulo. Com duas
     // series, a de baixo desce e vai pra direita, no vao entre as curvas e a
     // diagonal — dx/dy/textAnchor sao constantes, entao e uma marca por serie.
-    Plot.text([ganho(s.modelo.faixas_score)[3]!], {
+    Plot.text([noCorte(s)], {
       x: "pctBase",
       y: "pctConv",
       text: (r: any) => pct(r.pctConv * 100, 1),
@@ -154,6 +169,34 @@ function gGanho(series: { nome: string; modelo: Modelo; cor: string }[], height:
       fill: s.cor,
     }),
   ]);
+
+  // O vao entre a curva e a diagonal no ponto de operacao — e o argumento inteiro
+  // do relatorio em uma marca. So na serie unica: com duas curvas o espaco ja e disputado.
+  const vao =
+    series.length === 1
+      ? [
+          Plot.arrow([{ x: corte, y1: corte, y2: capturaEm(series[0]!.modelo.faixas_score, corte) }], {
+            x1: "x",
+            x2: "x",
+            y1: "y1",
+            y2: "y2",
+            stroke: COR.red,
+            strokeWidth: 1.4,
+            headLength: 6,
+            insetEnd: 4,
+          }),
+          Plot.text([{ x: corte, y: (corte + capturaEm(series[0]!.modelo.faixas_score, corte)) / 2 }], {
+            x: "x",
+            y: "y",
+            text: () => "+" + num((capturaEm(series[0]!.modelo.faixas_score, corte) - corte) * 100, 1) + " p.p.",
+            dx: 8,
+            textAnchor: "start",
+            fontSize: 9,
+            fontWeight: 600,
+            fill: COR.red,
+          }),
+        ]
+      : [];
 
   return plot({
     width: L,
@@ -167,21 +210,23 @@ function gGanho(series: { nome: string; modelo: Modelo; cor: string }[], height:
     color: { domain: series.map((s) => s.nome), range: series.map((s) => s.cor) },
     marks: [
       Plot.line(aleatorio, { x: "pctBase", y: "pctConv", stroke: COR.grey, strokeDasharray: "4,4" }),
-      Plot.text([{ pctBase: 0.78, pctConv: 0.78 }], { x: "pctBase", y: "pctConv", text: () => "discagem sem modelo", dx: 4, dy: 12, textAnchor: "start", fontSize: 8.5, fill: COR.grey }),
-      Plot.ruleX([0.3], { stroke: COR.dark, strokeDasharray: "3,3" }),
+      Plot.text([{ pctBase: 0.78, pctConv: 0.78 }], { x: "pctBase", y: "pctConv", text: () => "fila sem modelo", dx: 4, dy: 12, textAnchor: "start", fontSize: 8.5, fill: COR.grey }),
+      Plot.ruleX([corte], { stroke: COR.dark, strokeDasharray: "3,3" }),
+      Plot.text([{ x: corte }], { x: "x", frameAnchor: "bottom", text: () => p1(corte) + " atendidos", dy: -6, dx: -5, textAnchor: "end", fontSize: 8.5, fontWeight: 500, fill: COR.dark }),
       Plot.areaY(
         series.length === 1 ? ganho(series[0]!.modelo.faixas_score) : [],
         { x: "pctBase", y: "pctConv", fill: series[0]?.cor ?? COR.primary, fillOpacity: 0.08, curve: "monotone-x" },
       ),
       Plot.line(pontos, { x: "pctBase", y: "pctConv", stroke: "nome", strokeWidth: 2, curve: "monotone-x" }),
+      ...vao,
       ...porSerie,
       Plot.axisX({ label: "% da base contactada, do score mais quente para o mais frio", labelAnchor: "center", labelOffset: 30, labelArrow: "none", tickSize: 0, fontSize: 8.5, tickFormat: p1 }),
     ],
   });
 }
 
-/** AUC, KS e Recall@30% nos três conjuntos. A linha de meta só existe na faceta
- *  de Recall — é a métrica contratada do projeto. */
+/** AUC, KS e Recall@30% nos três conjuntos. Sem linha de alvo: o relatório não
+ *  julga o modelo contra uma meta, mostra onde ele chega. */
 function gMetricas(m: Modelo, height = 300) {
   const conj = [
     ["treino", "Treino"],
@@ -215,42 +260,42 @@ function gMetricas(m: Modelo, height = 300) {
         dy: 13,
         fontSize: 8.5,
         fontWeight: 600,
-        // dentro da barra: fora dela o valor do OOT caia em cima da linha de meta
+        // dentro da barra: a barra do treino é clara, as outras duas escuras
         fill: (r: any) => (r.conjunto === "Treino" ? COR.dark : "white"),
       }),
-      Plot.ruleY([{ metrica: "Recall@30%", v: META_RECALL }], { fx: "metrica", y: "v", stroke: COR.red, strokeDasharray: "3,3" }),
-      Plot.text([{ metrica: "Recall@30%", v: META_RECALL }], { fx: "metrica", y: "v", // dy folgado: com -6 o rotulo caia em cima do valor da barra do OOT, que fica
-      // logo abaixo da meta.
-      frameAnchor: "right", text: () => "meta 60%", dy: -21, dx: -2, textAnchor: "end", fontSize: 8, fontWeight: 500, fill: COR.red }),
       Plot.ruleY([0], { stroke: "#d4d4d8" }),
     ],
   });
 }
 
-/** Taxa de conversão por faixa de score (decis do OOT). Faixa 1 = 10% mais quentes. */
+/** Taxa de conversão por faixa de score (decis do OOT). Faixa 10 = 10% mais quentes. */
 function gFaixas(m: Modelo, taxaGeral: number, height = 300) {
   const f = m.faixas_score;
+  // eixo sempre 1→10 na tela, mesmo a ordem interna de `f` sendo quente→frio
+  const domain = Array.from({ length: 10 }, (_, i) => String(i + 1));
   return plot({
     width: L,
     height,
     marginLeft: 40,
     marginTop: 22,
     marginBottom: 42,
-    x: { label: null, tickSize: 0, domain: f.map((r) => String(r.faixa)) },
+    x: { label: null, tickSize: 0, domain },
     y: { label: null, grid: true, tickSize: 0, tickFormat: (v: number) => num(v * 100, 0) + "%" },
     marks: [
       Plot.barY(f, {
-        x: (r: any) => String(r.faixa),
+        x: (r: any) => String(faixaExibida(r.faixa)),
         y: "taxa_conversao",
-        // gradiente frio->quente: a faixa 1 precisa saltar aos olhos
-        fill: (r: any) => (r.faixa <= 3 ? COR.primary : r.faixa <= 6 ? COR.accent : "#c7d0dd"),
+        // gradiente frio->quente: a faixa 10 precisa saltar aos olhos
+        fill: (r: any) => (faixaExibida(r.faixa) >= 8 ? COR.primary : faixaExibida(r.faixa) >= 5 ? COR.accent : "#c7d0dd"),
         rx: 2,
       }),
-      Plot.text(f, { x: (r: any) => String(r.faixa), y: "taxa_conversao", text: (r: any) => num(r.taxa_conversao * 100, 1) + "%", dy: -8, fontSize: 8.5, fontWeight: 600, fill: COR.dark }),
+      Plot.text(f, { x: (r: any) => String(faixaExibida(r.faixa)), y: "taxa_conversao", text: (r: any) => num(r.taxa_conversao * 100, 1) + "%", dy: -8, fontSize: 8.5, fontWeight: 600, fill: COR.dark }),
       Plot.ruleY([taxaGeral], { stroke: COR.red, strokeDasharray: "3,3" }),
-      Plot.text([{ y: taxaGeral }], { y: "y", frameAnchor: "right", text: () => "média da base " + num(taxaGeral * 100, 1) + "%", dy: -6, dx: -2, textAnchor: "end", fontSize: 8, fontWeight: 500, fill: COR.red }),
+      // esquerda, não direita: com o eixo invertido são as barras frias (curtas)
+      // que ficam do lado esquerdo, deixando espaço pro rótulo não colidir com barra
+      Plot.text([{ y: taxaGeral }], { y: "y", frameAnchor: "left", text: () => "média da base " + num(taxaGeral * 100, 1) + "%", dy: -6, dx: 2, textAnchor: "start", fontSize: 8, fontWeight: 500, fill: COR.red }),
       Plot.ruleY([0], { stroke: "#d4d4d8" }),
-      Plot.axisX({ label: "faixa de score · 1 = 10% mais quentes, 10 = 10% mais frios", labelAnchor: "center", labelOffset: 32, labelArrow: "none", tickSize: 0, fontSize: 8.5 }),
+      Plot.axisX({ label: "faixa de score · 1 = 10% mais frios, 10 = 10% mais quentes", labelAnchor: "center", labelOffset: 32, labelArrow: "none", tickSize: 0, fontSize: 8.5 }),
     ],
   });
 }
@@ -280,7 +325,9 @@ function gImportancia(m: Modelo, height: number, destacar = false) {
 
 /** Drill-down SHAP: que valor da variável empurra a conversão pra cima ou pra baixo. */
 function gDrill(dd: Modelo["drilldown"][number], height: number) {
-  const dados = rotulosUnicos(dd.top_valores, 32);
+  // 46, nao 32: desde que o recorte virou par concatenado os rotulos ficaram mais
+  // longos — "Site Ofertas › Campanha - Lead Financiamento" tem 44 e saia cortado.
+  const dados = rotulosUnicos(dd.top_valores, 46);
   // Folga no dominio: sem ela a barra mais negativa encosta na moldura e o
   // rotulo dela cai por cima do nome da categoria, do lado de fora.
   const vals = dados.map((r) => r.contribuicao_media);
@@ -290,13 +337,14 @@ function gDrill(dd: Modelo["drilldown"][number], height: number) {
   return plot({
     width: L,
     height,
-    marginLeft: 172,
+    marginLeft: 232,
     // margem direita larga: a coluna de volume mora nela, ancorada na moldura
     marginRight: 104,
     marginBottom: 26,
     marginTop: 6,
     x: { label: null, grid: true, tickSize: 0, tickFormat: (v: number) => num(v, 2), domain: [min - (min < 0 ? folga : 0), max + folga] },
     y: { label: null, tickSize: 0, domain: dados.map((r) => r.rot) },
+    // 232 acompanha o `curto(…, 46)` acima — margem menor volta a cortar rotulo.
     marks: [
       Plot.barX(dados, { x: "contribuicao_media", y: "rot", fill: (r: any) => (r.contribuicao_media < 0 ? COR.red : COR.accent), rx: 2 }),
       // Duas marcas porque dx/textAnchor sao constantes: com uma so, o rotulo do
@@ -334,6 +382,8 @@ function gDrill(dd: Modelo["drilldown"][number], height: number) {
 export const graficos = {
   gSplit,
   gGanhoBase: (d: Dados, h = 430) => gGanho([{ nome: "Modelo VW", modelo: d.base, cor: COR.primary }], h),
+  // corte em 30% aqui, não nos 45%: a tabela A vs B compara Recall@30%, e gráfico
+  // e tabela marcando pontos diferentes na mesma página confundem.
   gGanhoAB: (d: Dados, h = 380) =>
     gGanho(
       [
@@ -341,6 +391,7 @@ export const graficos = {
         { nome: "B — +campanha", modelo: d.b, cor: COR.accent },
       ],
       h,
+      0.3,
     ),
   gMetricas,
   gFaixas,

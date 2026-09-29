@@ -3,7 +3,7 @@
  * clients/vw/CLAUDE.md, "Texto vs. dados").
  */
 import type { Dados, Modelo } from "./queries";
-import { ganho, lift, META_RECALL } from "./queries";
+import { capturaEm, faixaExibida, ganho, lift, TAXA_ATENDIMENTO } from "./queries";
 import { num, pct } from "../../core/report";
 import { rotulo } from "./report";
 
@@ -12,24 +12,44 @@ const pp = (v: number, d = 1) => num(Math.abs(v) * 100, d) + " p.p.";
 
 /** Manchete da capa: curta o bastante para caber em três linhas de h1. */
 export function manchete(d: Pick<Dados, "base">): string {
-  const r = d.base.metricas.oot.recall_30;
-  return `${p1(r)} das vendas estão nos 30% de leads mais quentes.`;
+  const c = capturaEm(d.base.faixas_score, TAXA_ATENDIMENTO);
+  return `Os mesmos ${p1(TAXA_ATENDIMENTO, 0)} de leads atendidos hoje podem render ${p1(c)} das vendas.`;
 }
 
 /** A mesma ideia da manchete, desdobrada — usada no corpo, não no título. */
 export function resumo(d: Pick<Dados, "base">): string {
-  const r = d.base.metricas.oot.recall_30;
-  return `Contactando apenas os 30% de leads com maior score, o time alcança ${p1(r)} de todas as vendas — ${num(r / 0.3, 1)}× o resultado de uma discagem sem critério.`;
+  const c = capturaEm(d.base.faixas_score, TAXA_ATENDIMENTO);
+  return `A auditoria mostrou que ${p1(TAXA_ATENDIMENTO, 0)} dos leads gerados recebem contato. Enquanto essa fila for atendida por ordem de chegada, ela entrega ${p1(TAXA_ATENDIMENTO, 0)} das vendas — nem mais, nem menos. Ordenada pelo score, a mesma fila entrega ${p1(c)}.`;
 }
 
-/** Veredito sobre a meta contratada (Recall@30% ≥ 60% no OOT). */
-export function vereditoMeta(d: Pick<Dados, "base">): string {
-  const r = d.base.metricas.oot.recall_30;
-  const gap = META_RECALL - r;
-  if (gap <= 0) return `Meta atingida: ${p1(r)} contra os ${p1(META_RECALL, 0)} contratados.`;
-  if (gap <= 0.01)
-    return `Meta praticamente atingida: ${p1(r)} contra os ${p1(META_RECALL, 0)} contratados — ${pp(gap)} de diferença, dentro da variação esperada de um recorte de dois meses.`;
-  return `Meta não atingida: ${p1(r)} contra os ${p1(META_RECALL, 0)} contratados, ${pp(gap)} abaixo.`;
+/**
+ * O ganho no ponto de operação real do time. Não é uma meta contratada: é o corte
+ * que já existe hoje, medido pela auditoria.
+ */
+export function ganhoAtendimento(d: Pick<Dados, "base">): string {
+  const c = capturaEm(d.base.faixas_score, TAXA_ATENDIMENTO);
+  return `Atendendo os mesmos ${p1(TAXA_ATENDIMENTO, 0)} de leads, mas do score mais quente para o mais frio, o time alcança ${p1(c)} das vendas em vez dos ${p1(TAXA_ATENDIMENTO, 0)} que uma fila sem critério entrega. São ${pp(c - TAXA_ATENDIMENTO)} de vendas que hoje ficam na mesa por causa da ordem de atendimento, não por falta de capacidade.`;
+}
+
+/**
+ * De onde sai o número do corte de atendimento. As faixas são decis, então 45%
+ * não é um ponto medido — é interpolação entre os dois decis vizinhos. Sem essa
+ * frase o valor aparece do nada no meio da capa, que foi exatamente a reclamação
+ * que originou esta função.
+ */
+export function procedenciaCaptura(d: Pick<Dados, "base">): string {
+  const g = ganho(d.base.faixas_score);
+  const i = g.findIndex((p) => p.pctBase >= TAXA_ATENDIMENTO);
+  const antes = g[i - 1]!;
+  const depois = g[i]!;
+  return `Os ${p1(capturaEm(d.base.faixas_score, TAXA_ATENDIMENTO))} são a curva de ganho lida no corte de ${p1(TAXA_ATENDIMENTO, 0)}. Como as faixas são decis, esse corte não é um ponto medido: ele cai entre ${p1(antes.pctBase, 0)} da base — que concentra ${p1(antes.pctConv)} das vendas — e ${p1(depois.pctBase, 0)}, que concentra ${p1(depois.pctConv)}. O valor é a interpolação entre os dois.`;
+}
+
+/** O outro lado do mesmo número: quem não é atendido. */
+export function naoAtendidos(d: Pick<Dados, "base">): string {
+  const fora = 1 - TAXA_ATENDIMENTO;
+  const perdidas = 1 - capturaEm(d.base.faixas_score, TAXA_ATENDIMENTO);
+  return `Os ${p1(fora, 0)} de leads que ficam sem contato levam junto ${p1(fora, 0)} das vendas enquanto a escolha for por ordem de chegada. Com a fila ordenada pelo score, esse mesmo corte deixa de fora ${p1(perdidas)} — o modelo não aumenta a capacidade de atendimento, ele decide melhor quem entra nela.`;
 }
 
 /** Faixa de queda treino→OOT. Título e texto do card saem daqui, não do template. */
@@ -66,6 +86,29 @@ export function estabilidadeOosOot(m: Modelo): string {
     : `${cabeca}, maior que os ${pp(ateOot, 1)} entre treino e OOT — o modelo oscila entre períodos, e isso pede investigação antes de subir.`;
 }
 
+/**
+ * As dez faixas agrupadas na régua operacional da fila: quentes (8–10), mornas
+ * (5–7) e frias (1–4). É o recorte que a página "Como ler o score" usa para dizer
+ * o que fazer com cada lead. `de`/`ate` aqui são posições internas (1 = mais
+ * quente), convertidas para o número exibido só no retorno — a ordem interna de
+ * `f` é sempre quente→frio, independente do rótulo.
+ */
+export function grupos(m: Modelo) {
+  const f = m.faixas_score;
+  const totalConv = f.reduce((s, x) => s + x.conversoes, 0);
+  const bloco = (de: number, ate: number, acao: string) => {
+    const linhas = f.slice(de - 1, ate);
+    const volume = linhas.reduce((s, x) => s + x.volume, 0);
+    const conversoes = linhas.reduce((s, x) => s + x.conversoes, 0);
+    return { de: faixaExibida(ate), ate: faixaExibida(de), acao, volume, taxa: conversoes / volume, pctVendas: conversoes / totalConv };
+  };
+  return [
+    bloco(1, 3, "Contato humano no mesmo dia. É onde o vendedor rende mais."),
+    bloco(4, 6, "Contato humano em prioridade normal, depois que a fila quente esvaziar."),
+    bloco(7, 10, "Automação: e-mail, WhatsApp e nutrição. O custo de ligar dificilmente se paga aqui."),
+  ];
+}
+
 /** Quantas vezes a faixa mais quente converte mais que a mais fria. */
 export function liftFaixas(m: Modelo): string {
   const f = m.faixas_score;
@@ -94,27 +137,34 @@ export function drill(dd: Modelo["drilldown"][number]): string {
   return `${base} No outro extremo, ${pior.valor} derruba (${num(pior.contribuicao_media, 3)} sobre ${num(pior.volume)}) — ${negativos.length} de ${v.length} valores contribuem negativamente.`;
 }
 
-/** Cadastro de produto: quantos valores do top são variação do mesmo termo. */
-export function cadastroRepetido(dd: Modelo["drilldown"][number]): string {
-  // "Novo T-Cross" e "T-Cross" são a mesma família; o hífen fica (senão T-Cross vira "T").
-  const raiz = (s: string) => s.replace(/^nov[oa]\s+/i, "").split(/\s+/)[0]!.replace(/[^\p{L}\p{N}-]/gu, "");
-  const cont = new Map<string, { n: number; termo: string }>();
-  for (const r of dd.top_valores) {
-    const termo = raiz(r.valor);
-    const at = cont.get(termo.toLowerCase()) ?? { n: 0, termo };
-    cont.set(termo.toLowerCase(), { n: at.n + 1, termo: at.termo });
-  }
-  const { n, termo } = [...cont.values()].sort((a, b) => b.n - a.n)[0]!;
-  if (n < 2) return `Os ${dd.top_valores.length} valores listados são distintos entre si — o cadastro de ${dd.coluna_detalhe} está consistente neste recorte.`;
-  return `${n} dos ${dd.top_valores.length} valores são variações de "${termo}": o campo ${dd.coluna_detalhe} é texto livre e a mesma família aparece escrita de várias formas. Limpar esse cadastro concentraria o sinal hoje diluído.`;
-}
+/** Marcador que o notebook grava quando o nível 2 do recorte vem nulo. */
+const SEM_CADASTRO = "(sem cadastro)";
 
-/** Valor de categoria que é claramente lixo de cadastro (código cru, vazio). */
+/** Última parte do rótulo do drill-down: "Whatsapp › 0" tem a sujeira no fim. */
+const folha = (valor: string) => valor.split("›").pop()!.trim();
+
+/**
+ * Valor de categoria que é lixo de cadastro (código cru, vazio, ausência marcada).
+ * Olha só a folha do rótulo: desde que o drill-down passou a concatenar origem e
+ * nível 2, o lixo mora depois do "›" e um teste no rótulo inteiro não pegaria nada.
+ */
 export function valorSuspeito(dd: Modelo["drilldown"][number]): string | null {
-  const r = dd.top_valores.find((x) => /^\s*$/.test(x.valor) || /^\d+$/.test(x.valor));
-  if (!r) return null;
-  const rotuloValor = r.valor.trim() === "" ? "em branco" : `"${r.valor}"`;
-  return `${rotulo(dd.feature)} tem um valor ${rotuloValor} com ${num(r.volume)} leads e contribuição ${num(r.contribuicao_media, 3)} — não é um canal, é ausência de cadastro. Vale isolar esses leads: hoje eles entram no modelo como se fossem uma origem legítima.`;
+  const suspeitos = dd.top_valores.filter((x) => {
+    const f = folha(x.valor);
+    return f === "" || f === SEM_CADASTRO || /^\d+$/.test(f);
+  });
+  if (suspeitos.length === 0) return null;
+  // o mais forte, nao o primeiro da lista: ordenada por contribuicao, o `.find()`
+  // devolvia o buraco de cadastro mais inofensivo e o achado saia sem forca.
+  const r = suspeitos.slice().sort((a, b) => Math.abs(b.contribuicao_media) - Math.abs(a.contribuicao_media))[0]!;
+  const f = folha(r.valor);
+  const diagnostico = f === "" || f === SEM_CADASTRO ? "sem nenhum cadastro de segundo nível" : `com o código cru "${f}" no lugar do nome do canal`;
+  const cabeca = `${rotulo(dd.feature)} traz "${r.valor}": ${num(r.volume)} leads ${diagnostico}, com contribuição ${num(r.contribuicao_media, 3)}.`;
+  const resto =
+    suspeitos.length > 1
+      ? ` E não está sozinho — ${suspeitos.length} dos ${dd.top_valores.length} valores listados são buraco de cadastro, somando ${num(suspeitos.reduce((s, x) => s + x.volume, 0))} leads.`
+      : "";
+  return `${cabeca}${resto} Não é canal, é ausência de cadastro entrando no modelo como se fosse origem legítima — vale isolar esses leads antes do próximo retreino.`;
 }
 
 /** Tamanho e perfil do subconjunto do experimento de mídia. */
@@ -148,14 +198,15 @@ export function pesoCampanha(d: { b: Modelo }, cols: string[]): string {
 
 /** Ações do plano final, ordenadas pelo que os dados sustentam. */
 export function acoes(d: Dados) {
-  const r = d.base.metricas.oot.recall_30;
+  const captura = capturaEm(d.base.faixas_score, TAXA_ATENDIMENTO);
   const difCampanha = d.b.metricas.oot.recall_30 - d.a.metricas.oot.recall_30;
-  const fam = d.base.drilldown.find((x) => x.feature === "FamilyProduct");
+  const f = d.base.faixas_score;
   const lista = [
     {
-      titulo: "Priorizar a discagem pelas faixas de score",
-      prioridade: r >= META_RECALL - 0.01 ? ("alta" as const) : ("média" as const),
-      texto: `Ordenar a fila do time de vendas pelo score coloca ${p1(r)} das vendas nos primeiros 30% de contatos. O ganho é imediato e não depende de dado novo.`,
+      titulo: "Priorizar a fila de atendimento pelas faixas de score",
+      // o ganho no ponto de operação real decide a prioridade — não um alvo externo
+      prioridade: captura - TAXA_ATENDIMENTO > 0.15 ? ("alta" as const) : ("média" as const),
+      texto: `Ordenar a fila pelo score leva os mesmos ${p1(TAXA_ATENDIMENTO, 0)} de leads atendidos hoje a cobrir ${p1(captura)} das vendas, contra os ${p1(TAXA_ATENDIMENTO, 0)} de uma fila por ordem de chegada. O ganho é imediato e não depende de dado novo nem de aumentar a equipe.`,
     },
     {
       titulo: difCampanha > 0 ? "Incorporar as colunas de campanha ao modelo de produção" : "Não incorporar as colunas de campanha",
@@ -171,10 +222,9 @@ export function acoes(d: Dados) {
       texto: `Hoje só ${p1(d.campanha.subconjunto.pct_da_base_limpa)} dos leads têm campanha atribuída. Enquanto for assim, o modelo com mídia não pode virar o modelo de produção — ele só sabe pontuar essa fatia.`,
     },
     {
-      titulo: "Padronizar o cadastro de produto",
-      prioridade: "média" as const,
-      // some do plano quando o cadastro esta limpo — acao sem problema atras nao e acao
-      texto: fam && cadastroRepetido(fam).includes("variações de") ? cadastroRepetido(fam) : null,
+      titulo: "Retroalimentar as plataformas de mídia com os sinais de quente e frio",
+      prioridade: "alta" as const,
+      texto: `Exportar as duas pontas do score como audiência: as faixas 8 a 10 viram semente de lookalike, as faixas 1 a 3 viram exclusão. O sinal já existe e não custa dado novo — a faixa mais quente converte ${p1(f[0]!.taxa_conversao)} contra ${p1(f[f.length - 1]!.taxa_conversao)} da mais fria, ${num(lift(f), 1)}× mais. Em vez de só ordenar quem já chegou, a mídia passa a trazer leads mais parecidos com quem compra.`,
     },
     {
       titulo: "Monitorar drift e reprocessar o score",
@@ -185,8 +235,10 @@ export function acoes(d: Dados) {
   return lista.filter((a): a is typeof a & { texto: string } => a.texto !== null);
 }
 
-/** Quanto das vendas o modelo captura em cada corte de contato — usado na p.2. */
+/**
+ * Quanto das vendas o modelo captura em cada corte de contato. Inclui o corte real
+ * de atendimento (45%), que não é decil e por isso sai interpolado.
+ */
 export function cortes(m: Modelo) {
-  const g = ganho(m.faixas_score);
-  return [1, 2, 3, 5].map((i) => ({ pctBase: g[i]!.pctBase, pctConv: g[i]!.pctConv }));
+  return [0.1, 0.3, TAXA_ATENDIMENTO, 0.6].map((pctBase) => ({ pctBase, pctConv: capturaEm(m.faixas_score, pctBase) }));
 }

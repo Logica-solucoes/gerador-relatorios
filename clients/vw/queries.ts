@@ -39,8 +39,15 @@ type ModeloCampanha = {
   modelos: (Modelo & { nome: string })[];
 };
 
-/** Meta contratada do projeto (ver metodologia-modelo.md, "Métricas de qualidade"). */
-export const META_RECALL = 0.6;
+/**
+ * Taxa de atendimento medida na auditoria de leads: de cada 100 leads gerados, 45
+ * recebem contato. É dado externo ao modelo — não sai dos JSONs, veio da auditoria
+ * (`Esteira_Automacao_VW/Auditoria de Leads`). Auditoria nova, número novo aqui.
+ *
+ * É a referência do relatório no lugar de uma meta de Recall: o ponto não é bater
+ * um alvo contratado, é que a fila já é cortada em 45% hoje — e cortada no aleatório.
+ */
+export const TAXA_ATENDIMENTO = 0.45;
 
 /**
  * Colunas da base limpa, agrupadas como no dicionário de dados. Literal e não
@@ -63,9 +70,24 @@ export const COLUNAS = [
 ] as const;
 
 /**
- * Curva de ganho acumulado a partir das faixas de score (faixa 1 = 10% mais
- * quentes). Ponto (0,0) incluso para a curva sair da origem junto com a
- * diagonal do aleatório.
+ * Ordem interna de `faixas_score`: sempre do mais quente para o mais frio
+ * (índice 0 = 10% mais quentes), é o que a matemática de ganho/captura abaixo
+ * precisa. O número exibido ao leitor é outro — ver `faixaExibida()`.
+ */
+
+/**
+ * Faixa 1 = 10% mais frios, faixa 10 = 10% mais quentes (decisão de produto de
+ * 20/08/2026: inverte a numeração antiga, onde faixa 1 era o topo). Só afeta o
+ * rótulo mostrado — a ordem interna de `faixas_score` continua quente→frio.
+ */
+export function faixaExibida(faixaInterna: number) {
+  return 11 - faixaInterna;
+}
+
+/**
+ * Curva de ganho acumulado a partir das faixas de score, na ordem interna
+ * (mais quente para mais frio). Ponto (0,0) incluso para a curva sair da
+ * origem junto com a diagonal do aleatório.
  */
 export function ganho(faixas: Faixa[]) {
   const total = faixas.reduce((s, f) => s + f.conversoes, 0);
@@ -78,6 +100,30 @@ export function ganho(faixas: Faixa[]) {
       return { pctBase: base, pctConv: conv / total };
     }),
   );
+}
+
+/**
+ * Quanto das vendas o time captura contactando `pct` da base na ordem do score.
+ * As faixas são decis, então um corte que não cai num decil (45%) sai por
+ * interpolação linear entre os dois pontos vizinhos da curva — é leitura da curva
+ * já exportada, não métrica nova.
+ */
+export function capturaEm(faixas: Faixa[], pct: number) {
+  const g = ganho(faixas);
+  const i = g.findIndex((p) => p.pctBase >= pct);
+  if (i <= 0) return g[i === 0 ? 0 : g.length - 1]!.pctConv;
+  const a = g[i - 1]!;
+  const b = g[i]!;
+  return a.pctConv + ((pct - a.pctBase) / (b.pctBase - a.pctBase)) * (b.pctConv - a.pctConv);
+}
+
+/**
+ * Taxa de conversão ao contactar `pct` da base, ordenada pelo score, do mais
+ * quente para o mais frio. Fila aleatória do mesmo tamanho tem taxa esperada
+ * igual à da base inteira (`taxaGeral`) — não precisa de função própria.
+ */
+export function taxaConversaoEm(faixas: Faixa[], pct: number, taxaGeral: number) {
+  return (capturaEm(faixas, pct) / pct) * taxaGeral;
 }
 
 /** Quantas vezes a faixa mais quente converte mais que a mais fria. */

@@ -29,8 +29,21 @@ export novo, não uma conta em `queries.ts`.
 de ROI seria invenção — o relatório diz isso explicitamente na página final. Só entra se o
 cliente fornecer ticket médio e custo por contato.
 
+**Sem meta de Recall.** O relatório não cita alvo contratado (o antigo "≥ 60%" era desafio
+interno, não compromisso com o cliente) — nem em texto, nem como linha no gráfico de métricas.
+A régua é `TAXA_ATENDIMENTO` (45%), a taxa de atendimento medida na auditoria de leads: o
+argumento é que a fila **já** é cortada nesse ponto, e hoje é cortada no aleatório. Recall@30%
+continua no relatório como métrica descritiva, sem veredito de aprovado/reprovado.
+
 **Referência cruzada de página usa `pg("<seção>")`**, não número literal — reordenar seções não
-pode deixar "ver página 7" apontando para o lugar errado.
+pode deixar "ver página 7" apontando para o lugar errado. `pg()` assume **uma página por
+seção**: se alguma seção precisar de duas páginas, `pg()` passa a mentir para tudo que vem
+depois e tem que virar uma tabela de `{ titulo, paginas }`.
+
+**A audiência não é técnica.** Quem lê conhece a base de leads pelo CRM da Volks e mais nada.
+As três primeiras páginas depois da capa (o que é / como funciona / como ler o score) e o
+glossário do fim existem por isso: são o contrato de leitura do documento, não enfeite. Termo
+técnico novo no corpo do relatório entra junto no `GLOSSARIO` de `pages.ts`.
 
 ## Dados
 
@@ -50,16 +63,34 @@ pode deixar "ver página 7" apontando para o lugar errado.
   primeira versão do relatório publicou `TAOS` (2 leads) e `Novo T-Cross - Sense TSI Automático
   Nacional` (1 lead) acima de `Test Drive` (50 mil). Todo valor traz seu `volume`, e o gráfico
   mostra esse número — é o que deixa a média auditável.
+- **O drill-down traz topo E fundo** (`top=7`, `piores=3` em `tabela_drilldown`). Só o `head()`
+  respondia "quais os melhores" e fazia parecer que nenhuma concessionária puxava a conversão
+  para baixo — quando o que acontecia é que o corte era pelos maiores. As 3 últimas linhas
+  entram sempre, mesmo se positivas.
+- **`coluna_detalhe` pode ser um par concatenado.** `DRILLDOWN_MAP` aceita string ou tupla;
+  `Sub Origem` usa `('Sub Origem', 'Sub Origem Nível 2')` e o rótulo sai como
+  `Site Ofertas › Estou interessado`. `Test Drive` sozinho não dizia de qual origem veio.
+  Do lado do relatório, `rotuloRecorte()` e `tituloDrill()` traduzem cada segmento pelo `LABEL`
+  e descartam o segmento que repete a própria feature.
+- **Volume alto não é contribuição positiva.** `POLO` é a família com mais leads da base
+  (326 mil no treino) e tem contribuição **−0,309**; `JETTA` é a mais negativa (−0,642). Do lado
+  das concessionárias, `Francauto` (−0,551), `Autohauss` (−0,459) e `Paraguacu` (−0,422) puxam
+  para baixo. Isso não é bug de sinal — é o modelo dizendo que aquele recorte converte abaixo da
+  média. Antes do top+fundo nenhum negativo aparecia no relatório e dava para achar que não havia.
+- **`FamilyProduct` detalha nele mesmo, não em `Descrição do Veículo`.** A descrição é texto
+  livre e quebrava a mesma família em quatro barras (`T-Cross`, `Novo T-Cross`, `T-Cross
+  Sense!Automática de 6 velocidades…`); `FamilyProduct` já vem padronizado em 13 valores macro.
+  Isso resolveu o achado na origem, então `cadastroRepetido()` foi removido de `narrativa.ts` —
+  não recrie a função para "detectar" um problema que o export não produz mais.
 - **O export é reproduzível desde 13/08/2026.** `optuna.create_study` rodava sem seed, então
   cada execução achava hiperparâmetros diferentes e não dava para reconstruir o modelo de um
   JSON antigo. Agora usa `TPESampler(seed=42)`. Re-exportar move as métricas (foi de AUC OOT
   0,7215 para 0,7207 na primeira re-execução) — isso é esperado, não bug.
-- `Descrição do Veículo` é texto livre: com o piso, o topo vira `T-Cross`/`Novo T-Cross`/
-  `T-Cross Sense…` — mesma família escrita de várias formas. Tratado como achado do relatório,
-  não escondido — ver `cadastroRepetido()` em `narrativa.ts`, que descarta o prefixo "Novo" e
-  **não** corta no hífen (senão `T-Cross` vira `T`).
-- `Sub Origem Nível 2` tem um valor literal `"0"` com 17,5 mil leads e contribuição negativa
-  forte — é ausência de cadastro entrando no modelo como se fosse canal. `valorSuspeito()` acusa.
+- `Sub Origem Nível 2` tem um valor literal `"0"` (~50 mil leads na base) e ~180 mil nulos. Os
+  nulos viravam nada: o `groupby` os descartava em silêncio. Agora `chave_drilldown()` grava
+  `(sem cadastro)` e eles aparecem. Os dois são ausência de cadastro entrando no modelo como se
+  fossem canal, e `valorSuspeito()` acusa — testando a **folha** do rótulo (o pedaço depois do
+  `›`), porque `Whatsapp › 0` não casa com um teste de "só dígitos" no rótulo inteiro.
 
 ## Insumos
 

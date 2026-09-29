@@ -34,3 +34,24 @@
   white-space: nowrap;
 }
 .cols td { line-height: 2; }
+
+/* Glossário: 21 verbetes só cabem numa página com a linha mais apertada que a
+   das outras tabelas. Se folgar isso, a página parte em duas. */
+.glos td { padding-top: 1.1mm; padding-bottom: 1.1mm; }
+
+/* Os 4 passos de "Como o modelo funciona" reusam a tabela do plano de ação, mas
+   dividem a página com outra tabela e um callout — com os 5mm originais não cabe. */
+.acao.passos td { padding-top: 3.5mm; padding-bottom: 3.5mm; }
+
+/* Capa: são 14 seções, não as 10 do basf — o índice passou de 5 para 7 linhas e o
+   conteúdo estourou os 247mm do `.capa`. Como o `.rodape` do core é ancorado com
+   `position:absolute; bottom:0`, ele não é empurrado por nada: ficava desenhado
+   POR CIMA das últimas linhas do índice, sem quebrar o build.
+   Aqui a capa volta a fluir — com 14 seções ela enche a página sozinha, então o
+   rodapé cai naturalmente no pé e a âncora deixa de ser necessária. Se o índice
+   encolher muito, o rodapé sobe junto: confira a capa no PDF ao mexer nas seções. */
+.capa { height: auto; }
+.capa .rodape { position: static; margin-top: 7mm; }
+.capa .topo { margin-bottom: 13mm; }
+.indice { margin-top: 6mm; }
+.indice li { padding-top: 1mm; padding-bottom: 1mm; }
