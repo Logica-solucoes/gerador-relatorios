@@ -26,6 +26,14 @@ Mesmo banco (`LogicaChatBot`) e mesmo `.env` do `vw_auditoria`. `-e DB_HOST=host
 `HOJE=AAAA-MM-DD` é a data que o relatório considera "hoje". A semana lida é sempre a última
 semana **fechada** antes dela — então `HOJE=2026-08-20` reprocessa 10–16/08. Sem ela, é a data real.
 
+## Publicação no portal
+
+`core/build.ts --publicar` sobe o PDF em `PORTAL_URL` (portal VwAuditoria) com assunto
+`Auditoria`, título `Relatório Semanal Auditoria - Semana N` e referência `Mês/AAAA` — o padrão do
+que já era publicado à mão. N e o mês saem do **domingo** da semana lida: 28/09–04/10 é
+`Outubro/2026` Semana 1. Mesmo título + referência já no portal → não envia de novo, então o n8n pode
+repetir a chamada. O portal devolve erro com HTTP 200 e `status: 1`; `publicar.ts` checa o corpo.
+
 ## O que este relatório é
 
 **Três páginas, densidade alta, sem capa e sem índice.** Página 1 = o pulso da semana (comparativo).
@@ -95,7 +103,7 @@ o sinal do desfecho (`perda()` / `venda()` em `report.ts`): subir "Comprei um VW
 
 O relatório é feito para rodar sozinho toda semana. O contrato com o agendador (hoje, **n8n**) é:
 
-1. Chamar o `docker compose run` acima, numa máquina que enxergue o banco.
+1. Chamar `POST http://gerador:3000/gerar/vw_auditoria_semanal` (ver `deploy/README.md`), que roda `core/build.ts --publicar` numa máquina que enxergue o banco.
 2. **Exit code é a verdade.** Semana sem auditoria, banco fora ou variável faltando derrubam o
    processo com mensagem — nunca geram PDF plausível e errado. Falha = não publica, e avisa.
 3. `carregar()` imprime `→ semana AAAA-MM-DD a AAAA-MM-DD · mês …` no stdout.
@@ -103,8 +111,7 @@ O relatório é feito para rodar sozinho toda semana. O contrato com o agendador
 
 Reprocessar é idempotente: mesma `HOJE`, mesmo PDF (desde que o banco não tenha mudado).
 
-**Pendente:** o destino final é um **endpoint de upload**, ainda não definido. Quando for, ele entra
-como passo do n8n, não como código daqui — o motor gera, quem publica é o agendador.
+A publicação no portal é feita aqui (`publicar.ts`, ver "Publicação no portal"), não no n8n: o n8n só agenda, chama e avisa por e-mail quando a resposta não é `ok`.
 
 ## Qual corte é semanal e qual é acumulado
 

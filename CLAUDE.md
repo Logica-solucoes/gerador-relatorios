@@ -37,6 +37,14 @@ build` para mudança de código, só para mudança de dependência ou de Dockerf
 esses mounts: sem eles o container roda a cópia assada na imagem e gera um PDF **plausível e
 errado**, sem avisar.
 
+## Produção
+
+A imagem sobe `core/server.ts`: o n8n chama `POST /gerar/<cliente>` e cada chamada roda
+`core/build.ts --publicar` num processo com só `env/<cliente>.env` — o servidor não carrega
+credencial de cliente nenhum. `--publicar` chama `clients/<id>/publicar.ts` depois do PDF; cliente
+sem esse arquivo não publica. Deploy, verificação e atualização: `deploy/README.md`.
+Publicar imagem: `bun run imagem <versão>` (recusa com git sujo).
+
 ## Tamanho da imagem: dois números, um deles engana
 
 `docker images` no CLI atual mostra **DISK USAGE** e **CONTENT SIZE** — são coisas diferentes.
@@ -55,7 +63,7 @@ Maior peso real, e o que fazer sobre cada um:
   `bun install --frozen-lockfile --omit=dev` no Dockerfile — só servem o `tsc --noEmit` local.
 
 `compose.yaml` fixa `image: gerador-relatorios:latest`. Sem isso o compose nomeia
-`{pasta}-{serviço}` (`gerador-relatorios-relatorio`), e o `docker image inspect` e o script de push perdem o nome estável.
+`{pasta}-{serviço}` (`gerador-relatorios-relatorio`) e o `docker image inspect` acima para de achar a imagem.
 
 ## Banco
 

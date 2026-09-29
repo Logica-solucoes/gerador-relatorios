@@ -1,0 +1,29 @@
+# Produção: servidor do n8n. Copie esta pasta para /opt/gerador-relatorios/ (ver README.md).
+services:
+  gerador:
+    image: logicasolucoesanaliticas/logicaprivado:gerador-relatorios-latest
+    restart: unless-stopped
+    environment:
+      GERADOR_TOKEN: ${GERADOR_TOKEN:?defina GERADOR_TOKEN no .env ao lado}
+      TZ: America/Sao_Paulo
+    volumes:
+      - ./env:/app/env:ro
+      - ./out:/app/out
+    # Sem ports: só o n8n, na mesma rede, chama http://gerador:3000.
+    networks: [n8n]
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    mem_limit: 1g
+    cpus: 2.0
+    healthcheck:
+      test: ["CMD", "bun", "-e", "process.exit((await fetch('http://localhost:3000/saude')).ok ? 0 : 1)"]
+      interval: 1m
+
+networks:
+  n8n:
+    external: true
+    name: ${N8N_NETWORK:?defina N8N_NETWORK no .env ao lado (docker network ls)}
