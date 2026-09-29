@@ -74,9 +74,13 @@ if (import.meta.main) {
 
   // Só com a flag: o loop local de design nunca publica.
   if (process.argv.includes("--publicar")) {
-    const pdf = `out/${client}/relatorio.pdf`;
-    if (!(await Bun.file(pdf).exists())) throw new Error("--publicar sem PDF — rode no container (weasyprint)");
-    const { publicar } = await import(`../clients/${client}/publicar.ts`);
-    await publicar(pdf);
+    // Checa o weasyprint, não o arquivo: um PDF antigo em out/ seria publicado no lugar do novo.
+    if (!Bun.which("weasyprint")) throw new Error("--publicar sem PDF — rode no container (weasyprint)");
+    if (!(await Bun.file(`clients/${client}/publicar.ts`).exists())) {
+      console.log(`· ${client} não tem publicar.ts — só gera`);
+    } else {
+      const { publicar } = await import(`../clients/${client}/publicar.ts`);
+      await publicar(`out/${client}/relatorio.pdf`);
+    }
   }
 }
