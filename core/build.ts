@@ -71,4 +71,12 @@ if (import.meta.main) {
   // dai o --env-file explicito. Sem ele a falha e' um DB_HOST ausente confuso.
   if (!client) throw new Error("CLIENT não definida. Ex: CLIENT=basf bun --env-file=clients/basf/.env run core/build.ts");
   await gerar(client);
+
+  // Só com a flag: o loop local de design nunca publica.
+  if (process.argv.includes("--publicar")) {
+    const pdf = `out/${client}/relatorio.pdf`;
+    if (!(await Bun.file(pdf).exists())) throw new Error("--publicar sem PDF — rode no container (weasyprint)");
+    const { publicar } = await import(`../clients/${client}/publicar.ts`);
+    await publicar(pdf);
+  }
 }
