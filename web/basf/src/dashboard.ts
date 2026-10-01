@@ -78,7 +78,7 @@ export function montarDashboard(host: HTMLElement, carregar: Carregar): Montado 
       [...new Set(base.map((l) => l[dim]).filter((v) => v != null && v !== "").map(String))]
         .sort((x, y) => (dim === "ano" ? Number(y) - Number(x) : x.localeCompare(y, "pt-BR")));
     shell.el("chips").innerHTML = chips(dims, estado.filtros[estado.aba], opcoes);
-    shell.el("ctl").innerHTML = a.controles(estado);
+    shell.el("ctl").innerHTML = a.controles(estado, dados);
     a.render({ shell, estado, dados, mudar }, corpo);
   }
 

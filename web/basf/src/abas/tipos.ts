@@ -19,6 +19,6 @@ export interface DefAba {
   /** Dimensões dos chips desta aba (dim → rótulo), e de onde tirar as opções. */
   chips(e: Estado): { dims: Record<string, string>; origem: Recurso };
   /** Controles à direita da barra (segmentados), em HTML. */
-  controles(e: Estado): string;
+  controles(e: Estado, dados: Dados): string;
   render(ctx: Ctx, corpo: HTMLElement): void;
 }

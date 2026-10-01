@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { agregar, atingimento, filtrar, share, total, variacao } from "./calc";
+import { agregar, atingimento, filtrar, mesDeCorte, mesMaximo, share, total, variacao } from "./calc";
 
 const L = [
   { uf: "MG", crop: "ONX", ano: 2024, area: 100, dose: 10 },
@@ -55,5 +55,18 @@ describe("razões", () => {
   test("atingimento é realizado / meta", () => {
     expect(atingimento(29, 94)).toBeCloseTo(0.3085, 3);
     expect(atingimento(29, null)).toBeNull();
+  });
+});
+
+describe("mesDeCorte", () => {
+  test("ano corrente não passa do mês da última venda", () => {
+    expect(mesMaximo(2026, "2026-06-15")).toBe(6);
+    expect(mesDeCorte(null, 2026, "2026-06-15")).toBe(6);
+    expect(mesDeCorte(12, 2026, "2026-06-15")).toBe(6);
+    expect(mesDeCorte(3, 2026, "2026-06-15")).toBe(3);
+  });
+  test("ano fechado vai até dezembro", () => {
+    expect(mesDeCorte(null, 2025, "2026-06-15")).toBe(12);
+    expect(mesDeCorte(9, 2025, "2026-06-15")).toBe(9);
   });
 });

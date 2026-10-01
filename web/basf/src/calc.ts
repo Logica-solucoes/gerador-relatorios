@@ -57,3 +57,8 @@ export function variacao(atual: N, anterior: N, baseMinima = 0): number | null {
 }
 
 export const atingimento = share;
+
+/** Último mês com venda no ano: o corrente vai até a data da última venda, ano fechado vai a dezembro. */
+export const mesMaximo = (ano: number, ultima: string) => (ano === Number(ultima.slice(0, 4)) ? Number(ultima.slice(5, 7)) : 12);
+
+export const mesDeCorte = (pedido: number | null, ano: number, ultima: string) => Math.min(pedido ?? 12, mesMaximo(ano, ultima));

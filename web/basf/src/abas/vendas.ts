@@ -1,21 +1,25 @@
 import * as Plot from "@observablehq/plot";
-import { agregar, atingimento, filtrar, total, variacao, type Filtros } from "../calc";
+import { agregar, atingimento, filtrar, mesDeCorte, mesMaximo, total, variacao, type Filtros } from "../calc";
 import { cartao, kpi, seg } from "../componentes";
 import { esc, moedaCompacta, n0, nf } from "../shared/formato";
 import { C } from "../shared/tema";
 import type { Linha } from "../types";
-import type { DefAba } from "./tipos";
+import type { Dados, DefAba } from "./tipos";
 
 const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 const BASE_MINIMA = 1000;
+const ultimaVenda = (d: Dados) => String(d.meta?.find((m) => m.ultimaVenda)?.ultimaVenda ?? "");
+const anoDe = (f: Filtros, d: Dados) => (f.ano?.length ? Math.max(...f.ano.map(Number)) : Math.max(...(d.vendas ?? []).map((l) => Number(l.ano))));
+
 export const vendas: DefAba = {
   id: "vendas",
   rotulo: "Vendas",
   recursos: () => ["vendas", "meta"],
   chips: () => ({ dims: { ano: "Ano", crop: "Crop", rtv: "RTV", regional: "Regional", cliente: "Cliente" }, origem: "vendas" }),
-  controles: (e) => {
+  controles: (e, dados) => {
+    const max = mesMaximo(anoDe(e.filtros.vendas, dados), ultimaVenda(dados));
     const corte = `<select class="bmd-sel" data-corte aria-label="Mês de corte" title="Mês de corte"><option value=""${e.mesCorte == null ? " selected" : ""}>Corte: auto</option>${MESES.map((m, i) =>
-      `<option value="${i + 1}"${e.mesCorte === i + 1 ? " selected" : ""}>Até ${m}</option>`).join("")}</select>`;
+      `<option value="${i + 1}"${e.mesCorte === i + 1 ? " selected" : ""}${i + 1 > max ? " disabled" : ""}>Até ${m}</option>`).join("")}</select>`;
     return corte + seg("moeda", { brl: "R$", eur: "€" }, e.moeda, [], "taxa do ano não cadastrada") + seg("medida", { valor: "Valor", th: "TH" }, e.medida);
   },
 
@@ -24,11 +28,8 @@ export const vendas: DefAba = {
     const f: Filtros = e.filtros.vendas;
     const todas = ctx.dados.vendas ?? [];
     const meta = ctx.dados.meta ?? [];
-    const ultima = String(meta.find((m) => m.ultimaVenda)?.ultimaVenda ?? "");
-    const anoMax = Math.max(...todas.map((l) => Number(l.ano)));
-    const ano = f.ano?.length ? Math.max(...f.ano.map(Number)) : anoMax;
-    // Automático: ano corrente corta no mês da última venda; ano fechado vai até dezembro.
-    const mesCorte = e.mesCorte ?? (ano === Number(ultima.slice(0, 4)) ? Number(ultima.slice(5, 7)) : 12);
+    const ano = anoDe(f, ctx.dados);
+    const mesCorte = mesDeCorte(e.mesCorte, ano, ultimaVenda(ctx.dados));
     const metaAno = meta.find((m) => m.ano === ano);
     const taxa = (a: number) => meta.find((m) => m.ano === a)?.taxa as number | null | undefined;
     const semTaxa = e.moeda === "eur" && !taxa(ano);
