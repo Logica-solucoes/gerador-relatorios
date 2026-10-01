@@ -132,3 +132,23 @@ Alvo: 88–99%. Abaixo de 85% sobra vão visível; acima de 99% a página parte 
 - Adicionar Playwright/Puppeteer. Foi avaliado e descartado: pesa 6× mais e não suporta Paged
   Media, que é justamente o motivo do WeasyPrint.
 - Adicionar dependência para o que resolve em algumas linhas. Hoje são 3.
+
+## UI stack (`web/basf/`)
+
+Dashboard web, não relatório PDF: segue o padrão `web/momentive/` (DOM puro + Observable Plot,
+`montarDashboard(host, dados)`, CSS escopado) para virar componente Aurelia no portal Basf. Os
+itens dos registries abaixo são React — porte o desenho (markup + CSS nos tokens), sem instalar.
+
+Tone: Dense system — BI interno de mercado, muitos filtros, tabelas e gráficos.
+- Blocks: `shared/` do LogicaDash (branch `masterAlexandreBFM`) retematizado; referência visual shadcnuikit (dashboards) e ReUI (filtros)
+- Motion: só transição CSS
+- Icons: Tabler outline, SVG inline só dos usados
+- Theme: escala 50–950 do laranja `#F39500` (portal), base creme, verde hortaliça para dados, azul BASF `#004A96` só na marca, vermelho `#C60023` só alerta
+- Fonts: Manrope (texto/títulos) + JetBrains Mono (números em tabela), algarismos tabulares
+- Showpiece: mapa do Brasil (Plot + GeoJSON IBGE, sem tiles) — único destaque; loading em skeleton CSS
+- Extras (portar desenho):
+  - dashboardcn `kpi-card` (KPIs com delta e sparkline), `bar-list` (rankings clicáveis), `allocation-card` (share), `distribution-bar` (composição 100%), `metric-list` (comparativo de fontes)
+  - ReUI `filters-chip` (barra de filtros global), `c-data-grid-8` (cliente-chave expande na ficha)
+  - blocks.so `table-04` (key list agrupada com subtotal)
+
+Pick UI from this stack only. At the start of a UI task, offer once to scout the `ui-sources` catalog for components that fit this tone; load that skill for the scouting pass or when the stack can't cover a need.
