@@ -6,14 +6,24 @@ import { C } from "./shared/tema";
 
 export interface PontoMapa { lat: number; lon: number; valor: number; rotulo: string }
 
-/** Afastamento mínimo (graus) entre rótulos: Uberaba e São Gotardo ficam a ~1,3°. */
-const DIST_ROTULO = 1.5;
+/** Afastamento mínimo (px) entre rótulos: o texto tem ~120px de largura e 14 de altura. */
+const DIST_ROTULO_PX = 90;
 
-function rotulaveis(pontos: PontoMapa[], n: number): PontoMapa[] {
-  // ponytail: anti-colisão gulosa em graus, não em pixel. Suficiente para 5 rótulos.
+const merc = (lat: number) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
+const coords = (g: unknown): [number, number][] => (Array.isArray(g) && typeof g[0] === "number" ? [g as [number, number]] : (g as unknown[]).flatMap(coords));
+
+/** Pixels por unidade mercator: o Plot encaixa o domínio (UFs) em largura x altura mantendo a proporção. */
+function escalaPx(largura: number, alto: number): number {
+  const pts = (ufGeo as unknown as { features: { geometry: { coordinates: unknown } }[] }).features.flatMap((f) => coords(f.geometry.coordinates));
+  const xs = pts.map((c) => (c[0] * Math.PI) / 180), ys = pts.map((c) => merc(c[1]));
+  return Math.min((largura - 8) / (Math.max(...xs) - Math.min(...xs)), (alto - 8) / (Math.max(...ys) - Math.min(...ys)));
+}
+
+function rotulaveis(pontos: PontoMapa[], n: number, px: number): PontoMapa[] {
   const escolhidos: PontoMapa[] = [];
+  const dist = (p: PontoMapa, q: PontoMapa) => px * Math.hypot(((p.lon - q.lon) * Math.PI) / 180, merc(p.lat) - merc(q.lat));
   for (const p of [...pontos].sort((a, b) => b.valor - a.valor)) {
-    if (escolhidos.every((q) => Math.hypot(q.lat - p.lat, q.lon - p.lon) > DIST_ROTULO)) escolhidos.push(p);
+    if (escolhidos.every((q) => dist(p, q) > DIST_ROTULO_PX)) escolhidos.push(p);
     if (escolhidos.length === n) break;
   }
   return escolhidos;
@@ -44,7 +54,7 @@ export function desenharMapa(
       }),
       Plot.geo(geo as never, Plot.pointer(Plot.centroid({ stroke: C.o700, strokeWidth: 2, fill: "none" }))),
       Plot.dot(pontos, { x: "lon", y: "lat", r: "valor", fill: C.verde, fillOpacity: 0.55, stroke: "#2F5E14", strokeWidth: 0.8, title: (p: PontoMapa) => `${p.rotulo}: ${fmt(p.valor)}` }),
-      Plot.text(rotulaveis(pontos, 5), {
+      Plot.text(rotulaveis(pontos, 5, escalaPx(shell.largura(), alto)), {
         x: "lon", y: "lat", text: (p: PontoMapa) => `${p.rotulo}  ${fmt(p.valor)}`,
         dx: 12, textAnchor: "start", fontSize: 11, fontWeight: 600, fill: C.ink, stroke: "#fff", strokeWidth: 3,
       }),
