@@ -124,14 +124,14 @@
 .bmd-ficha__g b { display: block; font-size: 17px; font-weight: 800; margin-top: 2px; }
 .bmd-ac { color: var(--o700); }
 @media (max-width: 760px) { .bmd-ficha__g { grid-template-columns: 1fr 1fr; } }
-.bmd-par2{display:flex;flex-direction:column;gap:6px}
-.bmd-par2 button{display:grid;grid-template-columns:minmax(70px,26%) 1fr auto;gap:10px;align-items:center;text-align:left;background:none;border:0;padding:4px 2px;cursor:pointer;font:inherit;color:inherit;border-radius:6px}
-.bmd-par2 button:hover{background:rgba(0,0,0,.04)}
-.bmd-par2 button>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
-.bmd-par2 button>span:nth-child(2){display:flex;flex-direction:column;gap:3px}
-.bmd-par2 s{display:block;height:7px;border-radius:2px;text-decoration:none}
-.bmd-par2 .bmd-mono{font-size:12px;white-space:nowrap}
-.bmd-par2 em{font-style:normal;margin-left:6px}
+.bmd-par2 { display: flex; flex-direction: column; gap: 6px; }
+.bmd-par2 button { display: grid; grid-template-columns: minmax(70px,26%) 1fr auto; gap: 10px; align-items: center; text-align: left; background: none; border: 0; padding: 4px 2px; cursor: pointer; font: inherit; color: inherit; border-radius: 6px; }
+.bmd-par2 button:hover { background: rgba(0,0,0,.04); }
+.bmd-par2 button>span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.bmd-par2 button>span:nth-child(2) { display: flex; flex-direction: column; gap: 3px; }
+.bmd-par2 s { display: block; height: 7px; border-radius: 2px; text-decoration: none; }
+.bmd-par2 .bmd-mono { font-size: 12px; white-space: nowrap; }
+.bmd-par2 em { font-style: normal; margin-left: 6px; }
 .bmd .bmd-busca { width: 100%; box-sizing: border-box; height: 34px; padding: 0 14px; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--bg); color: var(--ink); font: 500 13px Manrope, ui-sans-serif, system-ui, sans-serif; outline: 0; margin: 0; box-shadow: none; transition: border-color .15s, box-shadow .15s, background .15s; }
 .bmd .bmd-busca:focus { border-color: var(--o500); background: var(--surface); box-shadow: 0 0 0 3px var(--o100); }
 .bmd .bmd-busca.is-ativo { border-color: var(--o500); background: var(--o50); }
