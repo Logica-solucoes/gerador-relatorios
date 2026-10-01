@@ -14,7 +14,7 @@ import { median } from "d3-array";
    instâncias reusadas o mesmo trabalho leva 19 ms — 39x, medido.
 
    Só instância guardada: as opções e a saída são idênticas às de antes.       */
-const FMT_INT = new Intl.NumberFormat("pt-BR");
+const FMT_INT = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
 const FMT_TICK = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 });
 const FMT_DIA = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit" });
 const FMT_HORA = new Intl.DateTimeFormat("pt-BR", {

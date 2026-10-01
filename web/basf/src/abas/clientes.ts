@@ -1,12 +1,11 @@
 import { filtrar, share, total } from "../calc";
 import { kpi, seg } from "../componentes";
 import { busca, normalizar } from "../shared/filtros";
-import { esc, moedaCompacta, nf } from "../shared/formato";
+import { esc, moedaCompacta, n0, nf } from "../shared/formato";
 import { ICONE } from "../shared/icones";
 import type { Linha } from "../types";
 import type { DefAba } from "./tipos";
 
-const n0 = (v: number | null) => nf(v, 0);
 const pct = (v: number | null) => (v == null ? "—" : `${nf(v * 100, 1)}%`);
 const GENERICOS = new Set(["DIVERSOS"]);
 const COLS = 8;
