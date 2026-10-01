@@ -45,13 +45,19 @@ await gravar("basf", (await ler("basf")).map((b) => {
   };
 }));
 
-// IBGE: meso só faz sentido no nível ME; cod de MU vira uf pelo código
-await gravar("ibge", (await ler("ibge")).map((i) => ({
-  nivel: i.nivel, ano: num(i.ano), especie: txt(i.especie),
-  uf: txt(i.uf) ?? (i.nivel === "MU" ? ufDoCodigo(i.cod) : null),
-  meso: i.nivel === "ME" ? txt(i.nome) : null,
-  cod: i.nivel === "MU" ? num(i.cod) : null, nome: txt(i.nome), area: num(i.area),
-})));
+// IBGE: meso só faz sentido no nível ME. O `Cód.` do PBI não é confiável como código IBGE:
+// em MU o código vem de nome + UF ("Uberaba (MG)") pela tabela de municípios.
+await gravar("ibge", (await ler("ibge")).map((i) => {
+  const [, nomeMu, ufMu] = i.nivel === "MU" ? String(i.nome).match(/^(.*) \((\w\w)\)$/) ?? [] : [];
+  const cod = i.nivel === "MU" ? casarMunicipio(nomeMu ?? null, ufMu ? [ufMu] : [], idx) : null;
+  if (i.nivel === "MU" && cod == null) pendente("ibge_municipio_sem_codigo", String(i.nome));
+  return {
+    nivel: i.nivel, ano: num(i.ano), especie: txt(i.especie),
+    uf: txt(i.uf) ?? ufMu ?? null,
+    meso: i.nivel === "ME" ? txt(i.nome) : null,
+    cod, nome: txt(i.nome), area: num(i.area),
+  };
+}));
 
 await gravar("abcsem", (await ler("abcsem")).map((a) => ({
   ano: num(a.ano), especie: txt(a.especie), tipo: txt(a.tipo), segmento: txt(a.segmento), crop: txt(a.crop),
