@@ -8,18 +8,6 @@ import type { DefAba } from "./tipos";
 
 const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 const BASE_MINIMA = 1000;
-const ESTILO_PAR = `<style>
-.bmd-par{display:flex;flex-direction:column;gap:6px}
-.bmd-par button{display:grid;grid-template-columns:minmax(70px,26%) 1fr auto;gap:10px;align-items:center;text-align:left;background:none;border:0;padding:4px 2px;cursor:pointer;font:inherit;color:inherit;border-radius:6px}
-.bmd-par button:hover{background:rgba(0,0,0,.04)}
-.bmd-par button>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
-.bmd-par button>span:nth-child(2){display:flex;flex-direction:column;gap:3px}
-.bmd-par s{display:block;height:7px;border-radius:2px;text-decoration:none}
-.bmd-par .bmd-mono{font-size:12px;white-space:nowrap}
-.bmd-par em{font-style:normal;margin-left:6px}
-.bmd-pos{color:${C.verde}}.bmd-neg{color:${C.alerta}}
-</style>`;
-
 export const vendas: DefAba = {
   id: "vendas",
   rotulo: "Vendas",
@@ -87,7 +75,7 @@ export const vendas: DefAba = {
       }).join("")}</div>`;
     };
 
-    corpo.innerHTML = `${ESTILO_PAR}
+    corpo.innerHTML = `
       <div class="bmd-kpis2">
         ${kpi({ rotulo: "Atingimento do forecast anual", destaque: true, valor: ating == null ? "—" : `${nf(ating * 100, 1)}%`,
           proporcao: ating, marcador: mesCorte / 12,
