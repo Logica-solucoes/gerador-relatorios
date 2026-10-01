@@ -13,7 +13,7 @@ import type { Ctx, DefAba } from "./tipos";
 
 const UNIDADE: Record<string, string> = { area: "ha", dose: "TH/ha", th: "TH", volume: "", valor: "" };
 const fmtMetrica = (m: string) => (v: number) =>
-  m === "valor" ? (Math.abs(v) >= 1e6 ? moedaCompacta(v) : `R$ ${n0(Math.round(v))}`) : m === "dose" ? `${nf(v, 0)} ${UNIDADE[m]}` : `${n0(Math.round(v))}${UNIDADE[m] ? ` ${UNIDADE[m]}` : ""}`;
+  m === "valor" ? moedaCompacta(v) : m === "dose" ? `${nf(v, 0)} ${UNIDADE[m]}` : `${n0(Math.round(v))}${UNIDADE[m] ? ` ${UNIDADE[m]}` : ""}`;
 const DIMS_VENDAS = ["ano", "crop", "rtv", "regional", "hotspot", "segmento"];
 const pct = (v: number | null) => (v == null ? "—" : `${nf(v * 100, 1)}%`);
 const deltaTxt = (v: number | null, base: string) => (v == null ? null : { txt: `${v >= 0 ? "+" : "−"}${nf(Math.abs(v) * 100, 1)}% vs ${base}`, ruim: v < 0 });
