@@ -39,12 +39,17 @@ export const vendas: DefAba = {
     const ytdAnt = conv(total(recorte(ano - 1, mesCorte), campo), ano - 1);
     const vol = total(recorte(ano, mesCorte), "th");
     const volAnt = total(recorte(ano - 1, mesCorte), "th");
-    const forecast = conv((metaAno?.forecast as number | null) ?? null, ano);
-    const budget = conv((metaAno?.budget as number | null) ?? null, ano);
-    const ating = campo === "valor" ? atingimento(ytd, forecast) : null;
+    // Meta é do total da empresa e só em R$: recorte ou TH não têm contra o que comparar.
+    const recortado = Object.entries(f).some(([dim, vs]) => dim !== "ano" && vs.length);
+    const metaValida = campo === "valor" && !recortado;
+    const forecast = campo === "valor" ? conv((metaAno?.forecast as number | null) ?? null, ano) : null;
+    const budget = campo === "valor" ? conv((metaAno?.budget as number | null) ?? null, ano) : null;
+    const ating = metaValida ? atingimento(ytd, forecast) : null;
+    const notaMeta = campo === "th" ? "meta só em R$" : recortado ? "meta é do total, sem filtros" : "";
+    const baseMinima = campo === "valor" ? BASE_MINIMA : 0;
     const periodo = mesCorte === 12 ? String(ano) : `${ano} até ${MESES[mesCorte - 1]}`;
-    const d = (a: number | null, b: number | null) => {
-      const v = variacao(a, b, BASE_MINIMA);
+    const d = (a: number | null, b: number | null, base = 0) => {
+      const v = variacao(a, b, base);
       return v == null ? null : { txt: `${v >= 0 ? "+" : "−"}${nf(Math.abs(v) * 100, 1)}% vs ${ano - 1}`, ruim: v < 0 };
     };
 
@@ -54,6 +59,7 @@ export const vendas: DefAba = {
     }
 
     const acum = (a: number) => {
+      if (!filtrar(todas, { ...f, ano: [String(a)] }).length || (e.moeda === "eur" && !taxa(a))) return [];
       let s = 0;
       return Array.from({ length: a === ano ? mesCorte : 12 }, (_, i) => {
         s += conv(total(filtrar(todas, { ...f, ano: [String(a)], mes: [String(i + 1)] }), campo), a) ?? 0;
@@ -64,14 +70,15 @@ export const vendas: DefAba = {
 
     const pareado = (dim: string) => {
       const atual = agregar(recorte(ano, mesCorte), {}, dim, campo).slice(0, 6);
-      const ant = new Map(agregar(recorte(ano - 1, mesCorte), {}, dim, campo).map((g) => [g.chave, g.valor]));
-      const max = Math.max(...atual.map((g) => g.valor), ...atual.map((g) => ant.get(g.chave) ?? 0), 1);
-      return `<div class="bmd-par">${atual.map((g) => {
+      const ant = new Map(agregar(recorte(ano - 1, mesCorte), {}, dim, campo).map((g) => [g.chave, conv(g.valor, ano - 1)]));
+      const atualConv = atual.map((g) => conv(g.valor, ano) ?? 0);
+      const max = Math.max(...atualConv, ...atual.map((g) => ant.get(g.chave) ?? 0), 1);
+      return `<div class="bmd-par2">${atual.map((g, i) => {
         const a = ant.get(g.chave) ?? null;
-        const v = variacao(g.valor, a, BASE_MINIMA);
+        const v = variacao(atualConv[i]!, a, baseMinima);
         return `<button type="button" data-filtro="${dim}" data-v="${esc(g.chave)}"><span title="${esc(g.chave)}">${esc(g.chave)}</span>
-          <span><s style="width:${(g.valor / max) * 100}%;background:${C.o500}"></s><s style="width:${((a ?? 0) / max) * 100}%;background:${C.anterior}"></s></span>
-          <span class="bmd-mono">${fmt(conv(g.valor, ano))} <em class="${v != null && v < 0 ? "bmd-neg" : "bmd-pos"}">${v == null ? "—" : `${v >= 0 ? "+" : "−"}${nf(Math.abs(v) * 100, 0)}%`}</em></span></button>`;
+          <span><s style="width:${(atualConv[i]! / max) * 100}%;background:${C.o500}"></s><s style="width:${((a ?? 0) / max) * 100}%;background:${C.anterior}"></s></span>
+          <span class="bmd-mono">${fmt(atualConv[i]!)} <em class="${v != null && v < 0 ? "bmd-neg" : "bmd-pos"}">${v == null ? "—" : `${v >= 0 ? "+" : "−"}${nf(Math.abs(v) * 100, 0)}%`}</em></span></button>`;
       }).join("")}</div>`;
     };
 
@@ -79,10 +86,10 @@ export const vendas: DefAba = {
       <div class="bmd-kpis2">
         ${kpi({ rotulo: "Atingimento do forecast anual", destaque: true, valor: ating == null ? "—" : `${nf(ating * 100, 1)}%`,
           proporcao: ating, marcador: mesCorte / 12,
-          nota: forecast == null ? `meta não cadastrada para ${ano}` : `${fmt(ytd)} de ${fmt(forecast)} · marcador = ritmo esperado` })}
-        ${kpi({ rotulo: `Vendas · ${periodo}`, valor: fmt(ytd), delta: d(ytd, ytdAnt) })}
+          nota: notaMeta || (forecast == null ? `meta não cadastrada para ${ano}` : `${fmt(ytd)} de ${fmt(forecast)} · marcador = ritmo esperado`) })}
+        ${kpi({ rotulo: `Vendas · ${periodo}`, valor: fmt(ytd), delta: d(ytd, ytdAnt, baseMinima) })}
         ${kpi({ rotulo: `Volume · ${periodo}`, valor: vol == null ? "—" : `${n0(Math.round(vol / 1000))} mil TH`, delta: d(vol, volAnt) })}
-        ${kpi({ rotulo: `Budget ${ano}`, valor: budget == null ? "—" : fmt(budget), nota: budget == null ? "meta não cadastrada" : "" })}
+        ${kpi({ rotulo: `Budget ${ano}`, valor: budget == null ? "—" : fmt(budget), nota: budget == null ? notaMeta || "meta não cadastrada" : notaMeta })}
       </div>
       ${cartao("Vendas acumuladas no ano", `${ano} contra ${ano - 1}`, '<div data-el="curva"></div>')}
       <div class="bmd-grid2">
@@ -97,7 +104,7 @@ export const vendas: DefAba = {
       y: { grid: true, label: null, tickFormat: (v: number) => fmt(v) },
       color: { domain: [String(ano - 1), String(ano)], range: [C.anterior, C.o500] },
       marks: [
-        ...(budget != null && campo === "valor" ? [Plot.ruleY([budget], { stroke: C.verde, strokeDasharray: "4 3" }),
+        ...(budget != null && metaValida ? [Plot.ruleY([budget], { stroke: C.verde, strokeDasharray: "4 3" }),
           Plot.text([budget], { x: 11, y: (v: number) => v, text: () => `Budget ${ano}`, dy: -7, textAnchor: "end", fill: C.verde, fontWeight: 600 })] : []),
         Plot.areaY(curva.filter((p) => p.serie === String(ano)), { x: "m", y: "v", fill: C.o500, fillOpacity: 0.12, curve: "monotone-x" }),
         Plot.lineY(curva, { x: "m", y: "v", stroke: "serie", strokeWidth: 2.4, curve: "monotone-x" }),
