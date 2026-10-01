@@ -91,7 +91,6 @@ const vendasBruto = (await Bun.file(`${BRUTO}vendas.json`).json()) as { ultimaVe
 const vendas = new Map<string, Linha>();
 for (const v of vendasBruto.linhas) {
   const crop = normalizarCrop(v.kind);
-  if (crop == null) continue;
   const s2 = seg2.get(String(v.item));
   const l: Linha = {
     ano: v.ano, mes: v.mes, crop, rtv: txt(v.rtvNome) ?? txt(v.rtvCod) ?? "Sem RTV",

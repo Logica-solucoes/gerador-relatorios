@@ -20,7 +20,7 @@
 - Regras de vendas: `clients/basf/CLAUDE.md` (DUMMY, `ship_to_country='BR'`, `inv_date`, `cust_name`).
 - Armadilhas do Plot: `CLAUDE.md` da raiz, seção `## Plot` (`dx`/`dy` são constantes; `tickFormat` recebe `(v, i)`).
 - **IBGE tem níveis que não somam entre si**: 2024 → BR 232.102 ha, UF 232.102, MU 326.067. Total usa BR (ou UF quando há filtro de estado); ranking por estado usa UF; mesorregião usa ME; pontos do mapa usam MU. Nunca some MU para total.
-- Vendas no PBI: `ONS`/`ONI` viram `ONX`; `WMR` é excluído. Repetir isso no snapshot.
+- Vendas no PBI: `ONS`/`ONI` viram `ONX` (repetido no snapshot). O PBI exclui `WMR`; o snapshot mantém, para bater com o SQL (decisão do usuário, 2026-10-01).
 
 ## Mapa de arquivos
 

@@ -34,11 +34,11 @@ describe("dividirUF", () => {
 });
 
 describe("normalizarCrop", () => {
-  test("cebola tem um código só, como no PBI; WMR sai", () => {
+  test("cebola tem um código só, como no PBI; WMR fica (vendas batem com o SQL)", () => {
     expect(normalizarCrop("ONS")).toBe("ONX");
     expect(normalizarCrop("ONI")).toBe("ONX");
     expect(normalizarCrop("WMW")).toBe("WMW");
-    expect(normalizarCrop("WMR")).toBeNull();
+    expect(normalizarCrop("WMR")).toBe("WMR");
     expect(normalizarCrop(null)).toBe("Sem crop");
   });
 });

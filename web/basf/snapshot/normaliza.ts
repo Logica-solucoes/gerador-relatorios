@@ -37,10 +37,9 @@ export function dividirUF(s: string | null | undefined): string[] {
   return s.split("/").map((x) => x.trim().toUpperCase()).filter((x) => /^[A-Z]{2}$/.test(x));
 }
 
-/** Igual ao Power Query do PBI: ONS/ONI → ONX, WMR fora. */
-export function normalizarCrop(kind: string | null | undefined): string | null {
+/** ONS/ONI → ONX como no PBI. WMR fica (o PBI tira): vendas batem com o SQL e o relatório PDF. */
+export function normalizarCrop(kind: string | null | undefined): string {
   if (!kind) return "Sem crop";
-  if (kind === "WMR") return null;
   return kind === "ONS" || kind === "ONI" ? "ONX" : kind;
 }
 
