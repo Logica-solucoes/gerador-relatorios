@@ -29,7 +29,7 @@ function rotulaveis(pontos: PontoMapa[], n: number, largura: number, alto: numbe
     const { x, y } = pos(p), w = texto(p).length * CHAR_PX;
     const aDireita = x + 12 + w <= largura - 4;
     const [x0, x1] = aDireita ? [x + 12, x + 12 + w] : [x - 12 - w, x - 12];
-    if (x0 < 0 || caixas.some(([a, b, c, d]) => x0 < b + 4 && x1 + 4 > a && y - 8 < d && y + 8 > c)) continue;
+    if (x0 < 0 || y < 8 || y > alto - 8 || caixas.some(([a, b, c, d]) => x0 < b + 4 && x1 + 4 > a && y - 8 < d && y + 8 > c)) continue;
     caixas.push([x0, x1, y - 7, y + 7]);
     (aDireita ? dir : esq).push(p);
     if (dir.length + esq.length === n) break;
@@ -48,7 +48,7 @@ export function desenharMapa(
   const geo = ufGeo as unknown as { features: { properties: { uf: string } }[] };
   const alto = Math.min(460, Math.max(300, shell.largura() * 0.45));
   const texto = (p: PontoMapa) => `${p.rotulo}  ${fmt(p.valor)}`;
-  const rotulos = rotulaveis(pontos, 5, shell.el(alvo).clientWidth || shell.largura(), alto, texto);
+  const rotulos = rotulaveis(pontos, 5, shell.larguraDe(alvo), alto, texto);
   shell.desenhar(alvo, {
     height: alto,
     margin: 4,

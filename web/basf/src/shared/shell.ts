@@ -60,6 +60,8 @@ export interface Shell {
    *  quantas barras o recorte tem? Cai no padrão quando ainda não foi medido
    *  (clientWidth 0 no jsdom e no primeiro paint). */
   largura(): number;
+  /** Largura que `desenhar` vai usar no alvo (mesma medida, mesmo mínimo). */
+  larguraDe(nome: string): number;
   /** Chamado quando a LARGURA do container muda (debounce de 140 ms). */
   aoRedimensionar(cb: () => void): void;
   /**
@@ -121,12 +123,12 @@ export function criarShell(hospedeiro: HTMLElement, gabarito: string): Shell {
      "pouco espaço", não "é celular". */
   const compacto = () => { const l = medir(raiz); return l > 0 && l < LARGURA_COMPACTA; };
   const largura = () => medir(raiz);
+  const larguraDe = (nome: string) => Math.max(medir(el(nome)), LARGURA_MINIMA);
 
   function desenhar(nome: string, spec: Plot.PlotOptions): void {
     const alvo = el(nome);
     alvo.replaceChildren();
-    const largura = Math.max(medir(alvo), LARGURA_MINIMA);
-    alvo.append(Plot.plot({ ...ESTILO_PLOT, ...spec, width: largura }) as Node);
+    alvo.append(Plot.plot({ ...ESTILO_PLOT, ...spec, width: larguraDe(nome) }) as Node);
   }
 
   function vazio(nome: string, titulo: string, texto: string): void {
@@ -195,6 +197,7 @@ export function criarShell(hospedeiro: HTMLElement, gabarito: string): Shell {
     svg,
     compacto,
     largura,
+    larguraDe,
     aoRedimensionar,
     aoClicarEm,
     aoDestruir: (cb) => limpezas.push(cb),
