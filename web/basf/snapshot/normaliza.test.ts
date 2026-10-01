@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { casarMunicipio, dividirUF, indiceMunicipios, limparHotspot, normalizarCrop, ufDoCodigo, ufsDoEstado } from "./normaliza";
+import {
+  casarMunicipio, dividirUF, indiceMunicipios, limparCepea, limparHotspot, normalizarCrop, regiaoDasUfs, ufDoCodigo, ufsDoEstado,
+} from "./normaliza";
 
 describe("limparHotspot", () => {
   test("unifica grafias conhecidas", () => {
@@ -69,4 +71,28 @@ test("uf por código e por nome", () => {
   expect(ufsDoEstado("Minas Gerais")).toEqual(["MG"]);
   expect(ufsDoEstado("GO/DF")).toEqual(["GO", "DF"]);
   expect(ufsDoEstado("Triângulo")).toEqual([]);
+});
+
+describe("limparCepea", () => {
+  const l = (estado: string | null, item: string, valor: number, unidade = "ha.", ano = 2018) =>
+    ({ produto: "Tomate", ano, item, estado, unidade, valor });
+  test("só hectare: Mi. Planta é a mesma área em outra unidade", () => {
+    expect(limparCepea([l("Goiás", "Área Cepea", 1532), l("Goiás", "Área Cepea", 24.5, "Mi. Planta")]).map((x) => x.valor)).toEqual([1532]);
+  });
+  test("linha só de região cai quando o produto/ano/item já vem por estado", () => {
+    const ls = [l(null, "Área IBGE", 300), l("Paraná", "Área IBGE", 200), l("Santa Catarina", "Área IBGE", 100)];
+    expect(limparCepea(ls).map((x) => x.valor)).toEqual([200, 100]);
+  });
+  test("linha só de região fica quando não há estado para o produto/ano/item", () => {
+    const ls = [l(null, "Área IBGE", 300, "ha.", 2003), l("Paraná", "Área IBGE", 200, "ha.", 2004)];
+    expect(limparCepea(ls).map((x) => x.valor)).toEqual([300, 200]);
+  });
+});
+
+test("região pela UF; estados de regiões diferentes não decidem", () => {
+  expect(regiaoDasUfs(["RN"])).toBe("Nordeste");
+  expect(regiaoDasUfs(["CE", "PI"])).toBe("Nordeste");
+  expect(regiaoDasUfs(["GO", "DF"])).toBe("Centro-Oeste");
+  expect(regiaoDasUfs(["MG", "BA"])).toBeNull();
+  expect(regiaoDasUfs([])).toBeNull();
 });

@@ -48,7 +48,8 @@ cepea = m.get_table("CEPEA")
 # Filtros da página CEPEA: Estimativa = Consolidado; Região ≠ Brasil e não nula.
 cepea = cepea[(cepea["Estimativa"] == "Consolidado") & cepea["Região"].notna() & (cepea["Região"] != "Brasil")]
 gravar("cepea", cepea, {"Ano Civil": "ano", "Ano Safra": "safra", "Região": "regiao", "Estado": "estado",
-                        "Regional": "regional", "Produto": "produto", "Itens Projeção": "item", "Valor": "valor"})
+                        "Regional": "regional", "Produto": "produto", "Itens Projeção": "item", "Valor": "valor",
+                        "Unidade": "unidade"})
 
 gravar("resumo", m.get_table("Dados Mercado Total"),
        {"Fonte": "fonte", "Ano": "ano", "Espécie": "especie", "Área total": "area", "Total TH": "th"})

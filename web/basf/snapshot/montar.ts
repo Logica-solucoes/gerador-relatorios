@@ -4,7 +4,7 @@
  */
 import type { Linha, TabelaFio, Valor } from "../src/types";
 import {
-  casarMunicipio, dividirUF, indiceMunicipios, limparHotspot, normalizarCrop, ufDoCodigo, ufsDoEstado,
+  casarMunicipio, dividirUF, indiceMunicipios, limparCepea, limparHotspot, normalizarCrop, regiaoDasUfs, ufDoCodigo, ufsDoEstado,
 } from "./normaliza";
 
 const AQUI = new URL(".", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
@@ -58,11 +58,13 @@ await gravar("abcsem", (await ler("abcsem")).map((a) => ({
   selecionado: a.selecionado ? 1 : 0, area: num(a.area), volume: num(a.volume), valor: num(a.valor),
 })));
 
-await gravar("cepea", (await ler("cepea")).map((c) => {
+await gravar("cepea", limparCepea(await ler("cepea")).map((c) => {
   const ufs = ufsDoEstado(c.estado);
+  const regiao = regiaoDasUfs(ufs) ?? txt(c.regiao);
+  if (regiao !== txt(c.regiao)) pendente("cepea_regiao_corrigida", `${c.estado}: ${c.regiao} → ${regiao}`);
   return {
-    ano: num(c.ano), safra: txt(c.safra), regiao: txt(c.regiao), uf: ufs.length === 1 ? ufs[0]! : null,
-    estado: txt(c.estado), regional: txt(c.regional), produto: txt(c.produto), item: txt(c.item), valor: num(c.valor),
+    ano: num(c.ano), safra: txt(c.safra), regiao, uf: ufs.length === 1 ? ufs[0]! : null,
+    estado: txt(c.estado), regional: txt(c.regional), produto: txt(c.produto), item: txt(c.item), area: num(c.valor),
   };
 }));
 

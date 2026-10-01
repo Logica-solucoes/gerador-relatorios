@@ -23,7 +23,8 @@ export type Carregar = (r: Recurso) => Promise<Linha[]>;
  *            area, dose, th, potencial, potencialEur
  * ibge       nivel ("BR"|"UF"|"ME"|"MU"), ano, especie, uf, meso, cod, nome, area
  * abcsem     ano, especie, tipo, segmento, crop, selecionado (0|1), area, volume, valor
- * cepea      ano, safra, regiao, uf, estado, regional, produto, item, valor
+ * cepea      ano, safra, regiao, uf, estado, regional, produto, item, area (ha; só "Consolidado",
+ *            sem linha de região já aberta por estado; região corrigida pela UF)
  * resumo     fonte, ano, especie, area, th                       (Dados Mercado Total)
  * resumoSeg  fonte, ano, especie, segmento, hy, crop, area, th   (Dados Basf e ABCSEM)
  * clientes   cliente, crop, hotspot, rtv, regional, acesso, ano, area, dose, mercado, copa,

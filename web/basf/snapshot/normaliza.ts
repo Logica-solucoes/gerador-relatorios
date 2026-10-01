@@ -82,3 +82,27 @@ export function ufsDoEstado(s: string | null | undefined): string[] {
   if (UF_POR_NOME[k]) return [UF_POR_NOME[k]!];
   return dividirUF(s);
 }
+
+const REGIAO_POR_UF: Record<string, string> = {
+  AC: "Norte", AP: "Norte", AM: "Norte", PA: "Norte", RO: "Norte", RR: "Norte", TO: "Norte",
+  AL: "Nordeste", BA: "Nordeste", CE: "Nordeste", MA: "Nordeste", PB: "Nordeste", PE: "Nordeste",
+  PI: "Nordeste", RN: "Nordeste", SE: "Nordeste",
+  DF: "Centro-Oeste", GO: "Centro-Oeste", MT: "Centro-Oeste", MS: "Centro-Oeste",
+  ES: "Sudeste", MG: "Sudeste", RJ: "Sudeste", SP: "Sudeste", PR: "Sul", RS: "Sul", SC: "Sul",
+};
+/** CEPEA traz estado em região errada (RN em "Sul", SP em "Sul"). A UF decide; UFs de regiões diferentes, não. */
+export function regiaoDasUfs(ufs: string[]): string | null {
+  const rs = new Set(ufs.map((u) => REGIAO_POR_UF[u]));
+  return rs.size === 1 ? [...rs][0] ?? null : null;
+}
+
+/**
+ * CEPEA: só hectare ("Mi. Planta" repete a área do tomate em outra unidade). A linha só de região
+ * é a soma dos estados dela: cai quando o produto/ano/item já vem aberto por estado.
+ */
+export function limparCepea<T extends Record<string, unknown>>(ls: T[]): T[] {
+  const ha = ls.filter((l) => l.unidade === "ha.");
+  const chaveC = (l: T) => `${l.produto}|${l.ano}|${l.item}`;
+  const comEstado = new Set(ha.filter((l) => l.estado).map(chaveC));
+  return ha.filter((l) => l.estado || !comEstado.has(chaveC(l)));
+}

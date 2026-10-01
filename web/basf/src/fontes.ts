@@ -37,7 +37,7 @@ export const FONTES: Record<Fonte, DefFonte> = {
   cepea: {
     rotulo: "CEPEA",
     dims: { ano: "Ano", produto: "Produto", item: "Item", regiao: "Região", uf: "Estado", regional: "Regional" },
-    metricas: { valor: "Valor" },
+    metricas: { area: "Área (ha)" },
     rankings: ["regiao", "uf", "regional"],
     temMapa: true,
   },
