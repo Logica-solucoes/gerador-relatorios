@@ -38,6 +38,7 @@
 .bmd-seg2 button:last-child { border-right: 0; }
 .bmd-seg2 button.is-on { background: var(--o100); color: var(--o700); }
 .bmd-seg2 button:disabled { cursor: not-allowed; opacity: .45; }
+.bmd-sel { font: inherit; font-weight: 600; font-size: 13px; color: var(--muted); padding: 5px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); cursor: pointer; }
 
 .bmd-aviso { margin: 12px 24px 0; padding: 8px 12px; border-radius: 8px; background: var(--o50); border: 1px solid var(--accent-line); color: var(--o700); font-size: 13px; }
 .bmd-corpo { padding: 16px 24px 24px; display: grid; gap: 12px; max-width: 1500px; animation: bmd-entra .2s ease-out; }

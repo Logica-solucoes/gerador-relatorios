@@ -14,7 +14,9 @@ export const vendas: DefAba = {
   recursos: () => ["vendas", "meta"],
   chips: () => ({ dims: { ano: "Ano", crop: "Crop", rtv: "RTV", regional: "Regional", cliente: "Cliente" }, origem: "vendas" }),
   controles: (e) => {
-    return seg("moeda", { brl: "R$", eur: "€" }, e.moeda, [], "taxa do ano não cadastrada") + seg("medida", { valor: "Valor", th: "TH" }, e.medida);
+    const corte = `<select class="bmd-sel" data-corte aria-label="Mês de corte" title="Mês de corte"><option value=""${e.mesCorte == null ? " selected" : ""}>Corte: auto</option>${MESES.map((m, i) =>
+      `<option value="${i + 1}"${e.mesCorte === i + 1 ? " selected" : ""}>Até ${m}</option>`).join("")}</select>`;
+    return corte + seg("moeda", { brl: "R$", eur: "€" }, e.moeda, [], "taxa do ano não cadastrada") + seg("medida", { valor: "Valor", th: "TH" }, e.medida);
   },
 
   render(ctx, corpo) {
@@ -25,8 +27,8 @@ export const vendas: DefAba = {
     const ultima = String(meta.find((m) => m.ultimaVenda)?.ultimaVenda ?? "");
     const anoMax = Math.max(...todas.map((l) => Number(l.ano)));
     const ano = f.ano?.length ? Math.max(...f.ano.map(Number)) : anoMax;
-    // Ano corrente corta no mês da última venda; ano fechado vai até dezembro.
-    const mesCorte = ano === Number(ultima.slice(0, 4)) ? Number(ultima.slice(5, 7)) : 12;
+    // Automático: ano corrente corta no mês da última venda; ano fechado vai até dezembro.
+    const mesCorte = e.mesCorte ?? (ano === Number(ultima.slice(0, 4)) ? Number(ultima.slice(5, 7)) : 12);
     const metaAno = meta.find((m) => m.ano === ano);
     const taxa = (a: number) => meta.find((m) => m.ano === a)?.taxa as number | null | undefined;
     const semTaxa = e.moeda === "eur" && !taxa(ano);

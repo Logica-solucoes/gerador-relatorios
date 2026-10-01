@@ -11,6 +11,8 @@ export interface Estado {
   medida: "valor" | "th";
   agrupar: "hotspot" | "rtv" | "crop";
   itemCepea: string;
+  /** Mês de corte do YTD em Vendas; null = automático (mês da última venda no ano corrente, 12 em ano fechado). */
+  mesCorte: number | null;
   /** Dimensão ativa do ranking da aba Mercado. */
   dim: string;
   /** Caminho do drill do ranking (fora do hash: é navegação, não visão). */
@@ -26,7 +28,7 @@ export function inicial(): Estado {
   return {
     aba: "mercado", fonte: "basf",
     filtros: { mercado: {}, comparativo: {}, clientes: {}, vendas: {} },
-    metrica: "area", moeda: "brl", medida: "valor", agrupar: "hotspot", itemCepea: "Área Cepea", dim: "uf",
+    metrica: "area", moeda: "brl", medida: "valor", agrupar: "hotspot", itemCepea: "Área Cepea", mesCorte: null, dim: "uf",
     drill: [], clienteAberto: null,
   };
 }
@@ -78,6 +80,7 @@ export function paraHash(e: Estado): string {
   p.set("agrupar", e.agrupar);
   p.set("dim", e.dim);
   if (e.fonte === "cepea") p.set("item", e.itemCepea);
+  if (e.aba === "vendas" && e.mesCorte != null) p.set("corte", String(e.mesCorte));
   for (const [dim, vals] of Object.entries(e.filtros[e.aba])) for (const v of vals) p.append(`f.${dim}`, v);
   return `#${e.aba}?${p}`;
 }
@@ -99,6 +102,8 @@ export function deHash(hash: string): Estado {
   if (ag === "hotspot" || ag === "rtv" || ag === "crop") n.agrupar = ag;
   const item = p.get("item");
   if (item && item in ITENS_CEPEA) n.itemCepea = item;
+  const corte = Number(p.get("corte") || NaN);
+  if (Number.isInteger(corte) && corte >= 1 && corte <= 12) n.mesCorte = corte;
   const dim = p.get("dim");
   if (dim && def.rankings.includes(dim)) n.dim = dim;
   const dims = new Set([...p.keys()].filter((k) => k.startsWith("f.")));

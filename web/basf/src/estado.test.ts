@@ -91,3 +91,20 @@ describe("item da CEPEA", () => {
     expect(deHash("#mercado?fonte=cepea&f.item=Área IBGE").filtros.mercado.item).toBeUndefined();
   });
 });
+
+describe("mês de corte", () => {
+  test("padrão é automático e não vai no hash", () => {
+    expect(inicial().mesCorte).toBeNull();
+    expect(paraHash(inicial())).not.toContain("corte=");
+  });
+  test("vai e volta no hash só na aba vendas", () => {
+    const e = { ...inicial(), aba: "vendas" as const, mesCorte: 6 };
+    expect(deHash(paraHash(e)).mesCorte).toBe(6);
+    expect(paraHash({ ...e, aba: "mercado" })).not.toContain("corte=");
+  });
+  test("fora de 1..12 ou não inteiro cai no automático", () => {
+    for (const v of ["0", "13", "-1", "3.5", "abc", ""]) expect(deHash(`#vendas?corte=${v}`).mesCorte).toBeNull();
+    expect(deHash("#vendas?corte=12").mesCorte).toBe(12);
+    expect(deHash("#vendas?corte=1").mesCorte).toBe(1);
+  });
+});

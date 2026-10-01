@@ -103,6 +103,7 @@ export function montarDashboard(host: HTMLElement, carregar: Carregar): Montado 
 
   const aoMarcar = (ev: Event) => {
     const alvo = ev.target as HTMLInputElement;
+    if (alvo.hasAttribute?.("data-corte")) return mudar((e) => ({ ...e, mesCorte: alvo.value ? Number(alvo.value) : null }));
     const dim = alvo.dataset?.chipOp;
     if (!dim) return;
     const marcados = Array.from(shell.raiz.querySelectorAll<HTMLInputElement>(`input[data-chip-op="${dim}"]:checked`)).map((i) => i.value);
