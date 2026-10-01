@@ -1,7 +1,7 @@
 /** Limpeza do snapshot. Tudo explícito: o que não casa vai para pendencias.json, não some. */
 
 const chave = (s: string) =>
-  s.normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase().replace(/\s+/g, " ").trim();
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/\s+/g, " ").trim();
 
 /** Grafias vistas nos dados (key list e BASF consolidado). Chave sem acento, caixa alta. */
 const GRAFIAS: Record<string, string> = {
