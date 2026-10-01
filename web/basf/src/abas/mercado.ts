@@ -114,7 +114,9 @@ export const mercado: DefAba = {
     const tituloRank = ufDrill != null ? drill.titulo() : `Por ${ROTULO_DIM[e.dim]?.toLowerCase() ?? e.dim}`;
     const subRank = podeDrill && ufDrill == null ? `${esc(def.metricas[m] ?? m)} · clique num estado para ver os hotspots` : esc(def.metricas[m] ?? m);
     const dimSeg = e.fonte === "basf" ? "segmento" : e.fonte === "abcsem" ? "segmento" : e.fonte === "cepea" ? "produto" : "especie";
-    const comp = agregar(base(ctx, "total"), fAtual, dimSeg, m);
+    // Dose é média: fatia de soma de médias não é composição. Com dose a barra mostra a área.
+    const mComp = m === "dose" ? "area" : m;
+    const comp = agregar(base(ctx, "total"), fAtual, dimSeg, mComp);
 
     corpo.innerHTML = `
       <div class="bmd-kpis2">${kpis.map(kpi).join("")}</div>
@@ -124,7 +126,7 @@ export const mercado: DefAba = {
           ${cartao(tituloRank, subRank,
             barList(ranking, dimRank, fmt, f[dimRank] ?? [], 8, podeDrill && ufDrill == null ? "drill" : "filtro") || '<p class="bmd-nota">Sem dado neste recorte.</p>',
             `<div style="margin-bottom:8px">${seg("dim", Object.fromEntries(def.rankings.map((d) => [d, ROTULO_DIM[d] ?? d])), e.dim)}${drill.htmlVoltar()}</div>`)}
-          ${comp.length > 1 ? cartao(`Composição por ${ROTULO_DIM[dimSeg]?.toLowerCase() ?? dimSeg}`, "", distribuicao(comp, dimSeg, ESCALA)) : ""}
+          ${comp.length > 1 ? cartao(`Composição por ${ROTULO_DIM[dimSeg]?.toLowerCase() ?? dimSeg}`, esc(def.metricas[mComp] ?? mComp), distribuicao(comp, dimSeg, ESCALA)) : ""}
         </div>
       </div>
       ${cartao("Evolução por ano", esc(def.metricas[m] ?? m), '<div data-el="anos"></div>', "")}`;
