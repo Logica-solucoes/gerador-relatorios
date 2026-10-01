@@ -47,3 +47,5 @@ env/
 web/*/dist/
 
 .superpowers/
+*.zip
+web/basf/dados/
