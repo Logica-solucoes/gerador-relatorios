@@ -77,6 +77,7 @@ export function montarDashboard(host: HTMLElement, carregar: Carregar): Montado 
   }
 
   shell.aoClicarEm("[data-aba]", (el) => mudar((e) => ({ ...e, aba: el.dataset.aba as Aba, drill: [], clienteAberto: null })));
+  shell.aoClicarEm("[data-cliente]", (el) => mudar((e) => ({ ...e, clienteAberto: e.clienteAberto === el.dataset.cliente ? null : el.dataset.cliente! })));
   shell.aoClicarEm("[data-filtro]", (el) => mudar((e) => alternarFiltro(e, el.dataset.filtro!, el.dataset.v!)));
   shell.aoClicarEm("[data-chip-limpar]", (el) => mudar((e) => definirFiltro(e, el.dataset.chipLimpar!, [])));
   shell.aoClicarEm("[data-tentar]", () => { falhas.clear(); render(); });
