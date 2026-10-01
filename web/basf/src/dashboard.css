@@ -89,3 +89,15 @@
   .bmd-kpis2, .bmd-grid2 { grid-template-columns: 1fr; }
   .bmd-hero2, .bmd-tabs, .bmd-barra2, .bmd-corpo { padding-left: 14px; padding-right: 14px; }
 }
+
+.bmd-ml > div { display: grid; grid-template-columns: 12px 72px 44px 1fr 64px; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid #F4EDE3; }
+.bmd-ml > div:last-child { border-bottom: 0; }
+.bmd-ml i { width: 10px; height: 10px; border-radius: 3px; display: block; }
+.bmd-ml .bmd-mono { text-align: right; }
+.bmd-pos, .bmd-neg { text-align: right; font-weight: 600; color: var(--verde); }
+.bmd-neg { color: var(--alerta); }
+.bmd-par { display: grid; gap: 6px; }
+.bmd-par > button { all: unset; cursor: pointer; display: grid; grid-template-columns: minmax(90px, 150px) 1fr 120px; gap: 10px; align-items: center; padding: 2px 4px; border-radius: 6px; }
+.bmd-par > button:hover { background: var(--o50); }
+.bmd-par s { display: block; height: 7px; border-radius: 3px; text-decoration: none; margin: 2px 0; }
+.bmd-par .bmd-mono { text-align: right; }
