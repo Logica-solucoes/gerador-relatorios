@@ -78,7 +78,13 @@ export const mercado: DefAba = {
     }
     for (const [met, rot] of Object.entries(FONTES[e.fonte].metricas).slice(0, e.fonte === "basf" ? 2 : 3)) {
       const atual = tot(fAtual, met);
-      kpis.push({ rotulo: rot, valor: atual == null ? "—" : fmtMetrica(met)(atual), delta: deltaTxt(variacao(atual, tot(fAnt, met)), baseAnt), serie: serie(met) });
+      // A página ABCSEM do PBI soma todas as espécies; o Comparativo usa só as da BASF (produtos_selecionados).
+      const daBasf = e.fonte === "abcsem" && met === "area" ? tot({ ...fAtual, selecionado: ["1"] }, met) : null;
+      kpis.push({
+        rotulo: daBasf != null ? `${rot} · mercado total` : rot, valor: atual == null ? "—" : fmtMetrica(met)(atual),
+        delta: deltaTxt(variacao(atual, tot(fAnt, met)), baseAnt), serie: serie(met),
+        nota: daBasf != null ? `espécies BASF: ${fmtMetrica(met)(daBasf)}` : undefined,
+      });
     }
     if (e.fonte === "basf") {
       const pot = tot(fAtual, "potencial");
