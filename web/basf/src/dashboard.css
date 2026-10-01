@@ -134,3 +134,6 @@
 .bmd .bmd-busca:focus { border-color: var(--o500); background: var(--surface); box-shadow: 0 0 0 3px var(--o100); }
 .bmd .bmd-busca.is-ativo { border-color: var(--o500); background: var(--o50); }
 .bmd-par + .bmd-leg2 { margin-top: 10px; }
+
+/* Mercado numa coluna: mapa depois do ranking (spec §5). */
+@media (max-width: 760px) { .bmd-grid2--mapa > .bmd-pilha { order: -1; } }
