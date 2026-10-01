@@ -20,7 +20,7 @@ const deltaTxt = (v: number | null, base: string) => (v == null ? null : { txt: 
 function base(ctx: Ctx, visao: "total" | "uf" | "meso" | "mapa"): Linha[] {
   const ls = ctx.dados[ctx.estado.fonte] ?? [];
   if (ctx.estado.fonte !== "ibge") return ls;
-  return linhasIbge(ls, visao, !!ctx.estado.filtros.mercado.uf?.length);
+  return linhasIbge(ls, visao, ctx.estado.filtros.mercado);
 }
 
 /** Anos com dado, crescente. Filtro de ano escolhe o "atual"; sem filtro, o último. */

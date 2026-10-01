@@ -1,3 +1,4 @@
+import type { Filtros } from "./calc";
 import type { Fonte, Linha } from "./types";
 
 export interface DefFonte {
@@ -21,7 +22,7 @@ export const FONTES: Record<Fonte, DefFonte> = {
   },
   ibge: {
     rotulo: "IBGE",
-    dims: { ano: "Ano", especie: "Espécie", uf: "Estado" },
+    dims: { ano: "Ano", especie: "Espécie", uf: "Estado", meso: "Mesorregião" },
     metricas: { area: "Área (ha)" },
     rankings: ["uf", "meso"],
     temMapa: true,
@@ -54,8 +55,10 @@ export const ROTULO_DIM: Record<string, string> = {
 export type Visao = "total" | "uf" | "meso" | "mapa";
 const NIVEL: Record<Visao, string> = { total: "BR", uf: "UF", meso: "ME", mapa: "MU" };
 
-export function linhasIbge(ls: Linha[], visao: Visao, temFiltroUf: boolean): Linha[] {
+export function linhasIbge(ls: Linha[], visao: Visao, f: Filtros): Linha[] {
+  // Com mesorregião filtrada só o nível ME tem `meso` para casar; município não tem: mapa sem pontos.
+  if (f.meso?.length) return visao === "mapa" ? [] : ls.filter((l) => l.nivel === "ME");
   // Com estado filtrado o nível BR não tem `uf` para casar: o total vem dos UFs.
-  const nivel = visao === "total" && temFiltroUf ? "UF" : NIVEL[visao];
+  const nivel = visao === "total" && f.uf?.length ? "UF" : NIVEL[visao];
   return ls.filter((l) => l.nivel === nivel);
 }

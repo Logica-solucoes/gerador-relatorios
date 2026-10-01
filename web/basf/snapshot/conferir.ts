@@ -11,7 +11,7 @@ const ler = async (n: string): Promise<Linha[]> => {
 
 const basf24 = filtrar(await ler("basf"), { ano: ["2024"] });
 const resumo = await ler("resumo");
-const ibge = linhasIbge(filtrar(await ler("ibge"), { ano: ["2024"] }), "total", false);
+const ibge = linhasIbge(filtrar(await ler("ibge"), { ano: ["2024"] }), "total", {});
 const kcl = await ler("clientes");
 const vendas = await ler("vendas");
 const v26 = vendas.filter((v) => v.ano === 2026 && (v.mes as number) <= 6);
