@@ -77,7 +77,10 @@ export const clientes: DefAba = {
       return cab + cls;
     }).join("");
 
-    const buscaAtual = corpo.querySelector<HTMLInputElement>(".bmd-busca")?.value ?? "";
+    const antigo = corpo.querySelector<HTMLInputElement>(".bmd-busca");
+    const buscaAtual = antigo?.value ?? "";
+    const tinhaFoco = antigo != null && antigo === document.activeElement;
+    const caret = antigo?.selectionStart ?? buscaAtual.length;
     corpo.innerHTML = `
       <div class="bmd-kpis2">
         ${kpi({ rotulo: "Customer share (copa)", valor: pct(shareCopa), destaque: true, proporcao: shareCopa, nota: `${nf((total(ls, "copa") ?? 0) / 1e6, 2)} Mi de ${nf((total(ls, "mercado") ?? 0) / 1e6, 2)} Mi TH` })}
@@ -95,5 +98,6 @@ export const clientes: DefAba = {
     ctx.shell.el("busca").append(campo.el);
     const input = campo.el.querySelector<HTMLInputElement>("input")!;
     input.value = buscaAtual;
+    if (tinhaFoco) { input.focus(); input.setSelectionRange(caret, caret); }
   },
 };
