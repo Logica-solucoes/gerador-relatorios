@@ -1,6 +1,5 @@
 import * as Plot from "@observablehq/plot";
 import ufGeo from "./geo/uf.json";
-import { ligarClique } from "./shared/drill";
 import type { Shell } from "./shared/shell";
 import { C } from "./shared/tema";
 
@@ -47,12 +46,14 @@ export function desenharMapa(
     r: { range: [2, 15] },
     marks: [
       Plot.geo(geo as never, {
+        ariaDescription: "estados",
+        ariaLabel: (f: { properties: { uf: string } }) => f.properties.uf,
         fill: (f: { properties: { uf: string } }) => porUf.get(f.properties.uf),
         stroke: (f: { properties: { uf: string } }) => (ufsAtivas.includes(f.properties.uf) ? C.o700 : "#fff"),
         strokeWidth: (f: { properties: { uf: string } }) => (ufsAtivas.includes(f.properties.uf) ? 2 : 1),
         title: (f: { properties: { uf: string } }) => `${f.properties.uf}: ${porUf.has(f.properties.uf) ? fmt(porUf.get(f.properties.uf)!) : "sem dado"}`,
       }),
-      Plot.geo(geo as never, Plot.pointer(Plot.centroid({ stroke: C.o700, strokeWidth: 2, fill: "none" }))),
+      Plot.geo(geo as never, Plot.pointer(Plot.centroid({ stroke: C.o700, strokeWidth: 2, fill: "none", pointerEvents: "none" }))),
       Plot.dot(pontos, { x: "lon", y: "lat", r: "valor", fill: C.verde, fillOpacity: 0.55, stroke: "#2F5E14", strokeWidth: 0.8, title: (p: PontoMapa) => `${p.rotulo}: ${fmt(p.valor)}` }),
       Plot.text(rotulaveis(pontos, 5, escalaPx(shell.largura(), alto)), {
         x: "lon", y: "lat", text: (p: PontoMapa) => `${p.rotulo}  ${fmt(p.valor)}`,
@@ -61,5 +62,12 @@ export function desenharMapa(
     ],
   });
   const svg = shell.svg(alvo);
-  if (svg) ligarClique<{ properties: { uf: string } }>(svg, (f) => aoClicarUf(f.properties.uf));
+  if (!svg) return;
+  // Estado sob o clique, não o centroide mais próximo: ponto e rótulo por cima não roubam o clique.
+  svg.addEventListener("click", (ev) => {
+    const uf = document.elementsFromPoint(ev.clientX, ev.clientY)
+      .find((el) => el.tagName === "path" && el.parentElement?.getAttribute("aria-description") === "estados")
+      ?.getAttribute("aria-label");
+    if (uf) aoClicarUf(uf);
+  });
 }
