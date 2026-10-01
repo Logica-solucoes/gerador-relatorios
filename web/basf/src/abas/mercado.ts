@@ -13,6 +13,7 @@ import type { Ctx, DefAba } from "./tipos";
 const UNIDADE: Record<string, string> = { area: "ha", dose: "TH/ha", th: "TH", volume: "", valor: "" };
 const fmtMetrica = (m: string) => (v: number) =>
   m === "valor" ? (Math.abs(v) >= 1e6 ? moedaCompacta(v) : `R$ ${n0(Math.round(v))}`) : m === "dose" ? `${nf(v, 0)} ${UNIDADE[m]}` : `${n0(Math.round(v))}${UNIDADE[m] ? ` ${UNIDADE[m]}` : ""}`;
+const DIMS_VENDAS = ["ano", "crop", "rtv", "regional", "hotspot", "segmento"];
 const pct = (v: number | null) => (v == null ? "—" : `${nf(v * 100, 1)}%`);
 const deltaTxt = (v: number | null, base: string) => (v == null ? null : { txt: `${v >= 0 ? "+" : "−"}${nf(Math.abs(v) * 100, 1)}% vs ${base}`, ruim: v < 0 });
 
@@ -51,12 +52,13 @@ export const mercado: DefAba = {
     const fAtual: Filtros = { ...f, ano: anoAtual != null ? [String(anoAtual)] : [] };
     const fAnt: Filtros = { ...f, ano: anoAnt != null ? [String(anoAnt)] : [] };
     const tot = (ff: Filtros, met = m) => total(filtrar(base(ctx, "total"), ff), met);
-    const serie = (met = m) => {
+    const serieDe = (v: (ano: number) => number | null) => {
       // Série contínua de anos: ano sem estudo vira null e quebra a sparkline.
       const lo = todosAnos[0], hi = todosAnos.at(-1);
       if (lo == null || hi == null) return [];
-      return Array.from({ length: hi - lo + 1 }, (_, i) => tot({ ...semAno, ano: [String(lo + i)] }, met));
+      return Array.from({ length: hi - lo + 1 }, (_, i) => v(lo + i));
     };
+    const serie = (met = m) => serieDe((a) => tot({ ...semAno, ano: [String(a)] }, met));
 
     if (tot(fAtual) == null) {
       corpo.innerHTML = `<div class="bmd-card">${estadoVazio("Sem dado neste recorte", `Nenhum registro de <b>${FONTES[e.fonte].rotulo}</b> para os filtros escolhidos. Remova um filtro na barra acima.`)}</div>`;
@@ -65,19 +67,23 @@ export const mercado: DefAba = {
 
     const kpis: Kpi[] = [];
     const baseAnt = anoAnt != null ? String(anoAnt) : "ano anterior";
+    const def = FONTES[e.fonte];
     if (e.fonte === "basf") {
       // Share: venda do ano civil do estudo ÷ potencial, mesmos filtros. Estado não existe em vendas.
-      const fv: Filtros = Object.fromEntries(Object.entries(fAtual).filter(([k]) => ["ano", "crop", "rtv", "regional", "hotspot", "segmento"].includes(k)));
-      const vendasAno = f.uf?.length ? null : total(filtrar(ctx.dados.vendas ?? [], fv), "valor");
-      const pot = tot(fAtual, "potencial");
-      const sh = share(vendasAno, pot);
+      const vendasDe = (ff: Filtros) => f.uf?.length ? null
+        : total(filtrar(ctx.dados.vendas ?? [], Object.fromEntries(Object.entries(ff).filter(([k]) => DIMS_VENDAS.includes(k)))), "valor");
+      const shareDe = (ff: Filtros) => share(vendasDe(ff), tot(ff, "potencial"));
+      const vendasAno = vendasDe(fAtual), pot = tot(fAtual, "potencial");
+      const sh = share(vendasAno, pot), shAnt = anoAnt != null ? shareDe(fAnt) : null;
       kpis.push({
         rotulo: "Share potencial", valor: pct(sh), destaque: true, proporcao: sh,
+        delta: sh != null && shAnt != null ? { txt: `${sh >= shAnt ? "+" : "−"}${nf(Math.abs(sh - shAnt) * 100, 1)} p.p. vs ${baseAnt}`, ruim: sh < shAnt } : null,
         nota: f.uf?.length ? "share não se aplica a filtro de estado" : `vendas ${moedaCompacta(vendasAno)} de ${moedaCompacta(pot)}`,
+        serie: serieDe((a) => shareDe({ ...semAno, ano: [String(a)] })),
       });
     }
-    for (const [met, rot] of Object.entries(FONTES[e.fonte].metricas).slice(0, e.fonte === "basf" ? 2 : 3)) {
-      const atual = tot(fAtual, met);
+    for (const met of e.fonte === "basf" ? ["area", "th"] : Object.keys(def.metricas).slice(0, 3)) {
+      const atual = tot(fAtual, met), rot = def.metricas[met]!;
       // A página ABCSEM do PBI soma todas as espécies; o Comparativo usa só as da BASF (produtos_selecionados).
       const daBasf = e.fonte === "abcsem" && met === "area" ? tot({ ...fAtual, selecionado: ["1"] }, met) : null;
       kpis.push({
@@ -88,10 +94,12 @@ export const mercado: DefAba = {
     }
     if (e.fonte === "basf") {
       const pot = tot(fAtual, "potencial");
-      kpis.push({ rotulo: "Potencial", valor: moedaCompacta(pot), nota: `€ ${nf((tot(fAtual, "potencialEur") ?? 0) / 1e6, 1)} Mi`, serie: serie("potencial") });
+      kpis.push({
+        rotulo: "Potencial", valor: moedaCompacta(pot), delta: deltaTxt(variacao(pot, tot(fAnt, "potencial")), baseAnt),
+        nota: `€ ${nf((tot(fAtual, "potencialEur") ?? 0) / 1e6, 1)} Mi`, serie: serie("potencial"),
+      });
     }
 
-    const def = FONTES[e.fonte];
     const visaoRank = e.fonte === "ibge" ? (e.dim === "meso" ? "meso" : "uf") : "total";
     const ranking = agregar(base(ctx, visaoRank), fAtual, e.dim, m);
     const dimSeg = e.fonte === "basf" ? "segmento" : e.fonte === "abcsem" ? "segmento" : e.fonte === "cepea" ? "produto" : "especie";
