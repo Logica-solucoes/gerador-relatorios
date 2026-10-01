@@ -15,9 +15,15 @@
 .bmd-mono, .bmd .bmd-mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; }
 .bmd-ico { vertical-align: -3px; margin-right: 4px; }
 
-.bmd-hero2 { background: linear-gradient(115deg, var(--o500), var(--o600)); color: #fff; padding: 16px 24px; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; }
+/* Cabeçalho no padrão do site Nunhems: bloco cinza, respiro branco, bloco laranja chapado com a marca. */
+.bmd-hero2 { background: var(--surface); display: flex; gap: 20px; color: #fff; }
+.bmd-hero2__titulo { flex: 1; background: #8C8C8C; padding: 14px 24px; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; min-width: 0; }
 .bmd-hero2 h1 { margin: 2px 0 0; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
-.bmd-hero2 small { opacity: .9; font-size: 12px; }
+.bmd-hero2 small { font-size: 12px; font-weight: 600; }
+.bmd-hero2__marca { background: var(--o500); padding: 0 28px; display: flex; align-items: center; gap: 14px; white-space: nowrap; }
+.bmd-hero2__marca b { font-size: 22px; font-weight: 800; letter-spacing: .02em; }
+.bmd-hero2__marca i { width: 1px; align-self: stretch; margin: 16px 0; background: rgba(255,255,255,.8); }
+.bmd-hero2__marca span { font-size: 20px; font-weight: 700; }
 
 .bmd-tabs { display: flex; gap: 24px; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; overflow-x: auto; }
 .bmd-tabs button { all: unset; cursor: pointer; padding: 12px 0; color: var(--muted); font-weight: 600; white-space: nowrap; transition: color .15s; }
@@ -88,7 +94,13 @@
 
 @media (max-width: 760px) {
   .bmd-kpis2, .bmd-grid2 { grid-template-columns: 1fr; }
-  .bmd-hero2, .bmd-tabs, .bmd-barra2, .bmd-corpo { padding-left: 14px; padding-right: 14px; }
+  .bmd-hero2__titulo, .bmd-tabs, .bmd-barra2, .bmd-corpo { padding-left: 14px; padding-right: 14px; }
+  .bmd-hero2 { gap: 12px; }
+  .bmd-hero2__titulo { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .bmd-hero2 h1 { font-size: 19px; }
+  .bmd-hero2__marca { padding: 0 16px; gap: 10px; }
+  .bmd-hero2__marca b { font-size: 18px; }
+  .bmd-hero2__marca span { font-size: 16px; }
 }
 
 .bmd-ml > div { display: grid; grid-template-columns: 12px 72px 44px 1fr 64px; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid #F4EDE3; }
