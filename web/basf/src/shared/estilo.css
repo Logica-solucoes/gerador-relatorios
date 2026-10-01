@@ -1,0 +1,1555 @@
+/* ===========================================================================
+   Base visual dos dashboards BFM — Momentive, Polaris e Clientes.
+
+   Tudo escopado sob .bmd para conviver com o CSS do portal Aurelia (Materialize).
+   Nada aqui toca em `body`/`html`: o hospedeiro define o próprio fundo.
+
+   Cor de SÉRIE não mora aqui — mora em shared/tema.ts, pintada inline pelo Plot.
+   Duplicar em custom property cria duas fontes de verdade.
+   =========================================================================== */
+
+/* Mesmo padrão de app.html (@import de Google Fonts) — só que escopado aqui,
+   então carrega apenas quando esta view entra, não em todo o portal. */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap');
+
+.bmd {
+   /* --- paleta: navy BFM (#2C4870) preservado como âncora ------------------ */
+   --navy-900: #162438;
+   /* oklch(.258 .043 257) — hero                     */
+   --navy: #2C4870;
+   /* oklch(.399 .076 257) — marca BFM, série FCL     */
+   --navy-400: #4D6991;
+
+   /* Sistema de DUAS cores: navy estrutura, laranja é o contraponto.
+     O laranja é cor de CATEGORIA (LCL nos gráficos por modal, trânsito no
+     ciclo), não mais só marca de alerta — travá-lo em "alerta" deixava o dash
+     monocromático. LCL e trânsito nunca aparecem no mesmo gráfico: o ciclo é
+     exclusivo de FCL, então não há ambiguidade.
+
+     As cores de série (FCL/LCL e as três etapas do ciclo) NÃO moram aqui: são
+     pintadas inline pelo Plot e pela tira, a partir de `C` e `ETAPAS` no
+     dashboard.ts. Duplicá-las em custom property só cria duas fontes de verdade
+     que saem de sincronia — foi o que aconteceu com as --et-* que existiam aqui
+     e nunca eram lidas por nenhuma regra.                                    */
+
+   --accent-ink: #9A5817;
+   /* laranja BFM escurecido p/ TEXTO pequeno (5,6:1) */
+   --accent-bg: #FBEAD6;
+   --accent-line: #E8C9A4;
+
+   --bg: #FAFBFC;
+   /* near-white puxado p/ o hue da marca, não p/ creme */
+   --surface: #FFFFFF;
+   --panel: #F2F4F7;
+   /* segunda camada neutra: cabeçalhos, thead         */
+
+   --ink: #111C2E;
+   /* 16,5:1                                            */
+   --muted: #55637A;
+   /*  5,9:1                                            */
+   --faint: #66717F;
+   /*  4,8:1 — labels pequenos ainda passam AA          */
+
+   --border: #E3E7ED;
+   --border-strong: #D5DBE4;
+
+   /* --- hero: cores sobre o navy escuro ------------------------------------
+     O hero encolheu para uma FAIXA de imagem: sobre a foto moram apenas a logo,
+     o título e o período. A barra de filtros saiu daqui (ver .bmd-barra-wrap)
+     e os KPIs também (ver .bmd-kpis-wrap) — os dois agora ficam sobre
+     superfície opaca, com texto escuro.
+
+     Foi isso que permitiu jogar fora o scrim de SEIS paradas em pixel que
+     existia aqui: ele só existia para segurar 4,5:1 num texto de 13px sobre
+     foto, e não há mais texto de 13px sobre foto. Junto foi --hero-label, que
+     só pintava o placeholder da busca — a busca agora é escura sobre branco. */
+   --hero-topo: #D8E2EE;
+   /* período sob o título: 4,8:1 no pior caso        */
+   --hero-linha: rgba(255, 255, 255, .14);
+
+   /* --- imagem de fundo do hero -------------------------------------------
+     Para ligar a foto, o host sobrescreve o background-image reusando o scrim:
+
+         .bmd-hero { background-image: var(--scrim), url("/assets/porto.jpg"); }
+
+     A url fica NA FOLHA DO HOST, de propósito. Não a coloque dentro de uma
+     custom property (`--img: url(...)`): o Chromium resolve url() de variável
+     relativa à folha que CONSOME a variável — aqui, este arquivo — e não à que
+     declara. Um caminho relativo escrito no host viraria `src/…` e daria 404
+     silencioso, com o hero renderizando navy chapado e nenhum erro no console.
+
+     Sem override, sobra só o gradiente sobre --navy-900: o dash não quebra.
+
+     O scrim agora é HORIZONTAL. Escurece a esquerda, onde vive o texto, e abre
+     à direita, onde a foto aparece de verdade. A vantagem sobre as paradas em
+     px que estavam aqui: não precisa ser recalibrado quando o hero muda de
+     ALTURA (título em duas linhas no mobile, logo mais alta de um cliente
+     novo) — a divisão passou a ser por porcentagem da LARGURA, e largura é a
+     dimensão que o conteúdo do hero não altera. O segundo gradiente é só um
+     assentamento vertical leve, para a foto não bater seca na barra de filtros
+     logo abaixo.                                                             */
+   --scrim: linear-gradient(90deg,
+         rgba(22, 36, 56, .97) 0,
+         rgba(22, 36, 56, .94) 38%,
+         rgba(22, 36, 56, .62) 72%,
+         rgba(22, 36, 56, .46) 100%),
+      linear-gradient(180deg,
+         rgba(22, 36, 56, .22) 0,
+         rgba(22, 36, 56, 0) 45%,
+         rgba(22, 36, 56, .30) 100%);
+
+   --coluna: 1500px;
+   /* largura útil; a faixa escura sangra, o conteúdo não */
+   --r: 10px;
+   --shadow: 0 1px 2px rgba(17, 28, 46, .04), 0 1px 3px rgba(17, 28, 46, .06);
+   --ease: cubic-bezier(.22, 1, .36, 1);
+
+   /* escala de tipo fixa (product register: nada de clamp fluido) */
+   --t-micro: .8125rem;
+   /* 13px */
+   --t-sm: .9375rem;
+   /* 15px */
+   --t-base: 1rem;
+   /* 16px */
+   --t-lg: 1.25rem;
+   --t-xl: 1.75rem;
+   --t-num: 2rem;
+   /* KPI no hero: é a âncora da página. --coluna trava a faixa em 1500px, então
+      mesmo no monitor mais largo cada uma das 4 colunas tem no máximo ~316px
+      de conteúdo — 2.5rem não cabia "R$ 480.417,34" nem aí.                 */
+
+   /* z-index semântico */
+   --z-sticky: 10;
+   --z-tooltip: 40;
+
+   font-family: Geist, ui-sans-serif, system-ui, sans-serif;
+   font-size: var(--t-base);
+   font-feature-settings: "tnum" 1, "cv05" 1;
+   /* tabular por padrão: é um dash de números */
+   line-height: 1.5;
+   color: var(--ink);
+   background: var(--bg);
+   -webkit-font-smoothing: antialiased;
+   min-height: 100vh;
+}
+
+/* `font-family: inherit` aqui não é enfeite: o portal declara `* { font-family:
+   'M PLUS 1'... }` em app.html. Regra explícita bate herança mesmo com
+   especificidade zero — então todo `<td>`/`<span>` sem classe própria (Modal,
+   Ref., Origem, Valor...) ignorava a Geist herdada do `.bmd` e caía na fonte
+   do portal, mais pesada. `.bmd *` (0,1,0) explícito volta a valer, e ganha
+   do `*` do portal por especificidade. `.bmd-mono`, declarada DEPOIS neste
+   mesmo arquivo com a mesma especificidade (0,1,0), continua vencendo o
+   empate por ordem de cascata — não precisa de `!important` em lugar nenhum. */
+.bmd *,
+.bmd *::before,
+.bmd *::after {
+   box-sizing: border-box;
+   font-family: inherit;
+}
+
+.bmd :focus-visible {
+   outline: 2px solid var(--navy);
+   outline-offset: 2px;
+   border-radius: 4px;
+}
+
+.bmd-hero :focus-visible {
+   outline-color: #fff;
+}
+
+/* ─── hero ────────────────────────────────────────────────────────────────── */
+.bmd-hero {
+   background-color: var(--navy-900);
+   /* fallback se a imagem falhar */
+   background-image: var(--scrim);
+   /* o host acrescenta a foto — ver acima */
+   background-size: cover;
+   background-position: center;
+   background-repeat: no-repeat;
+   color: #fff;
+   /* Faixa, não capa: logo de 34px + título + período, e acabou. O
+     padding-bottom generoso de antes existia para o card branco de KPI cobrir
+     por cima com margem negativa; o card acabou, a margem negativa também, e o
+     espaço que estava reservado para ela foi junto.
+     Altura total da faixa (top+bottom) igual à versão anterior — só que
+     dividida IGUAL (52/52) em vez de 24/80: a logo+título deixa de colar no
+     topo e senta centralizada na faixa, sobrando o mesmo respiro embaixo p/
+     a foto (polaris/clientes) aparecer. */
+   padding: 52px 28px;
+}
+
+.bmd-hero__inner {
+   max-width: var(--coluna);
+   margin-inline: auto;
+}
+
+.bmd-hero__row {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 24px;
+   flex-wrap: wrap;
+}
+
+/* logo + filete + título, lado a lado (só existe quando há asset de logo). */
+.bmd-hero__id {
+   display: flex;
+   align-items: center;
+   gap: 16px;
+   flex-wrap: wrap;
+}
+
+.bmd-hero__logo {
+   height: 34px;
+   width: auto;
+   object-fit: contain;
+   display: block;
+}
+
+/* O filete só aparece quando há logo: clientes e momentive não têm asset e
+   OMITEM o <img> inteiro (ver CONTRATO.md) — sem elemento anterior, o
+   combinador de irmão adjacente abaixo simplesmente não casa. Evita precisar
+   de uma classe condicional extra que os outros agentes teriam que lembrar
+   de aplicar só quando existir logo. */
+.bmd-hero__logo+.bmd-hero__tit {
+   padding-left: 16px;
+   border-left: 1px solid var(--hero-linha);
+}
+
+.bmd-hero h1 {
+   margin: 0;
+   font-size: var(--t-xl);
+   font-weight: 600;
+   letter-spacing: -.02em;
+}
+
+.bmd-hero__meta {
+   font-size: var(--t-sm);
+   color: var(--hero-topo);
+   margin-top: 5px;
+}
+
+/* Segmented control — afford padrão, não reinventado.
+   Fundo navy OPACO, não translúcido. O controle mora na metade direita do
+   hero, que é justo onde o scrim abre e a foto aparece mais. Sobre uma foto
+   clara o véu de antes (.55) deixava o rótulo inativo em ~3:1, e o resultado
+   dependia de qual banner o cliente tinha subido. Opaco não depende de nada. */
+.bmd-seg {
+   display: inline-flex;
+   background: var(--navy-900);
+   border: 1px solid var(--hero-linha);
+   border-radius: 8px;
+   padding: 3px;
+   gap: 2px;
+}
+
+.bmd-seg button {
+   font: inherit;
+   font-size: var(--t-sm);
+   font-weight: 500;
+   color: var(--hero-topo);
+   background: none;
+   border: 0;
+   cursor: pointer;
+   padding: 6px 15px;
+   border-radius: 6px;
+   transition: background 160ms var(--ease), color 160ms var(--ease);
+}
+
+.bmd-seg button:hover {
+   background: rgba(255, 255, 255, .12);
+   color: #fff;
+}
+
+.bmd-seg button:active {
+   transform: translateY(.5px);
+}
+
+.bmd-seg button[aria-pressed="true"] {
+   background: #fff;
+   color: var(--navy-900);
+   font-weight: 600;
+}
+
+/* --- KPIs: linha de números, sem card ------------------------------------
+   Não são mais quatro caixas: são quatro colunas de uma linha só, separadas por
+   filete de 1px, direto sobre o fundo da página. Sumiram o card branco, a
+   sombra, o canto arredondado, o filete de acento colorido por card e a margem
+   negativa que subia a faixa por cima do hero.
+
+   Caixa serve para agrupar o que precisa de ELEVAÇÃO. Quatro números irmãos, do
+   mesmo período e do mesmo recorte, não precisam: o que os separa é uma linha, e
+   o que os agrupa é o espaço em volta. O card aqui era moldura sem função — e a
+   moldura flutuante ainda comia a barra de filtros por baixo dela.
+
+   O acento colorido por card foi embora junto: pintava três cards de navy e um
+   de laranja sem que a cor codificasse nada que o rótulo já não dissesse. Onde
+   a cor ainda significa alguma coisa (a mini faixa min–mediana–max do momentive)
+   ela continua, pintada inline por `faixa()` em shared/blocos.ts.            */
+/* Só horizontal: a respiração vertical mora no `padding-top` do próprio
+   `.bmd-kpi` logo abaixo, não aqui. Um padding-top NESTE wrapper ficaria fora
+   do elemento que recebe `:hover` — visualmente parece parte do card, mas o
+   mouse passa por cima sem acender nada, e o retângulo cinza nasce cortado no
+   topo (era esse o "espaço em branco sem interação" reportado). */
+.bmd-kpis-wrap {
+   max-width: var(--coluna);
+   margin-inline: auto;
+   padding: 0 28px;
+}
+
+.bmd-kpis {
+   display: flex;
+   border-bottom: 1px solid var(--border);
+}
+
+/* `flex: 1 1 0` e não `1 1 220px`: com base 0 as colunas NUNCA quebram linha,
+   elas encolhem. Com base 220px o conjunto quebrava em 2+2 num container médio
+   e a coluna que virava primeira-da-segunda-linha ficava sem o filete divisor
+   (o `:first-child` abaixo só alcança a primeira de todas), deixando a faixa
+   torta. Quem cuida do estreito de verdade é o @media lá embaixo, que empilha
+   de uma vez só. */
+.bmd-kpi {
+   flex: 1 1 0;
+   min-width: 0;
+   padding: 22px 22px 20px;
+   text-align: center;
+   /* centralizado: pedido explícito */
+   border-left: 1px solid var(--border);
+   transition: background 140ms var(--ease);
+}
+
+/* Padding IGUAL nas quatro, inclusive na primeira e na última. A tentação é
+   zerar o padding das pontas para o texto encostar na borda da coluna, mas o
+   conteúdo é centralizado: não há aresta de texto para alinhar, e o único
+   efeito visível seria o realce de hover abaixo nascer torto — retângulo de um
+   tamanho, texto centrado em outro. */
+.bmd-kpi:first-child {
+   border-left: 0;
+}
+
+/* Hover de LEITURA, não de clique: o KPI não leva a lugar nenhum. Um passo de
+   fundo (--bg → --panel) marca a coluna que o olho está seguindo quando o
+   cursor atravessa a faixa, e para por aí. Sombra ou deslocamento prometeriam
+   uma ação que não existe. */
+.bmd-kpi:hover {
+   background: var(--panel);
+}
+
+.bmd-kpi__k {
+   font-size: var(--t-micro);
+   font-weight: 500;
+   color: var(--muted);
+   letter-spacing: .01em;
+}
+
+.bmd-kpi__v {
+   font-size: var(--t-num);
+   font-weight: 600;
+   letter-spacing: -.03em;
+   line-height: 1.1;
+   margin-top: 8px;
+   color: var(--ink);
+   display: flex;
+   align-items: baseline;
+   justify-content: center;
+   gap: 7px;
+   flex-wrap: wrap;
+   /* Sem o card, o que alinha um número com o da coluna vizinha é só a largura
+     do dígito. `tnum` já vem do .bmd, mas aqui é requisito e não preferência:
+     deixar explícito impede que alguém tire lá em cima sem perceber o efeito. */
+   font-variant-numeric: tabular-nums;
+}
+
+.bmd-kpi__v small {
+   font-size: var(--t-base);
+   font-weight: 500;
+   color: var(--muted);
+   letter-spacing: 0;
+}
+
+.bmd-kpi__sub {
+   font-size: var(--t-micro);
+   color: var(--faint);
+   margin-top: 5px;
+}
+
+.bmd-kpi svg {
+   display: block;
+   margin: 11px auto 0;
+   overflow: visible;
+}
+
+/* 4 colunas dividindo a largura fazem "R$ 480.417,34" quebrar entre "R$" e o
+   número bem antes de qualquer outra parte do dash considerar a tela
+   "estreita" (--t-num é FIXO — ver "escala de tipo fixa" no topo do arquivo,
+   então a saída não é encolher fonte, é dar a largura da linha inteira pra
+   cada KPI mais cedo que o resto do layout, que só empilha em 640px). */
+@media (max-width: 1400px) {
+   .bmd-kpis {
+      flex-direction: column;
+   }
+
+   .bmd-kpi {
+      border-left: 0;
+      border-bottom: 1px solid var(--border);
+      padding: 16px 0;
+   }
+
+   .bmd-kpi:last-child {
+      border-bottom: 0;
+   }
+}
+
+/* Delta mês a mês. Laranja só quando piorou — coerente com "laranja = olhe aqui".
+   Melhora não precisa chamar atenção, então fica neutra.                     */
+.bmd-delta {
+   font-size: var(--t-sm);
+   font-weight: 500;
+   letter-spacing: 0;
+   color: var(--muted);
+   white-space: nowrap;
+}
+
+.bmd-delta--pior {
+   color: var(--accent-ink);
+}
+
+/* ─── corpo ───────────────────────────────────────────────────────────────── */
+.bmd-body {
+   padding: 24px 28px 40px;
+   display: flex;
+   flex-direction: column;
+   gap: 20px;
+   max-width: var(--coluna);
+   margin-inline: auto;
+   /* sem o auto, cola na esquerda em tela larga */
+}
+
+/* --- seções --------------------------------------------------------------- */
+.bmd-sec {
+   background: var(--surface);
+   border: 1px solid var(--border);
+   border-radius: var(--r);
+   box-shadow: var(--shadow);
+}
+
+/* align-items: flex-start (era baseline) — .bmd-sec__acoes é ele mesmo um
+   flex row (botão + legenda), e "baseline" alinhava o texto do título com a
+   linha de base do CONTAINER inteiro do lado direito, não com um texto. Era
+   isso que deixava o conjunto torto. */
+.bmd-sec__hd {
+   padding: 16px 22px 14px;
+   border-bottom: 1px solid var(--border);
+   display: flex;
+   justify-content: space-between;
+   align-items: flex-start;
+   gap: 16px;
+   flex-wrap: wrap;
+}
+
+.bmd-sec__hd h2 {
+   margin: 0;
+   font-size: var(--t-lg);
+   font-weight: 600;
+   letter-spacing: -.014em;
+}
+
+.bmd-sec__hd p {
+   margin: 4px 0 0;
+   font-size: var(--t-sm);
+   color: var(--muted);
+   max-width: 78ch;
+   text-wrap: pretty;
+}
+
+.bmd-sec__bd {
+   padding: 16px 22px 20px;
+}
+
+/* Ações do cabeçalho de seção: botão de voltar do drill (span populado por
+   drill.ts) + legenda, lado a lado. Sem regra nenhuma pra essa classe os dois
+   empilhavam sem alinhamento — era por isso que "Voltar para Estado" saía
+   torto sob a legenda. Em tela estreita a legenda quebra pra linha de baixo
+   (flex-wrap), o botão nunca. */
+.bmd-sec__acoes {
+   display: flex;
+   align-items: center;
+   gap: 14px;
+   flex-wrap: wrap;
+}
+
+/* Contexto é secundário: título menor, menos respiro. A hierarquia é o que
+   impede a página de virar uma pilha de caixas de peso idêntico.            */
+.bmd-sec--ctx .bmd-sec__hd {
+   padding: 13px 18px 11px;
+}
+
+.bmd-sec--ctx .bmd-sec__hd h2 {
+   font-size: var(--t-base);
+}
+
+.bmd-sec--ctx .bmd-sec__bd {
+   padding: 12px 18px 16px;
+}
+
+/* voltar do drilldown */
+.bmd-voltar {
+   display: inline-flex;
+   align-items: center;
+   gap: 5px;
+   padding: 4px 10px 4px 7px;
+   border: 1px solid var(--border-strong);
+   border-radius: 999px;
+   background: var(--surface);
+   color: var(--navy);
+   font-size: var(--t-micro);
+   font-weight: 500;
+   cursor: pointer;
+}
+
+.bmd-voltar:hover {
+   background: var(--panel);
+}
+
+.bmd-voltar .material-icons {
+   font-size: 15px;
+}
+
+/* Barra clicável precisa dizer que é clicável — e acender um pouco no
+   hover reforça o afford sem brigar com a cor de série (`filter`, não
+   troca de `fill`, então funciona igual pra qualquer cor que o Plot pinte). */
+.bmd-sec--drill .chart svg g[aria-label$="bar"] rect {
+   cursor: pointer;
+   transition: filter .12s var(--ease);
+}
+
+.bmd-sec--drill .chart svg g[aria-label$="bar"] rect:hover {
+   filter: brightness(1.15);
+}
+
+/* legenda */
+.bmd-leg {
+   display: flex;
+   gap: 16px;
+   flex-wrap: wrap;
+   font-size: var(--t-micro);
+   color: var(--muted);
+}
+
+.bmd-leg span {
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
+   white-space: nowrap;
+}
+
+.bmd-leg i {
+   width: 9px;
+   height: 9px;
+   border-radius: 50%;
+   flex: none;
+}
+
+.bmd-leg i.sq {
+   border-radius: 2px;
+}
+
+.bmd-leg i.dash {
+   width: 14px;
+   height: 0;
+   border-radius: 0;
+   border-top: 1.5px dashed var(--navy-400);
+}
+
+/* --- estado vazio que ensina --------------------------------------------- */
+.bmd-empty {
+   padding: 44px 24px;
+   text-align: center;
+}
+
+.bmd-empty strong {
+   display: block;
+   font-size: var(--t-base);
+   font-weight: 600;
+   margin-bottom: 6px;
+}
+
+.bmd-empty p {
+   margin: 0 auto;
+   font-size: var(--t-sm);
+   color: var(--muted);
+   max-width: 52ch;
+   text-wrap: pretty;
+}
+
+/* --- tabela --------------------------------------------------------------- */
+.bmd-tw {
+   max-height: 480px;
+   overflow: auto;
+   border-radius: 0 0 var(--r) var(--r);
+}
+
+/* Colunas secundárias atrás do toggle: escondidas por padrão, mata o scroll
+   horizontal no uso normal. `.bmd-toggle-cols` alterna `is-expandido` aqui. */
+.bmd-tw:not(.is-expandido) .col-extra {
+   display: none;
+}
+
+.bmd-tb {
+   width: 100%;
+   border-collapse: collapse;
+   font-size: var(--t-sm);
+}
+
+.bmd-tb th {
+   position: sticky;
+   top: 0;
+   z-index: var(--z-sticky);
+   background: var(--panel);
+   color: var(--muted);
+   /* --faint aqui media 4,50:1 — na régua, sem folga; --muted sobra (5,52:1) */
+   font-size: var(--t-micro);
+   font-weight: 600;
+   text-align: left;
+   padding: 9px 16px;
+   white-space: nowrap;
+   border-bottom: 1px solid var(--border-strong);
+}
+
+.bmd-tb th.n,
+.bmd-tb td.n {
+   text-align: right;
+}
+
+.bmd-tb td {
+   padding: 9px 16px;
+   border-bottom: 1px solid var(--border);
+   vertical-align: middle;
+   white-space: nowrap;
+}
+
+/* O backend devolve a base inteira sem paginação e a tabela imprime todas as
+   linhas do recorte. `content-visibility: auto` faz o navegador pular layout e
+   pintura das que estão fora da viewport — virtualização nativa, sem lista
+   virtual em JS. `contain-intrinsic-size` dá a altura estimada da linha para o
+   scrollbar não pular conforme rola. */
+.bmd-tb tbody tr {
+   transition: background 120ms var(--ease);
+   content-visibility: auto;
+   contain-intrinsic-size: auto 39px;
+}
+
+/* Zebra sutil puxada pro navy da marca, não cinza neutro. O hover usa um tom
+   mais forte que a zebra pra ficar claramente "isto aqui é o que o mouse
+   tocou" mesmo numa linha ímpar já branca — mas continua leve, nada de cinza
+   pesado numa tabela densa. */
+.bmd-tb tbody tr:nth-child(even) {
+   background: #F7F9FC;
+}
+
+.bmd-tb tbody tr:hover {
+   background: #EEF3FA;
+}
+
+.bmd-tb tbody tr:last-child td {
+   border-bottom: 0;
+}
+
+.bmd-mono {
+   font-family: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+   font-size: var(--t-micro);
+   color: var(--muted);
+}
+
+.bmd-tb .ref {
+   font-weight: 600;
+   color: var(--ink);
+}
+
+/* NF com mais peso: é a chave que o olho procura primeiro na linha */
+
+/* Botão de toggle das colunas secundárias — mesma linguagem visual do
+   .bmd-voltar (pill discreta), pra não introduzir um terceiro estilo de botão. */
+.bmd-toggle-cols {
+   display: inline-flex;
+   align-items: center;
+   gap: 5px;
+   padding: 4px 12px;
+   border: 1px solid var(--border-strong);
+   border-radius: 999px;
+   background: var(--surface);
+   color: var(--navy);
+   font-size: var(--t-micro);
+   font-weight: 500;
+   cursor: pointer;
+}
+
+.bmd-toggle-cols:hover {
+   background: var(--panel);
+}
+
+/* chips */
+.bmd-chip {
+   display: inline-block;
+   font-size: var(--t-micro);
+   font-weight: 500;
+   padding: 2px 7px;
+   border-radius: 4px;
+   line-height: 1.5;
+}
+
+/* Os chips espelham a cor da série no gráfico: quem viu laranja no beeswarm
+   reconhece LCL na tabela sem reler a legenda. IMO se separa pelo peso — é
+   sólido e raro (2 registros), não outro matiz.                             */
+.bmd-chip--fcl {
+   background: #E7ECF4;
+   color: var(--navy);
+}
+
+.bmd-chip--lcl {
+   background: var(--accent-bg);
+   color: var(--accent-ink);
+}
+
+.bmd-chip--imo {
+   background: var(--accent-ink);
+   color: #fff;
+   font-weight: 600;
+}
+
+/* Chips de status da tabela (entregue / em trânsito) — MESMOS dois tokens de
+   cor do par fcl/lcl acima, não por coincidência: é o mesmo sistema de duas
+   cores (navy estrutura, laranja é o "olhe aqui") aplicado a outro eixo
+   semântico. Medido: navy sobre #E7ECF4 = 7,81:1; accent-ink sobre
+   --accent-bg = 4,72:1 — os dois folgados acima do mínimo de 4,5:1. */
+.bmd-chip--ok {
+   background: #E7ECF4;
+   color: var(--navy);
+}
+
+.bmd-chip--transito {
+   background: var(--accent-bg);
+   color: var(--accent-ink);
+}
+
+.bmd-flag {
+   border: 0;
+   background: none;
+   padding: 0;
+   margin-left: 6px;
+   cursor: help;
+   font: inherit;
+   font-size: var(--t-micro);
+   font-weight: 600;
+   color: var(--accent-ink);
+}
+
+.bmd-dim {
+   color: var(--faint);
+}
+
+/* ─── tira do ciclo ───────────────────────────────────────────────────────────
+   Onde o tempo do ciclo inteiro é gasto, em %. A tira É a legenda: o detalhe de
+   cada etapa (mediana, faixa, quanto pesa num ciclo mediano) vive no hover, não
+   numa linha de rótulos fixa. A versão anterior tinha a tira + uma linha de
+   legenda + um parágrafo narrando a conclusão; os três somavam mais altura que
+   o gráfico que vinha abaixo.                                                */
+.bmd-tira__wrap {
+   position: relative;
+   margin-bottom: 16px;
+}
+
+.bmd-tira {
+   display: flex;
+   height: 30px;
+   border-radius: 6px;
+   overflow: hidden;
+}
+
+.bmd-tira__seg {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-size: var(--t-micro);
+   font-weight: 600;
+   white-space: nowrap;
+   overflow: hidden;
+   cursor: default;
+   transition: box-shadow 140ms var(--ease);
+}
+
+/* Esmaece as OUTRAS fatias em vez de acender a de baixo do cursor: acender por
+   brilho mexeria no fundo da fatia ativa, que já está no limite de AA contra o
+   próprio texto.
+
+   Véu por `box-shadow: inset`, NÃO por `opacity`. O opacity se aplica ao
+   elemento inteiro — o percentual escrito dentro da fatia desbotava junto e caía
+   para ~2,3:1 contra o card branco, reprovando 1.4.3 num texto que é conteúdo,
+   não decoração. A sombra inset pinta acima do background e ABAIXO do conteúdo:
+   o fundo recua, o número continua cheio.
+
+   `is-hovering` fica no WRAPPER, não na tira: `ciclo()` troca o innerHTML das
+   fatias a cada render e uma classe posta na .bmd-tira seria varrida junto. */
+.bmd-tira__wrap.is-hovering .bmd-tira__seg {
+   box-shadow: inset 0 0 0 999px rgba(255, 255, 255, .55);
+}
+
+.bmd-tira__wrap.is-hovering .bmd-tira__seg.is-active {
+   box-shadow: none;
+}
+
+/* `currentColor` e não o navy do foco global: as três fatias vão de #B4C6DA a
+   #162438 e nenhuma cor fixa contrasta com todas — a fatia escura engolia o
+   outline. A `color` de cada fatia já foi escolhida para contrastar com o
+   próprio fundo, então herdar dela é correto por construção.
+   Offset de -2px e não -4px: a fatia da estufagem é ~2,5% do ciclo e num
+   container estreito mede ~7px — com -4px o retângulo do outline colapsava
+   (largura ≤ 0) e o foco ficava invisível justo na fatia mais difícil de achar. */
+.bmd-tira__seg:focus-visible {
+   outline: 2px solid currentColor;
+   outline-offset: -2px;
+}
+
+/* Tooltip da tira. Mesma linguagem visual do Plot.tip dos gráficos — card
+   branco, borda fina, sombra curta — para o dash ter um só jeito de "detalhe
+   sob o cursor". `left` vem do JS (centro da fatia, preso dentro do wrapper);
+   aqui só a translação e a ancoragem logo abaixo da tira.                    */
+.bmd-tira__tip {
+   position: absolute;
+   top: calc(100% + 8px);
+   left: 0;
+   transform: translateX(-50%);
+   z-index: var(--z-tooltip);
+   pointer-events: none;
+   min-width: 208px;
+   padding: 11px 13px 12px;
+   background: var(--surface);
+   border: 1px solid var(--border-strong);
+   border-radius: 8px;
+   box-shadow: 0 4px 12px rgba(17, 28, 46, .10), 0 1px 3px rgba(17, 28, 46, .08);
+   font-size: var(--t-micro);
+   color: var(--muted);
+   text-align: left;
+}
+
+.bmd-tira__tip-hd {
+   display: flex;
+   align-items: center;
+   gap: 7px;
+   font-size: var(--t-sm);
+   font-weight: 600;
+   color: var(--ink);
+}
+
+.bmd-tira__tip-hd i {
+   width: 10px;
+   height: 10px;
+   border-radius: 2px;
+   flex: none;
+}
+
+.bmd-tira__tip-num {
+   font-size: var(--t-lg);
+   font-weight: 600;
+   color: var(--ink);
+   letter-spacing: -.02em;
+   line-height: 1.2;
+   margin-top: 5px;
+}
+
+.bmd-tira__tip-num small {
+   font-size: var(--t-micro);
+   font-weight: 500;
+   color: var(--muted);
+   letter-spacing: 0;
+}
+
+.bmd-tira__tip-dl {
+   display: grid;
+   grid-template-columns: auto auto;
+   gap: 3px 14px;
+   margin: 9px 0 0;
+   padding-top: 9px;
+   border-top: 1px solid var(--border);
+}
+
+.bmd-tira__tip-dl dt {
+   color: var(--faint);
+}
+
+.bmd-tira__tip-dl dd {
+   margin: 0;
+   text-align: right;
+   color: var(--ink);
+   font-weight: 500;
+}
+
+/* A legenda por extenso existe só para o papel: no PDF não há cursor, e sem ela
+   a tira vira três retângulos sem nome. Na tela ela é exatamente o ruído que o
+   hover veio substituir. */
+.bmd-tira__leg {
+   display: none;
+}
+
+.bmd-foot {
+   font-size: var(--t-micro);
+   color: var(--faint);
+   text-wrap: pretty;
+}
+
+/* Plot injeta seu próprio figure; neutraliza margem e deixa o svg respirar */
+.bmd figure {
+   margin: 0;
+}
+
+.bmd .chart {
+   min-height: 40px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+   .bmd *,
+   .bmd *::before,
+   .bmd *::after {
+      transition-duration: 1ms !important;
+      animation-duration: 1ms !important;
+   }
+}
+
+/* ─── barra de filtros ────────────────────────────────────────────────────────
+   Saiu de dentro do hero. Mora numa faixa própria, branca, entre o hero e os
+   KPIs — e é por isso que os controles voltaram a ser escuros sobre claro, sem
+   véu translúcido nenhum. O `rgba(255,255,255,.10)` de antes fazia a borda do
+   campo depender de qual foto o cliente tinha subido no banner: sobre a região
+   clara da imagem o campo simplesmente sumia. Agora não depende de nada.
+
+   Vanilla, não Materialize — ver o cabeçalho de shared/filtros.ts.
+
+   O portal carrega Materialize globalmente e `input[type=text]:not(.browser-
+   default)` (especificidade 0,2,1) ganhava de `.bmd-busca` (0,1,0) sozinho —
+   por isso "Cliente" e "Nota Fiscal" apareciam sem caixa. A correção de fato é
+   em shared/filtros.ts: a classe `browser-default` faz o seletor do Materialize
+   nem CASAR mais, independente de especificidade. O que segue aqui é cinto e
+   suspensório — os seletores da barra ganham dois níveis de `.bmd .bmd-barra`
+   (0,3,0 ou 0,3,1), que bate 0,2,1 pelo número de classes sozinho, sem precisar
+   de `!important` — pra sobreviver mesmo se algum dia o browser-default sumir
+   de um dos três controles.                                                   */
+.bmd-barra-wrap {
+   background: var(--surface);
+   border-bottom: 1px solid var(--border);
+}
+
+/* Sangra a faixa de ponta a ponta e alinha o conteúdo na mesma coluna do hero,
+   dos KPIs e do corpo — quatro paddings iguais, um só eixo vertical. */
+.bmd-barra-wrap__in {
+   max-width: var(--coluna);
+   margin-inline: auto;
+   padding: 11px 28px;
+}
+
+.bmd-barra {
+   display: flex;
+   flex-wrap: wrap;
+   align-items: center;
+   gap: 10px;
+}
+
+.bmd-barra__campos {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 8px;
+   flex: 1 1 auto;
+}
+
+.bmd-barra__acoes {
+   display: flex;
+   gap: 6px;
+   flex: none;
+}
+
+.bmd-filtro {
+   position: relative;
+}
+
+/* Altura fixa nos três tipos de controle: alinhados na mesma linha de base
+   mesmo com o ícone nativo do input de data. */
+.bmd .bmd-barra .bmd-ms>summary,
+.bmd .bmd-barra .bmd-busca,
+.bmd .bmd-barra .bmd-data__wrap {
+   display: flex;
+   align-items: center;
+   height: 34px;
+   padding: 0 11px;
+   background: var(--surface);
+   border: 1px solid var(--border-strong);
+   border-radius: 7px;
+   color: var(--ink);
+   font-size: var(--t-micro);
+   white-space: nowrap;
+   cursor: pointer;
+   transition: border-color 140ms var(--ease), background 140ms var(--ease);
+}
+
+.bmd .bmd-barra .bmd-ms>summary:hover,
+.bmd .bmd-barra .bmd-busca:hover,
+.bmd .bmd-barra .bmd-data__wrap:hover {
+   border-color: var(--navy-400);
+}
+
+.bmd-ms>summary {
+   list-style: none;
+   gap: 6px;
+}
+
+.bmd-ms>summary::-webkit-details-marker {
+   display: none;
+}
+
+.bmd-ms>summary::after {
+   content: "▾";
+   color: var(--faint);
+}
+
+/* Filtro ativo = borda navy + fundo do painel. Sem badge de contagem: o próprio
+   summary já escreve o recorte ("Status: 2 de 5"), e um contador ao lado seria
+   o mesmo número duas vezes. */
+.bmd .bmd-barra .bmd-ms[open]>summary,
+.bmd .bmd-barra .bmd-ms.is-ativo>summary,
+.bmd .bmd-barra .bmd-busca.is-ativo,
+.bmd .bmd-barra .bmd-data.is-ativo {
+   background: var(--panel);
+   border-color: var(--navy);
+   color: var(--navy);
+}
+
+.bmd-ms__lista {
+   position: absolute;
+   z-index: var(--z-tooltip);
+   top: calc(100% + 4px);
+   left: 0;
+   min-width: 200px;
+   max-height: 260px;
+   overflow: auto;
+   padding: 6px;
+   background: var(--surface);
+   border: 1px solid var(--border);
+   border-radius: 8px;
+   box-shadow: 0 6px 18px rgba(17, 28, 46, .18);
+}
+
+.bmd-ms__lista label {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   padding: 6px 8px;
+   border-radius: 6px;
+   color: var(--ink);
+   font-size: var(--t-micro);
+   cursor: pointer;
+}
+
+.bmd-ms__lista label:hover {
+   background: var(--panel);
+}
+
+/* O Materialize esconde o checkbox nativo e desenha a caixinha num `::before`
+   do <span>, travando o span em `height: 25px; line-height: 25px; font-size:
+   1rem`. O seletor é `[type="checkbox"] + span:not(.lever)` — 0,2,1, que ganha
+   da nossa `.bmd-ms__lista label` (0,2,0). Resultado: rótulo longo quebrava em
+   duas linhas dentro de uma caixa de 25px e transbordava por cima do item
+   seguinte ("Presidente Getúlio" escrito em cima de "Prudentópolis" no filtro
+   de cidade).
+
+   Solta a altura e devolve entrelinha e corpo de texto normais. O
+   `padding-left: 35px` do Materialize FICA de propósito: é ele que abre a
+   calha onde o ::before desenha a caixinha, e zerá-lo poria o quadrado em cima
+   da primeira letra. */
+.bmd .bmd-ms__lista label>span {
+   display: block;
+   height: auto;
+   min-height: 20px;
+   line-height: 1.35;
+   font-size: var(--t-micro);
+}
+
+/* Com rótulo de duas linhas o alinhamento tem que ser pelo TOPO: centralizado,
+   a caixinha (que é `top: 0` do span) descolava do texto. */
+.bmd .bmd-ms__lista label {
+   align-items: flex-start;
+   padding: 6px 8px 7px;
+}
+
+/* --- sugestões da busca ---------------------------------------------------
+   Reusa o painel do multiselect (.bmd-ms__lista): os dois popups da barra são
+   a mesma coisa e não podem ter dois visuais. O que muda é o item, que aqui é
+   uma linha escolhível e não um checkbox.
+
+   Largura pelo campo, não fixa: "Nota Fiscal" é um número de cinco dígitos e o
+   `min-width: 200px` do multiselect abriria um painel com metade de vazio. */
+.bmd-sug {
+   min-width: 100%;
+   max-width: 320px;
+}
+
+.bmd-sug__i {
+   padding: 7px 9px;
+   border-radius: 6px;
+   color: var(--ink);
+   font-size: var(--t-micro);
+   cursor: pointer;
+   overflow-wrap: anywhere;
+}
+
+/* Mesmo realce para mouse e teclado: `is-marcado` é posto pelas setas, e quem
+   navega de teclado tem que ver exatamente o que quem usa mouse vê. */
+.bmd-sug__i:hover,
+.bmd-sug__i.is-marcado {
+   background: var(--panel);
+}
+
+/* "Nenhum resultado" / "e mais N". Sem `cursor: pointer` e sem realce: não é
+   opção, é recado — clicar nela não pode parecer que escolhe alguma coisa. */
+.bmd-sug__nota {
+   padding: 7px 9px;
+   color: var(--muted);
+   font-size: var(--t-micro);
+   cursor: default;
+}
+
+.bmd-busca {
+   cursor: text;
+}
+
+.bmd-busca::placeholder {
+   color: var(--faint);
+}
+
+.bmd-busca__wrap {
+   display: contents;
+}
+
+.bmd-data__wrap {
+   gap: 8px;
+}
+
+.bmd-data__wrap>span {
+   color: var(--muted);
+}
+
+.bmd-data {
+   background: transparent;
+   border: 0;
+   color: inherit;
+   font: inherit;
+}
+
+/* O `filter: invert(1)` que estava aqui existia para o ícone preto do Chrome não
+   sumir sobre o navy. Sobre branco ele inverteria para branco e sumiria de novo
+   — some a inversão junto com o fundo escuro. */
+.bmd-data::-webkit-calendar-picker-indicator {
+   opacity: .55;
+   cursor: pointer;
+}
+
+.bmd-data::-webkit-calendar-picker-indicator:hover {
+   opacity: 1;
+}
+
+.bmd-acao {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   width: 34px;
+   height: 34px;
+   padding: 0;
+   background: var(--surface);
+   border: 1px solid var(--border-strong);
+   border-radius: 7px;
+   color: var(--muted);
+   cursor: pointer;
+   transition: background .15s var(--ease), color .15s var(--ease), border-color .15s var(--ease);
+}
+
+.bmd-acao:hover {
+   background: var(--panel);
+   border-color: var(--navy-400);
+   color: var(--navy);
+}
+
+.bmd-acao:active {
+   transform: translateY(.5px);
+}
+
+.bmd-acao .material-icons {
+   font-size: 18px;
+}
+
+/* ═══ estreito ════════════════════════════════════════════════════════════════
+   ESTE BLOCO FICA NO FIM DE PROPOSITO. Ele mora depois de todas as regras base
+   porque varias delas tem a MESMA especificidade das daqui (uma classe, 0,1,0)
+   — `.bmd-barra__campos`, `.bmd-barra-wrap__in` — e no empate quem vence e a
+   ULTIMA declarada, nao a que esta dentro da media query. Com o bloco la em
+   cima, no meio do arquivo, a grade mobile dos filtros era sobrescrita pelo
+   flex da secao "barra de filtros" logo abaixo e simplesmente nunca aplicava.
+
+   Ao adicionar regra responsiva nova, adicione AQUI. Nao suba o bloco.        */
+@media (max-width: 640px) {
+
+   .bmd-hero,
+   .bmd-body,
+   .bmd-kpis-wrap,
+   .bmd-barra-wrap__in {
+      padding-left: 16px;
+      padding-right: 16px;
+   }
+
+   .bmd-hero {
+      padding-top: 16px;
+      padding-bottom: 18px;
+   }
+
+   .bmd-hero__row {
+      gap: 14px;
+   }
+
+   .bmd-hero h1 {
+      font-size: 1.25rem;
+   }
+
+   /* Mesmo problema do h1 acima: mesmo empilhado (largura cheia), a faixa é
+      estreita demais pra "R$ 480.417,34" caber numa linha só no --t-num base.
+      `nowrap` no valor: sem ele o texto ainda quebra entre "R$" e o número
+      antes de render admitir que já encolheu o quanto dava. */
+   .bmd-kpi__v {
+      font-size: 1.375rem;
+   }
+
+   .bmd-kpi__v>span {
+      white-space: nowrap;
+   }
+
+   /* No estreito a foto tem pouca largura para "abrir à direita" e o título
+     ocupa a faixa inteira: o scrim horizontal vira um véu chapado.
+
+     `!important`: esta regra e a foto de cada dashboard (`.bmd-hero--polaris`,
+     `.bmd-hero--clientes`) têm a MESMA especificidade (0,1,0 — uma classe
+     cada). Sem forçar, quem ganha o empate é ordem de carregamento, não
+     largura de tela: `shared/estilo.css` é sempre `<require>`d ANTES do CSS
+     de cada dashboard nos três `.html`, então a regra de foto — que não mora
+     em media query nenhuma — fica textualmente DEPOIS desta e venceria em
+     QUALQUER largura, inclusive abaixo de 640px, deixando este véu sem efeito
+     nenhum. */
+   .bmd-hero {
+      background-image: linear-gradient(rgba(22, 36, 56, .90), rgba(22, 36, 56, .90)), var(--scrim) !important;
+   }
+
+   /* Empilhamento do .bmd-kpis já aconteceu bem antes de 640px — ver o
+      @media (max-width: 1400px) logo acima do .bmd-delta. */
+
+   .bmd-body {
+      gap: 16px;
+      padding-top: 18px;
+   }
+
+   .bmd-sec__hd,
+   .bmd-sec--ctx .bmd-sec__hd {
+      padding: 13px 16px 11px;
+   }
+
+   .bmd-sec__bd,
+   .bmd-sec--ctx .bmd-sec__bd {
+      padding: 12px 14px 16px;
+   }
+
+   /* Tabela: rolagem horizontal já é o padrão certo pra tabela densa (ver
+     CLAUDE.md — "Density" é permissão de product register), só falta o
+     momentum scroll do iOS pra não travar em Safari. */
+   .bmd-tw {
+      -webkit-overflow-scrolling: touch;
+   }
+
+   /* Campos em duas colunas iguais, no lugar do flex "encaixa como der". Com
+     `flex: 0 0 auto` cada campo tinha a largura do próprio texto: no celular
+     saía Status+Cliente numa linha, Estado+Cidade noutra e "Nota Fiscal"
+     sozinho, cada um de um tamanho — muita borda desalinhada numa tela onde
+     já sobra pouco espaço. */
+   .bmd-barra__campos {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+   }
+
+   .bmd-filtro {
+      min-width: 0;
+   }
+
+   .bmd .bmd-barra .bmd-ms>summary,
+   .bmd .bmd-barra .bmd-busca,
+   .bmd .bmd-barra .bmd-data__wrap {
+      width: 100%;
+   }
+
+   /* Data ocupa a linha inteira: o controle é rótulo + input nativo com ícone
+     de calendário, e em meia largura o "dd/mm/yyyy" corta (os campos têm
+     `white-space: nowrap`, então ele vazaria em vez de quebrar).
+     `:has()` é Chromium 105+; onde não existir, o campo apenas fica em meia
+     coluna como os demais — apertado, não quebrado. */
+   .bmd-filtro:has(.bmd-data__wrap) {
+      grid-column: 1 / -1;
+   }
+
+   /* O gráfico é o conteúdo mais largo da seção: sem reduzir o padding lateral
+     ele perde ~28px de área útil justo onde ela é mais escassa. */
+   .bmd-sec__bd .chart {
+      margin-inline: -6px;
+   }
+}
+
+/* --- guarda contra o `button:focus` global do portal ----------------------
+   O portal declara `button:focus { background-color: … }` — o Materialize traz
+   uma dessas (`materialize.css`, especificidade 0,1,1). Todo botão nosso
+   identificado por uma classe só vale 0,1,0 e PERDE: depois do clique ele fica
+   pintado de uma cor que não é da paleta, com o nosso `color` navy por cima. Foi
+   o bug de "Mostrar todas as colunas" — fundo escuro, texto escuro, ~1,2:1.
+
+   O `:hover` nunca teve o problema (0,2,0 ganha de 0,1,1), e é por isso que só
+   o estado pós-clique aparecia quebrado: o rótulo sumia e voltava ao mover o
+   mouse por cima.
+
+   Cada botão REAFIRMA o próprio fundo com um `.bmd` na frente (0,2,0 / 0,2,1).
+   Um genérico `.bmd button:focus { background: unset }` seria mais curto e
+   errado: apagaria junto o branco do .bmd-acao e o branco da aba ativa do
+   .bmd-seg. O `:focus:hover` existe porque `:focus` sozinho, vindo depois na
+   folha, engoliria o hover de quem já está com foco.                          */
+.bmd .bmd-toggle-cols:focus {
+   background: var(--surface);
+}
+
+.bmd .bmd-toggle-cols:hover,
+.bmd .bmd-toggle-cols:focus:hover {
+   background: var(--panel);
+}
+
+.bmd .bmd-voltar:focus {
+   background: var(--surface);
+}
+
+.bmd .bmd-voltar:hover,
+.bmd .bmd-voltar:focus:hover {
+   background: var(--panel);
+}
+
+.bmd .bmd-acao:focus {
+   background: var(--surface);
+}
+
+.bmd .bmd-acao:hover,
+.bmd .bmd-acao:focus:hover {
+   background: var(--panel);
+}
+
+.bmd .bmd-seg button:focus {
+   background: none;
+}
+
+.bmd .bmd-seg button:hover,
+.bmd .bmd-seg button:focus:hover {
+   background: rgba(255, 255, 255, .12);
+}
+
+.bmd .bmd-seg button:focus[aria-pressed="true"] {
+   background: #fff;
+}
+
+/* ===========================================================================
+   Impressão / PDF
+   O PDF sai do Chromium (`--print-to-pdf`), não do WeasyPrint do `core/`: esta
+   tela é renderizada em JS e o WeasyPrint não executa JS — geraria página em
+   branco. Paisagem porque o dash é largo; retrato encolheria demais.
+   =========================================================================== */
+@page {
+   size: A4 landscape;
+   margin: 9mm;
+}
+
+@media print {
+
+   /* Sem isto o Chromium descarta fundo do hero e cor das barras. */
+   .bmd,
+   .bmd * {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+   }
+
+   /* `min-height: 100vh` vira altura-de-página na impressão: o .bmd pintava um
+     retângulo branco vazio depois do rodapé, na última folha. */
+   .bmd {
+      background: #fff;
+      font-size: 12px;
+      min-height: auto;
+   }
+
+   /* A foto não vai para o papel — vira mancha e come tinta. O scrim fica.
+     `!important` porque quem liga a foto é a folha de cada dashboard
+     (polaris/dashboard.css etc.), que carrega DEPOIS desta: mesma
+     especificidade, e no empate vence a última. O `--img: none` que estava
+     aqui não desligava nada — nenhuma regra lê `--img`, o host escreve o
+     `url()` direto no background-image. */
+   .bmd-hero {
+      background-image: var(--scrim) !important;
+      padding: 12px 14px;
+   }
+
+   .bmd-body {
+      padding: 0;
+      gap: 12px;
+      max-width: none;
+   }
+
+   .bmd-kpis-wrap {
+      padding: 10px 0 0;
+      max-width: none;
+   }
+
+   .bmd-kpi {
+      padding: 0 12px 8px;
+   }
+
+   /* Controle interativo não existe no papel. */
+   .bmd-seg {
+      display: none;
+   }
+
+   /* O cabeçalho do PDF já escreve o recorte por extenso. */
+   .bmd-barra-wrap {
+      display: none;
+   }
+
+   .bmd-barra {
+      display: none;
+   }
+
+   .bmd-voltar {
+      display: none;
+   }
+
+   .bmd-toggle-cols {
+      display: none;
+   }
+
+   /* A tabela rola na tela; no papel precisa imprimir as 70 linhas. */
+   .bmd-tw {
+      max-height: none;
+      overflow: visible;
+   }
+
+   .bmd-tb thead {
+      display: table-header-group;
+   }
+
+   /* repete o cabeçalho a cada página */
+   .bmd-tb tr {
+      break-inside: avoid;
+   }
+
+   .bmd-tb th {
+      position: static;
+   }
+
+   /* sticky vira artefato na impressão */
+   /* O relatório impresso quer TODAS as colunas — "recolhido" é estado de
+     tela, no papel não existe. Mesmo seletor (mesma especificidade) da regra
+     que esconde na tela: como este vem DEPOIS no arquivo, ganha por ordem de
+     cascata, sem precisar de !important. */
+   .bmd-tw:not(.is-expandido) .col-extra {
+      display: table-cell;
+   }
+
+   /* Um SVG não se parte entre páginas: cada seção com gráfico é atômica. Quando
+     não cabe no que resta da folha, ela inteira desce — sobra branco no pé, que
+     é o comportamento certo PARA GRÁFICO. Não generalize essa regra para a
+     tabela (ver .bmd-sec--tabela abaixo): lá o "não caber inteiro" é a regra, não
+     a exceção, e break-inside:avoid num bloco garantidamente maior que a página
+     produz o comportamento oposto do esperado — o Chromium não consegue evitar
+     quebrar, mas ao tentar deixa metade da folha em branco em vez de preencher
+     com linha. Isso produzia 5 páginas quase vazias antes desta seção existir. */
+   .bmd-sec,
+   .bmd-kpis {
+      break-inside: avoid;
+   }
+
+   .bmd-sec {
+      box-shadow: none;
+   }
+
+   .bmd-sec__hd {
+      break-after: avoid;
+   }
+
+   /* A tabela é a única seção que tem permissão de flutuar livre: sem o card
+     fechado (borda/sombra/canto), o Chromium empacota linha após linha até
+     encher cada folha de verdade, continuando direto onde o gráfico anterior
+     parou — em vez de pular pra uma folha nova só pra caber o cabeçalho. */
+   .bmd-sec--tabela {
+      border: 0;
+      break-inside: auto;
+   }
+
+   .bmd-sec--tabela .bmd-sec__hd {
+      padding: 0 0 8px;
+      border-bottom: 2px solid var(--border-strong);
+   }
+
+   .bmd-sec--tabela .bmd-tw {
+      border-radius: 0;
+   }
+
+   .bmd-tb th,
+   .bmd-tb td {
+      padding: 5px 12px;
+   }
+
+   /* mais denso que a tela: mais linha por folha */
+
+   /* No papel não existe cursor: o hover da tira some e a legenda por extenso
+     entra no lugar dele. É a única coisa que nomeia as três fatias no PDF. */
+   .bmd-tira__tip {
+      display: none;
+   }
+
+   /* Imprimir com o cursor parado sobre a tira sairia com as fatias esmaecidas. */
+   .bmd-tira__wrap.is-hovering .bmd-tira__seg {
+      box-shadow: none;
+   }
+
+   .bmd-tira__wrap {
+      margin-bottom: 10px;
+   }
+
+   .bmd-tira__leg {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+      font-size: var(--t-micro);
+      color: var(--muted);
+   }
+
+   .bmd-tira__leg span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+   }
+
+   .bmd-tira__leg i {
+      width: 9px;
+      height: 9px;
+      border-radius: 2px;
+      flex: none;
+   }
+
+   .bmd-foot {
+      margin-top: 10px;
+   }
+}
