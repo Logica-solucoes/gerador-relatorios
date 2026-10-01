@@ -32,9 +32,13 @@ export const comparativo: DefAba = {
     }).filter((x): x is NonNullable<typeof x> => x != null);
 
     const ultimoAnoBA = Math.max(...filtrar(ctx.dados.resumoSeg ?? [], { fonte: ["BASF"] }).map((l) => Number(l.ano)));
-    const seg2 = agregar(filtrar(ctx.dados.resumoSeg ?? [], { ...f, ano: [String(ultimoAnoBA)], fonte: ["ABCSEM"] }), {}, "segmento", m).slice(0, 6);
-    const basfSeg = new Map(agregar(filtrar(ctx.dados.resumoSeg ?? [], { ...f, ano: [String(ultimoAnoBA)], fonte: ["BASF"] }), {}, "segmento", m).map((g) => [g.chave, g.valor]));
-    const maxSeg = Math.max(...seg2.map((g) => g.valor), ...basfSeg.values(), 1);
+    const porSeg = (fonte: string) => new Map(agregar(filtrar(ctx.dados.resumoSeg ?? [], { ...f, ano: [String(ultimoAnoBA)], fonte: [fonte] }), {}, "segmento", m).map((g) => [g.chave, g.valor]));
+    const abcSeg = porSeg("ABCSEM"), basfSeg = porSeg("BASF");
+    // segmento só da BASF (ou só da ABCSEM) também entra: ranking pelo maior dos dois lados
+    const seg2 = [...new Set([...abcSeg.keys(), ...basfSeg.keys()])]
+      .map((chave) => ({ chave, valor: abcSeg.get(chave) ?? 0, pico: Math.max(abcSeg.get(chave) ?? 0, basfSeg.get(chave) ?? 0) }))
+      .sort((a, b) => b.pico - a.pico).slice(0, 12);
+    const maxSeg = Math.max(...seg2.map((g) => g.pico), 1);
 
     corpo.innerHTML = `
       ${cartao(`${m === "area" ? "Área" : "Total TH"} de mercado por fonte, por ano`, "a BASF não tem estudo de 2021 a 2023: a linha é interrompida", '<div data-el="linhas"></div>')}
@@ -48,7 +52,7 @@ export const comparativo: DefAba = {
           const b = basfSeg.get(g.chave) ?? 0;
           return `<button type="button" data-filtro="segmento" data-v="${esc(g.chave)}"><span>${esc(g.chave)}</span>
             <span><s style="width:${(g.valor / maxSeg) * 100}%;background:${C.verde}"></s><s style="width:${(b / maxSeg) * 100}%;background:${C.o500}"></s></span>
-            <span class="bmd-mono">${n0(Math.round(g.valor))} / ${b ? n0(Math.round(b)) : "—"}</span></button>`;
+            <span class="bmd-mono">${g.valor ? n0(Math.round(g.valor)) : "—"} / ${b ? n0(Math.round(b)) : "—"}</span></button>`;
         }).join("")}</div><div class="bmd-leg2"><span><i style="background:${C.verde}"></i>ABCSEM</span><span><i style="background:${C.o500}"></i>BASF</span></div>`)}
       </div>`;
 
