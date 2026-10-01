@@ -1,7 +1,7 @@
 import * as Plot from "@observablehq/plot";
 import { agregar, atingimento, filtrar, mesDeCorte, mesMaximo, total, variacao, type Filtros } from "../calc";
 import { cartao, kpi, seg } from "../componentes";
-import { esc, moedaCompacta, n0, nf } from "../shared/formato";
+import { esc, euroCompacto, moedaCompacta, n0, nf } from "../shared/formato";
 import { C } from "../shared/tema";
 import type { Linha } from "../types";
 import type { Dados, DefAba } from "./tipos";
@@ -35,7 +35,7 @@ export const vendas: DefAba = {
     const semTaxa = e.moeda === "eur" && !taxa(ano);
     const campo = e.medida === "th" ? "th" : "valor";
     const conv = (v: number | null, a: number) => (v == null || campo === "th" || e.moeda === "brl" ? v : taxa(a) ? v / taxa(a)! : null);
-    const fmt = (v: number | null) => campo === "th" ? (v == null ? "—" : `${n0(Math.round(v / 1000))} mil TH`) : e.moeda === "eur" ? (v == null ? "—" : `€ ${nf(v / 1e6, 1)} Mi`) : moedaCompacta(v);
+    const fmt = (v: number | null) => campo === "th" ? (v == null ? "—" : `${n0(Math.round(v / 1000))} mil TH`) : e.moeda === "eur" ? euroCompacto(v) : moedaCompacta(v);
 
     const recorte = (a: number, ate: number): Linha[] => filtrar(todas, { ...f, ano: [String(a)] }).filter((l) => Number(l.mes) <= ate);
     const ytd = conv(total(recorte(ano, mesCorte), campo), ano);

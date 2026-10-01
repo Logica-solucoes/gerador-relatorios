@@ -66,9 +66,18 @@ export function moedaCompacta(v: number | null | undefined): string {
   if (v == null || !Number.isFinite(v)) return "—";
   const abs = Math.abs(v);
   if (abs >= 1e9) return `R$ ${nf(v / 1e9, 1)} bi`;
-  if (abs >= 1e6) return `R$ ${nf(v / 1e6, 1)} mi`;
+  if (abs >= 999_500) return `R$ ${nf(v / 1e6, 1)} mi`;
   if (abs >= 1e3) return `R$ ${nf(v / 1e3, 0)} mil`;
   return moeda(v);
+}
+
+/** Euro abreviado, mesma regra de `moedaCompacta`: `€ 1,2 Mi`, `€ 481 mil`. */
+export function euroCompacto(v: number | null | undefined): string {
+  if (v == null || !Number.isFinite(v)) return "—";
+  const abs = Math.abs(v);
+  if (abs >= 999_500) return `€ ${nf(v / 1e6, 1)} Mi`;
+  if (abs >= 1e3) return `€ ${nf(v / 1e3, 0)} mil`;
+  return `€ ${nf(v, 2)}`;
 }
 
 /** Plot chama `tickFormat` como `(valor, índice)`. Um formatter com segundo parâmetro
