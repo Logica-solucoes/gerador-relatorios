@@ -5,6 +5,7 @@ import { alternarFiltro } from "../estado";
 import { FONTES, ITENS_CEPEA, linhasIbge, ROTULO_DIM } from "../fontes";
 import { desenharMapa, type PontoMapa } from "../mapa";
 import { estadoVazio } from "../shared/blocos";
+import { criarDrill } from "../shared/drill";
 import { esc, moedaCompacta, n0, nf } from "../shared/formato";
 import { C, ESCALA } from "../shared/tema";
 import type { Linha } from "../types";
@@ -100,8 +101,18 @@ export const mercado: DefAba = {
       });
     }
 
+    // Drill estado → hotspots só na BASF (as outras fontes não têm hotspot). O caminho mora no estado.
+    const podeDrill = e.fonte === "basf" && e.dim === "uf";
+    let pronto = false;
+    const drill = criarDrill<string>(["Estado", "Hotspot"], () => { if (pronto) ctx.mudar((s) => ({ ...s, drill: drill.chaves() })); });
+    if (podeDrill) e.drill.forEach((k) => drill.descer(k));
+    pronto = true;
+    const ufDrill = drill.chave();
+    const dimRank = ufDrill != null ? "hotspot" : e.dim;
     const visaoRank = e.fonte === "ibge" ? (e.dim === "meso" ? "meso" : "uf") : "total";
-    const ranking = agregar(base(ctx, visaoRank), fAtual, e.dim, m);
+    const ranking = agregar(base(ctx, visaoRank), ufDrill != null ? { ...fAtual, uf: [ufDrill] } : fAtual, dimRank, m);
+    const tituloRank = ufDrill != null ? drill.titulo() : `Por ${ROTULO_DIM[e.dim]?.toLowerCase() ?? e.dim}`;
+    const subRank = podeDrill && ufDrill == null ? `${esc(def.metricas[m] ?? m)} · clique num estado para ver os hotspots` : esc(def.metricas[m] ?? m);
     const dimSeg = e.fonte === "basf" ? "segmento" : e.fonte === "abcsem" ? "segmento" : e.fonte === "cepea" ? "produto" : "especie";
     const comp = agregar(base(ctx, "total"), fAtual, dimSeg, m);
 
@@ -110,13 +121,16 @@ export const mercado: DefAba = {
       <div class="bmd-grid2">
         ${def.temMapa ? cartao("Distribuição geográfica", "clique num estado para filtrar", '<div data-el="mapa"></div>') : ""}
         <div class="bmd-pilha">
-          ${cartao(`Por ${ROTULO_DIM[e.dim]?.toLowerCase() ?? e.dim}`, esc(def.metricas[m] ?? m),
-            barList(ranking, e.dim, fmt, f[e.dim] ?? []) || '<p class="bmd-nota">Sem dado neste recorte.</p>',
-            `<div style="margin-bottom:8px">${seg("dim", Object.fromEntries(def.rankings.map((d) => [d, ROTULO_DIM[d] ?? d])), e.dim)}</div>`)}
+          ${cartao(tituloRank, subRank,
+            barList(ranking, dimRank, fmt, f[dimRank] ?? [], 8, podeDrill && ufDrill == null ? "drill" : "filtro") || '<p class="bmd-nota">Sem dado neste recorte.</p>',
+            `<div style="margin-bottom:8px">${seg("dim", Object.fromEntries(def.rankings.map((d) => [d, ROTULO_DIM[d] ?? d])), e.dim)}${drill.htmlVoltar()}</div>`)}
           ${comp.length > 1 ? cartao(`Composição por ${ROTULO_DIM[dimSeg]?.toLowerCase() ?? dimSeg}`, "", distribuicao(comp, dimSeg, ESCALA)) : ""}
         </div>
       </div>
       ${cartao("Evolução por ano", esc(def.metricas[m] ?? m), '<div data-el="anos"></div>', "")}`;
+
+    corpo.querySelectorAll<HTMLElement>("[data-drill]").forEach((b) => b.addEventListener("click", () => drill.descer(b.dataset.v!)));
+    corpo.querySelector("[data-el-voltar]")?.addEventListener("click", () => drill.voltar());
 
     if (def.temMapa) {
       const porUf = new Map(agregar(base(ctx, e.fonte === "ibge" ? "uf" : "total"), fAtual, "uf", m).map((g) => [g.chave, g.valor]));

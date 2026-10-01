@@ -72,12 +72,12 @@ export function kpi(k: Kpi): string {
   </div>`;
 }
 
-/** Ranking clicável (dashboardcn bar-list). Clique delegado em `[data-filtro]`. */
-export function barList(grupos: Grupo[], dim: string, fmt: (v: number) => string, ativos: string[] = [], limite = 8): string {
+/** Ranking clicável (dashboardcn bar-list). Clique delegado em `[data-filtro]`; `acao = "drill"` troca por `[data-drill]`. */
+export function barList(grupos: Grupo[], dim: string, fmt: (v: number) => string, ativos: string[] = [], limite = 8, acao: "filtro" | "drill" = "filtro"): string {
   if (!grupos.length) return "";
   const max = grupos[0]!.valor;
   return `<div class="bmd-bl">${grupos.slice(0, limite).map((g) => `
-    <button type="button" class="bmd-bl__i${ativos.includes(g.chave) ? " is-on" : ""}" data-filtro="${dim}" data-v="${esc(g.chave)}" title="${esc(g.chave)}">
+    <button type="button" class="bmd-bl__i${ativos.includes(g.chave) ? " is-on" : ""}" data-${acao}="${dim}" data-v="${esc(g.chave)}" title="${esc(g.chave)}">
       <span class="bmd-bl__k">${esc(g.chave)}</span>
       <span class="bmd-bl__b"><s style="width:${((g.valor / max) * 100).toFixed(1)}%"></s></span>
       <span class="bmd-bl__v bmd-mono">${esc(fmt(g.valor))}</span>
