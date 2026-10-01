@@ -130,3 +130,7 @@
 .bmd-par2 s{display:block;height:7px;border-radius:2px;text-decoration:none}
 .bmd-par2 .bmd-mono{font-size:12px;white-space:nowrap}
 .bmd-par2 em{font-style:normal;margin-left:6px}
+.bmd .bmd-busca { width: 100%; box-sizing: border-box; height: 34px; padding: 0 14px; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--bg); color: var(--ink); font: 500 13px Manrope, ui-sans-serif, system-ui, sans-serif; outline: 0; margin: 0; box-shadow: none; transition: border-color .15s, box-shadow .15s, background .15s; }
+.bmd .bmd-busca:focus { border-color: var(--o500); background: var(--surface); box-shadow: 0 0 0 3px var(--o100); }
+.bmd .bmd-busca.is-ativo { border-color: var(--o500); background: var(--o50); }
+.bmd-par + .bmd-leg2 { margin-top: 10px; }

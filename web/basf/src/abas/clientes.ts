@@ -49,8 +49,8 @@ export const clientes: DefAba = {
     if (termo) ls = ls.filter((l) => normalizar(String(l.cliente ?? "")).includes(termo));
 
     const shareCopa = share(total(ls, "copa"), total(ls, "mercado"));
-    // 80-20: TH da key list ÷ TH da BASF no mesmo ano/hotspot/crop.
-    const fBasf = Object.fromEntries(Object.entries(f).filter(([k]) => ["ano", "hotspot", "crop"].includes(k)));
+    // 80-20: TH da key list ÷ TH da BASF no mesmo ano/hotspot/crop/rtv.
+    const fBasf = Object.fromEntries(Object.entries(f).filter(([k]) => ["ano", "hotspot", "crop", "rtv"].includes(k)));
     const thBasf = total(filtrar(ctx.dados.basf ?? [], { ...fBasf, ano: fBasf.ano ?? ["2024"] }), "th");
     const enx = total(ls, "enxertia");
     const nClientes = new Set(ls.map((l) => l.cliente)).size;
@@ -72,7 +72,7 @@ export const clientes: DefAba = {
         return `<tr class="bmd-cli${aberto ? " is-open" : ""}" data-cliente="${esc(id)}"><td>${aberto ? ICONE.aberto : ICONE.abrir}<b title="${esc(c)}">${esc(c)}</b>${generico}</td>
           <td>${esc(String(cs[0]!.rtv ?? "—"))}</td><td>${crops}</td><td>${esc(String(cs[0]!.acesso ?? "—"))}</td>
           <td class="n bmd-mono">${n0(total(cs, "area"))}</td><td class="n bmd-mono">${n0(total(cs, "mercado"))}</td>
-          <td class="n bmd-mono">${n0(total(cs, "copa") ?? 0)}</td><td>${barraShare(share(total(cs, "copa"), total(cs, "mercado")))}</td></tr>${aberto ? ficha(cs) : ""}`;
+          <td class="n bmd-mono">${n0(total(cs, "copa") ?? 0)}</td><td>${barraShare(share(total(cs, "copa"), total(cs, "mercado")))}</td></tr>${aberto ? ficha(ls.filter((l) => l.cliente === c)) : ""}`;
       }).join("");
       return cab + cls;
     }).join("");
@@ -98,6 +98,11 @@ export const clientes: DefAba = {
     ctx.shell.el("busca").append(campo.el);
     const input = campo.el.querySelector<HTMLInputElement>("input")!;
     input.value = buscaAtual;
-    if (tinhaFoco) { input.focus(); input.setSelectionRange(caret, caret); }
+    if (tinhaFoco) {
+      input.focus();
+      input.setSelectionRange(caret, caret);
+      // o focus reabre a lista de sugestões; Esc fecha sem limpar o texto
+      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    }
   },
 };
