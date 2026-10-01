@@ -13,8 +13,8 @@ const ABAS: DefAba[] = [mercado, comparativo, clientes, vendas];
 
 const GABARITO = `
   <header class="bmd-hero2">
-    <div class="bmd-hero2__titulo"><div><small>SHIFT BI</small><h1>Inteligência de Mercado</h1></div><small data-el="ultima"></small></div>
-    <div class="bmd-hero2__marca" aria-label="BASF Nunhems"><b>BASF</b><i></i><span>nunhems</span></div>
+    <div class="bmd-hero2__titulo"><h1>Inteligência de Mercado</h1><small data-el="ultima"></small></div>
+    <div class="bmd-hero2__marca" aria-label="SHIFT BI · BASF Nunhems"><em>SHIFT BI</em><div><b>BASF</b><i></i><span>nunhems</span></div></div>
   </header>
   <nav class="bmd-tabs" role="tablist" data-el="tabs"></nav>
   <div class="bmd-barra2"><div class="bmd-barra2__chips" data-el="chips"></div><div class="bmd-barra2__ctl" data-el="ctl"></div></div>
