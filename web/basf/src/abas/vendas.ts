@@ -103,7 +103,7 @@ export const vendas: DefAba = {
     ctx.shell.desenhar("curva", {
       height: ctx.shell.compacto() ? 220 : 260, marginLeft: 80, marginRight: 130,
       x: { domain: [0, 11], ticks: 12, tickFormat: (i: number) => MESES[i] ?? "", label: null },
-      y: { grid: true, label: null, tickFormat: (v: number) => fmt(v) },
+      y: { grid: true, label: null, tickFormat: (v: number) => (v === 0 ? "0" : fmt(v)) },
       color: { domain: [String(ano - 1), String(ano)], range: [C.anterior, C.o500] },
       marks: [
         ...(budget != null && metaValida ? [Plot.ruleY([budget], { stroke: C.verde, strokeDasharray: "4 3" }),
