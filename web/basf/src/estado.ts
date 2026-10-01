@@ -101,7 +101,7 @@ export function deHash(hash: string): Estado {
   const ag = p.get("agrupar");
   if (ag === "hotspot" || ag === "rtv" || ag === "crop") n.agrupar = ag;
   const item = p.get("item");
-  if (item && item in ITENS_CEPEA) n.itemCepea = item;
+  if (item && Object.hasOwn(ITENS_CEPEA, item)) n.itemCepea = item;
   const corte = Number(p.get("corte") || NaN);
   if (Number.isInteger(corte) && corte >= 1 && corte <= 12) n.mesCorte = corte;
   const dim = p.get("dim");

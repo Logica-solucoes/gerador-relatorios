@@ -63,6 +63,9 @@ describe("hash", () => {
 });
 
 describe("deHash", () => {
+  test("item herdado do Object não vira item do CEPEA", () => {
+    expect(deHash("#mercado?fonte=cepea&item=constructor").itemCepea).toBe(inicial().itemCepea);
+  });
   test("valores inválidos caem no padrão da fonte", () => {
     const e = deHash("#mercado?fonte=ibge&m=zzz&dim=zzz&f.rtv=X&f.uf=");
     expect(e.fonte).toBe("ibge");
