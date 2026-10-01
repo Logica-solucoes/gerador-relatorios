@@ -53,12 +53,17 @@ export const comparativo: DefAba = {
       </div>`;
 
     const finais = FONTES_ORDEM.map((fonte) => pontos.filter((p) => p.fonte === fonte).at(-1)).filter((p): p is NonNullable<typeof p> => !!p);
-    // dx/dy são constantes no Plot: rótulos que terminam colados (BASF e CEPEA) vão em marcas separadas.
-    const ordenados = [...finais].sort((a, b) => b.v - a.v);
-    const desloc = new Map<string, number>();
-    ordenados.forEach((p, i) => { const prox = ordenados[i - 1]; desloc.set(p.fonte, prox && Math.abs(prox.v - p.v) / Math.max(prox.v, 1) < 0.08 ? 9 : 0); });
+    // rótulos do fim da linha: empurra para baixo em espaço de dados até caber a altura do texto
+    const altura = ctx.shell.compacto() ? 240 : 300;
+    const vs = pontos.map((p) => p.v);
+    const porPx = (Math.max(...vs) - Math.min(...vs)) / (altura - 50);
+    const rotulos: { fonte: string; ano: number; v: number; y: number }[] = [];
+    for (const p of [...finais].sort((x, y) => y.v - x.v)) {
+      const acima = rotulos.at(-1);
+      rotulos.push({ fonte: p.fonte, ano: p.ano, v: p.v, y: acima ? Math.min(p.v, acima.y - 14 * porPx) : p.v });
+    }
     ctx.shell.desenhar("linhas", {
-      height: ctx.shell.compacto() ? 240 : 300, marginLeft: 56, marginRight: 120,
+      height: altura, marginLeft: 56, marginRight: 120,
       x: { label: null, tickFormat: (v: number) => String(v) },
       y: { grid: true, label: null, tickFormat: (v: number) => (m === "area" ? mil(v) : `${nf(v / 1e6, 0)} Mi`) },
       color: { domain: FONTES_ORDEM, range: FONTES_ORDEM.map((x) => COR_FONTE[x]!) },
@@ -66,8 +71,7 @@ export const comparativo: DefAba = {
         // z quebra a linha onde falta ano consecutivo
         Plot.lineY(pontos, { x: "ano", y: "v", stroke: "fonte", strokeWidth: 2.2, curve: "monotone-x", z: (p: { fonte: string; ano: number }) => `${p.fonte}${pontos.some((q) => q.fonte === p.fonte && q.ano === p.ano - 1) || !pontos.some((q) => q.fonte === p.fonte && q.ano < p.ano) ? "" : p.ano}` }),
         Plot.dot(pontos.filter((p) => p.fonte === "BASF"), { x: "ano", y: "v", fill: COR_FONTE.BASF, r: 3 }),
-        Plot.text(finais.filter((p) => !desloc.get(p.fonte)), { x: "ano", y: "v", text: (p: { fonte: string; v: number }) => `${p.fonte}  ${m === "area" ? mil(p.v) : nf(p.v / 1e6, 1) + " Mi"}`, dx: 8, textAnchor: "start", fill: "fonte", fontWeight: 700 }),
-        Plot.text(finais.filter((p) => desloc.get(p.fonte)), { x: "ano", y: "v", text: (p: { fonte: string; v: number }) => `${p.fonte}  ${m === "area" ? mil(p.v) : nf(p.v / 1e6, 1) + " Mi"}`, dx: 8, dy: 11, textAnchor: "start", fill: "fonte", fontWeight: 700 }),
+        Plot.text(rotulos, { x: "ano", y: "y", text: (p: { fonte: string; v: number }) => `${p.fonte}  ${m === "area" ? mil(p.v) : nf(p.v / 1e6, 1) + " Mi"}`, dx: 8, textAnchor: "start", fill: "fonte", fontWeight: 700 }),
       ],
     });
   },
