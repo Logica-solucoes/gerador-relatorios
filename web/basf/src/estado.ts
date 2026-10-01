@@ -1,5 +1,5 @@
 import type { Filtros } from "./calc";
-import { FONTES } from "./fontes";
+import { FONTES, ITENS_CEPEA } from "./fontes";
 import type { Aba, Fonte } from "./types";
 
 export interface Estado {
@@ -10,6 +10,7 @@ export interface Estado {
   moeda: "brl" | "eur";
   medida: "valor" | "th";
   agrupar: "hotspot" | "rtv" | "crop";
+  itemCepea: string;
   /** Dimensão ativa do ranking da aba Mercado. */
   dim: string;
   /** Caminho do drill do ranking (fora do hash: é navegação, não visão). */
@@ -25,7 +26,7 @@ export function inicial(): Estado {
   return {
     aba: "mercado", fonte: "basf",
     filtros: { mercado: {}, comparativo: {}, clientes: {}, vendas: {} },
-    metrica: "area", moeda: "brl", medida: "valor", agrupar: "hotspot", dim: "uf",
+    metrica: "area", moeda: "brl", medida: "valor", agrupar: "hotspot", itemCepea: "Área Cepea", dim: "uf",
     drill: [], clienteAberto: null,
   };
 }
@@ -76,6 +77,7 @@ export function paraHash(e: Estado): string {
   p.set("medida", e.medida);
   p.set("agrupar", e.agrupar);
   p.set("dim", e.dim);
+  if (e.fonte === "cepea") p.set("item", e.itemCepea);
   for (const [dim, vals] of Object.entries(e.filtros[e.aba])) for (const v of vals) p.append(`f.${dim}`, v);
   return `#${e.aba}?${p}`;
 }
@@ -95,6 +97,8 @@ export function deHash(hash: string): Estado {
   n.medida = p.get("medida") === "th" ? "th" : "valor";
   const ag = p.get("agrupar");
   if (ag === "hotspot" || ag === "rtv" || ag === "crop") n.agrupar = ag;
+  const item = p.get("item");
+  if (item && item in ITENS_CEPEA) n.itemCepea = item;
   const dim = p.get("dim");
   if (dim && def.rankings.includes(dim)) n.dim = dim;
   const dims = new Set([...p.keys()].filter((k) => k.startsWith("f.")));

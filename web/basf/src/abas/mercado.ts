@@ -2,7 +2,7 @@ import * as Plot from "@observablehq/plot";
 import { agregar, filtrar, share, total, variacao, type Filtros } from "../calc";
 import { barList, cartao, distribuicao, kpi, seg, type Kpi } from "../componentes";
 import { alternarFiltro } from "../estado";
-import { FONTES, linhasIbge, ROTULO_DIM } from "../fontes";
+import { FONTES, ITENS_CEPEA, linhasIbge, ROTULO_DIM } from "../fontes";
 import { desenharMapa, type PontoMapa } from "../mapa";
 import { estadoVazio } from "../shared/blocos";
 import { esc, moedaCompacta, n0, nf } from "../shared/formato";
@@ -19,6 +19,7 @@ const deltaTxt = (v: number | null, base: string) => (v == null ? null : { txt: 
 /** Linhas da fonte ativa já no nível certo (IBGE) para a visão pedida. */
 function base(ctx: Ctx, visao: "total" | "uf" | "meso" | "mapa"): Linha[] {
   const ls = ctx.dados[ctx.estado.fonte] ?? [];
+  if (ctx.estado.fonte === "cepea") return ls.filter((l) => l.item === ctx.estado.itemCepea);
   if (ctx.estado.fonte !== "ibge") return ls;
   return linhasIbge(ls, visao, ctx.estado.filtros.mercado);
 }
@@ -35,7 +36,8 @@ export const mercado: DefAba = {
   chips: (e) => ({ dims: FONTES[e.fonte].dims, origem: e.fonte }),
   controles: (e) =>
     seg("fonte", { basf: "BASF", ibge: "IBGE", abcsem: "ABCSEM", cepea: "CEPEA" }, e.fonte) +
-    (Object.keys(FONTES[e.fonte].metricas).length > 1 ? seg("metrica", FONTES[e.fonte].metricas, e.metrica) : ""),
+    (Object.keys(FONTES[e.fonte].metricas).length > 1 ? seg("metrica", FONTES[e.fonte].metricas, e.metrica) : "") +
+    (e.fonte === "cepea" ? seg("itemCepea", ITENS_CEPEA, e.itemCepea) : ""),
 
   render(ctx, corpo) {
     const { estado: e } = ctx;

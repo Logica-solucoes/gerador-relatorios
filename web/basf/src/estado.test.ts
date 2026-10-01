@@ -78,3 +78,16 @@ describe("deHash", () => {
     expect(e.filtros.mercado.tipo).toEqual(["A", "B"]);
   });
 });
+
+describe("item da CEPEA", () => {
+  test("padrão é Área Cepea, como o slicer do PBI; vai e volta no hash só na CEPEA", () => {
+    expect(inicial().itemCepea).toBe("Área Cepea");
+    const e = { ...trocarFonte(inicial(), "cepea").estado, itemCepea: "Área IBGE" };
+    expect(deHash(paraHash(e)).itemCepea).toBe("Área IBGE");
+    expect(paraHash(inicial())).not.toContain("item=");
+  });
+  test("item desconhecido cai no padrão; item não é mais filtro de chip", () => {
+    expect(deHash("#mercado?fonte=cepea&item=zzz").itemCepea).toBe("Área Cepea");
+    expect(deHash("#mercado?fonte=cepea&f.item=Área IBGE").filtros.mercado.item).toBeUndefined();
+  });
+});

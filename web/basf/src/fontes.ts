@@ -36,11 +36,17 @@ export const FONTES: Record<Fonte, DefFonte> = {
   },
   cepea: {
     rotulo: "CEPEA",
-    dims: { ano: "Ano", produto: "Produto", item: "Item", regiao: "Região", uf: "Estado", regional: "Regional" },
+    dims: { ano: "Ano", produto: "Produto", regiao: "Região", uf: "Estado", regional: "Regional" },
     metricas: { area: "Área (ha)" },
     rankings: ["regiao", "uf", "regional"],
     temMapa: true,
   },
+};
+
+/** Itens da CEPEA são visões diferentes da mesma área: escolha única, nunca soma (slicer do PBI, padrão "Área Cepea"). */
+export const ITENS_CEPEA: Record<string, string> = {
+  "Área Cepea": "Área Cepea", "Área Cepea - Mesa": "Mesa", "Área Cepea - Indústria": "Indústria",
+  "Área Cepea - Semente": "Semente", "Área IBGE": "Área IBGE",
 };
 
 export const ROTULO_DIM: Record<string, string> = {
