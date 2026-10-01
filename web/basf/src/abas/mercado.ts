@@ -1,8 +1,8 @@
 import * as Plot from "@observablehq/plot";
 import { agregar, filtrar, share, total, variacao, type Filtros } from "../calc";
 import { barList, cartao, distribuicao, kpi, seg, type Kpi } from "../componentes";
-import { alternarFiltro } from "../estado";
-import { FONTES, ITENS_CEPEA, linhasIbge, ROTULO_DIM } from "../fontes";
+import { alternarFiltro, definirFiltro } from "../estado";
+import { FONTES, ITENS_CEPEA, linhasIbge, ROTULO_DIM, type DefFonte } from "../fontes";
 import { desenharMapa, type PontoMapa } from "../mapa";
 import { estadoVazio } from "../shared/blocos";
 import { criarDrill } from "../shared/drill";
@@ -29,6 +29,18 @@ function base(ctx: Ctx, visao: "total" | "uf" | "meso" | "mapa"): Linha[] {
 /** Anos com dado, crescente. Filtro de ano escolhe o "atual"; sem filtro, o último. */
 function anos(ls: Linha[]): number[] {
   return [...new Set(ls.map((l) => l.ano).filter((a): a is number => typeof a === "number"))].sort((a, b) => a - b);
+}
+
+/** Estado vazio que diz o que zerou: ano sem estudo na fonte, ou a lista de filtros, cada um removível. */
+function vazio(def: DefFonte, f: Filtros, ano: number | undefined, anosFonte: number[]): string {
+  if (ano != null && !anosFonte.includes(ano)) {
+    return estadoVazio(`Sem dado para ${ano}`, `<b>${def.rotulo}</b> não tem dado em ${ano}. Anos disponíveis: ${anosFonte.join(", ")}.`);
+  }
+  const ativos = Object.entries(f).filter(([, vs]) => vs.length);
+  const botoes = ativos.map(([dim, vs]) =>
+    `<button type="button" class="bmd-voltar" data-chip-limpar="${esc(dim)}">${esc(def.dims[dim] ?? ROTULO_DIM[dim] ?? dim)}: ${esc(vs.join(", "))} ×</button>`).join(" ");
+  return estadoVazio("Sem dado neste recorte", `Nenhum registro de <b>${def.rotulo}</b> com estes filtros. Remova um:`) +
+    `<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:-16px">${botoes}<button type="button" class="bmd-voltar" data-limpar-tudo>Limpar filtros</button></div>`;
 }
 
 export const mercado: DefAba = {
@@ -61,14 +73,16 @@ export const mercado: DefAba = {
     };
     const serie = (met = m) => serieDe((a) => tot({ ...semAno, ano: [String(a)] }, met));
 
-    if (tot(fAtual) == null) {
-      corpo.innerHTML = `<div class="bmd-card">${estadoVazio("Sem dado neste recorte", `Nenhum registro de <b>${FONTES[e.fonte].rotulo}</b> para os filtros escolhidos. Remova um filtro na barra acima.`)}</div>`;
+    const def = FONTES[e.fonte];
+    if (Object.keys(def.metricas).every((met) => tot(fAtual, met) == null)) {
+      corpo.innerHTML = `<div class="bmd-card">${vazio(def, f, anoAtual, todosAnos)}</div>`;
+      corpo.querySelector("[data-limpar-tudo]")?.addEventListener("click", () =>
+        ctx.mudar((s) => Object.keys(s.filtros.mercado).reduce((x, dim) => definirFiltro(x, dim, []), s)));
       return;
     }
 
     const kpis: Kpi[] = [];
     const baseAnt = anoAnt != null ? String(anoAnt) : "ano anterior";
-    const def = FONTES[e.fonte];
     if (e.fonte === "basf") {
       // Share: venda do ano civil do estudo ÷ potencial, mesmos filtros. Estado não existe em vendas.
       const vendasDe = (ff: Filtros) => f.uf?.length ? null
@@ -94,10 +108,10 @@ export const mercado: DefAba = {
       });
     }
     if (e.fonte === "basf") {
-      const pot = tot(fAtual, "potencial");
+      const pot = tot(fAtual, "potencial"), eur = tot(fAtual, "potencialEur");
       kpis.push({
         rotulo: "Potencial", valor: moedaCompacta(pot), delta: deltaTxt(variacao(pot, tot(fAnt, "potencial")), baseAnt),
-        nota: `€ ${nf((tot(fAtual, "potencialEur") ?? 0) / 1e6, 1)} Mi`, serie: serie("potencial"),
+        nota: eur == null ? "€ —" : `€ ${nf(eur / 1e6, 1)} Mi`, serie: serie("potencial"),
       });
     }
 
@@ -120,7 +134,7 @@ export const mercado: DefAba = {
 
     corpo.innerHTML = `
       <div class="bmd-kpis2">${kpis.map(kpi).join("")}</div>
-      <div class="bmd-grid2">
+      <div class="bmd-grid2 bmd-grid2--mapa">
         ${def.temMapa ? cartao("Distribuição geográfica", "clique num estado para filtrar", '<div data-el="mapa"></div>') : ""}
         <div class="bmd-pilha">
           ${cartao(tituloRank, subRank,
