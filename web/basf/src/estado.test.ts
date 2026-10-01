@@ -61,3 +61,20 @@ describe("hash", () => {
     expect(deHash("#xyz?fonte=nada").fonte).toBe("basf");
   });
 });
+
+describe("deHash", () => {
+  test("valores inválidos caem no padrão da fonte", () => {
+    const e = deHash("#mercado?fonte=ibge&m=zzz&dim=zzz&f.rtv=X&f.uf=");
+    expect(e.fonte).toBe("ibge");
+    expect(e.metrica).toBe("area");
+    expect(e.dim).toBe("uf");
+    expect(e.filtros.mercado.rtv).toBeUndefined();
+    expect(e.filtros.mercado.uf).toBeUndefined();
+  });
+  test("valores válidos são mantidos", () => {
+    const e = deHash("#mercado?fonte=abcsem&m=valor&dim=tipo&f.uf=&f.tipo=A&f.tipo=B");
+    expect(e.metrica).toBe("valor");
+    expect(e.dim).toBe("tipo");
+    expect(e.filtros.mercado.tipo).toEqual(["A", "B"]);
+  });
+});

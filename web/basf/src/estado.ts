@@ -88,13 +88,20 @@ export function deHash(hash: string): Estado {
   const p = new URLSearchParams(query);
   const fonte = p.get("fonte");
   let n = fonte && fonte in FONTES ? trocarFonte(e, fonte as Fonte).estado : e;
-  n.metrica = p.get("m") ?? n.metrica;
+  const def = FONTES[n.fonte];
+  const m = p.get("m");
+  if (m && m in def.metricas) n.metrica = m;
   n.moeda = p.get("moeda") === "eur" ? "eur" : "brl";
   n.medida = p.get("medida") === "th" ? "th" : "valor";
   const ag = p.get("agrupar");
   if (ag === "hotspot" || ag === "rtv" || ag === "crop") n.agrupar = ag;
-  n.dim = p.get("dim") ?? n.dim;
+  const dim = p.get("dim");
+  if (dim && def.rankings.includes(dim)) n.dim = dim;
   const dims = new Set([...p.keys()].filter((k) => k.startsWith("f.")));
-  for (const k of dims) n = definirFiltro(n, k.slice(2), p.getAll(k));
+  for (const k of dims) {
+    const dimFiltro = k.slice(2);
+    if (e.aba === "mercado" && !(dimFiltro in def.dims)) continue;
+    n = definirFiltro(n, dimFiltro, p.getAll(k).filter(Boolean));
+  }
   return n;
 }
