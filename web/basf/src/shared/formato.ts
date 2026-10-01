@@ -55,10 +55,9 @@ export function moeda(v: number | null | undefined): string {
   return `R$ ${nf(v, 2)}`;
 }
 
-/** Valor em reais abreviado para caber num KPI: `R$ 23,9 mi`.
+/** Valor em reais abreviado para caber num KPI: `R$ 23,9 mi`, `R$ 481 mil`.
  *
- *  Abaixo de um milhão devolve o valor cheio — "R$ 0,9 mi" é mais difícil de ler
- *  do que "R$ 923.410,00" e não economiza largura nenhuma.
+ *  Abaixo de mil devolve o valor cheio — "R$ 0,9 mil" não ajuda.
  *
  *  Só para a TELA. O exato continua indo para o `title` do número e para os
  *  relatórios: ver `CardKpi.exato` em shared/blocos.ts. Nunca use esta função
@@ -68,6 +67,7 @@ export function moedaCompacta(v: number | null | undefined): string {
   const abs = Math.abs(v);
   if (abs >= 1e9) return `R$ ${nf(v / 1e9, 1)} bi`;
   if (abs >= 1e6) return `R$ ${nf(v / 1e6, 1)} mi`;
+  if (abs >= 1e3) return `R$ ${nf(v / 1e3, 0)} mil`;
   return moeda(v);
 }
 
