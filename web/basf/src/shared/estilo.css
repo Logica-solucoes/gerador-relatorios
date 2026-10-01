@@ -512,10 +512,6 @@
    background: var(--panel);
 }
 
-.bmd-voltar .material-icons {
-   font-size: 15px;
-}
-
 /* Barra clicável precisa dizer que é clicável — e acender um pouco no
    hover reforça o afford sem brigar com a cor de série (`filter`, não
    troca de `fill`, então funciona igual pra qualquer cor que o Plot pinte). */
@@ -917,84 +913,8 @@
    }
 }
 
-/* ─── barra de filtros ────────────────────────────────────────────────────────
-   Saiu de dentro do hero. Mora numa faixa própria, branca, entre o hero e os
-   KPIs — e é por isso que os controles voltaram a ser escuros sobre claro, sem
-   véu translúcido nenhum. O `rgba(255,255,255,.10)` de antes fazia a borda do
-   campo depender de qual foto o cliente tinha subido no banner: sobre a região
-   clara da imagem o campo simplesmente sumia. Agora não depende de nada.
-
-   Vanilla, não Materialize — ver o cabeçalho de shared/filtros.ts.
-
-   O portal carrega Materialize globalmente e `input[type=text]:not(.browser-
-   default)` (especificidade 0,2,1) ganhava de `.bmd-busca` (0,1,0) sozinho —
-   por isso "Cliente" e "Nota Fiscal" apareciam sem caixa. A correção de fato é
-   em shared/filtros.ts: a classe `browser-default` faz o seletor do Materialize
-   nem CASAR mais, independente de especificidade. O que segue aqui é cinto e
-   suspensório — os seletores da barra ganham dois níveis de `.bmd .bmd-barra`
-   (0,3,0 ou 0,3,1), que bate 0,2,1 pelo número de classes sozinho, sem precisar
-   de `!important` — pra sobreviver mesmo se algum dia o browser-default sumir
-   de um dos três controles.                                                   */
-.bmd-barra-wrap {
-   background: var(--surface);
-   border-bottom: 1px solid var(--border);
-}
-
-/* Sangra a faixa de ponta a ponta e alinha o conteúdo na mesma coluna do hero,
-   dos KPIs e do corpo — quatro paddings iguais, um só eixo vertical. */
-.bmd-barra-wrap__in {
-   max-width: var(--coluna);
-   margin-inline: auto;
-   padding: 11px 28px;
-}
-
-.bmd-barra {
-   display: flex;
-   flex-wrap: wrap;
-   align-items: center;
-   gap: 10px;
-}
-
-.bmd-barra__campos {
-   display: flex;
-   flex-wrap: wrap;
-   gap: 8px;
-   flex: 1 1 auto;
-}
-
-.bmd-barra__acoes {
-   display: flex;
-   gap: 6px;
-   flex: none;
-}
-
 .bmd-filtro {
    position: relative;
-}
-
-/* Altura fixa nos três tipos de controle: alinhados na mesma linha de base
-   mesmo com o ícone nativo do input de data. */
-.bmd .bmd-barra .bmd-ms>summary,
-.bmd .bmd-barra .bmd-busca,
-.bmd .bmd-barra .bmd-data__wrap {
-   display: flex;
-   align-items: center;
-   height: 34px;
-   padding: 0 11px;
-   background: var(--surface);
-   border: 1px solid var(--border-strong);
-   border-radius: 7px;
-   color: var(--ink);
-   font-size: var(--t-micro);
-   white-space: nowrap;
-   cursor: pointer;
-   transition: border-color 140ms var(--ease), background 140ms var(--ease);
-}
-
-.bmd .bmd-barra .bmd-ms>summary:hover,
-.bmd .bmd-barra .bmd-busca:hover,
-.bmd .bmd-barra .bmd-data__wrap:hover {
-   border-color: var(--navy-400);
 }
 
 .bmd-ms>summary {
@@ -1009,18 +929,6 @@
 .bmd-ms>summary::after {
    content: "▾";
    color: var(--faint);
-}
-
-/* Filtro ativo = borda navy + fundo do painel. Sem badge de contagem: o próprio
-   summary já escreve o recorte ("Status: 2 de 5"), e um contador ao lado seria
-   o mesmo número duas vezes. */
-.bmd .bmd-barra .bmd-ms[open]>summary,
-.bmd .bmd-barra .bmd-ms.is-ativo>summary,
-.bmd .bmd-barra .bmd-busca.is-ativo,
-.bmd .bmd-barra .bmd-data.is-ativo {
-   background: var(--panel);
-   border-color: var(--navy);
-   color: var(--navy);
 }
 
 .bmd-ms__lista {
@@ -1129,62 +1037,6 @@
    display: contents;
 }
 
-.bmd-data__wrap {
-   gap: 8px;
-}
-
-.bmd-data__wrap>span {
-   color: var(--muted);
-}
-
-.bmd-data {
-   background: transparent;
-   border: 0;
-   color: inherit;
-   font: inherit;
-}
-
-/* O `filter: invert(1)` que estava aqui existia para o ícone preto do Chrome não
-   sumir sobre o navy. Sobre branco ele inverteria para branco e sumiria de novo
-   — some a inversão junto com o fundo escuro. */
-.bmd-data::-webkit-calendar-picker-indicator {
-   opacity: .55;
-   cursor: pointer;
-}
-
-.bmd-data::-webkit-calendar-picker-indicator:hover {
-   opacity: 1;
-}
-
-.bmd-acao {
-   display: inline-flex;
-   align-items: center;
-   justify-content: center;
-   width: 34px;
-   height: 34px;
-   padding: 0;
-   background: var(--surface);
-   border: 1px solid var(--border-strong);
-   border-radius: 7px;
-   color: var(--muted);
-   cursor: pointer;
-   transition: background .15s var(--ease), color .15s var(--ease), border-color .15s var(--ease);
-}
-
-.bmd-acao:hover {
-   background: var(--panel);
-   border-color: var(--navy-400);
-   color: var(--navy);
-}
-
-.bmd-acao:active {
-   transform: translateY(.5px);
-}
-
-.bmd-acao .material-icons {
-   font-size: 18px;
-}
-
 /* ═══ estreito ════════════════════════════════════════════════════════════════
    ESTE BLOCO FICA NO FIM DE PROPOSITO. Ele mora depois de todas as regras base
    porque varias delas tem a MESMA especificidade das daqui (uma classe, 0,1,0)
@@ -1197,9 +1049,8 @@
 @media (max-width: 640px) {
 
    .bmd-hero,
-   .bmd-body,
-   .bmd-kpis-wrap,
-   .bmd-barra-wrap__in {
+.bmd-body,
+.bmd-kpis-wrap{
       padding-left: 16px;
       padding-right: 16px;
    }
@@ -1269,34 +1120,8 @@
       -webkit-overflow-scrolling: touch;
    }
 
-   /* Campos em duas colunas iguais, no lugar do flex "encaixa como der". Com
-     `flex: 0 0 auto` cada campo tinha a largura do próprio texto: no celular
-     saía Status+Cliente numa linha, Estado+Cidade noutra e "Nota Fiscal"
-     sozinho, cada um de um tamanho — muita borda desalinhada numa tela onde
-     já sobra pouco espaço. */
-   .bmd-barra__campos {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-   }
-
    .bmd-filtro {
       min-width: 0;
-   }
-
-   .bmd .bmd-barra .bmd-ms>summary,
-   .bmd .bmd-barra .bmd-busca,
-   .bmd .bmd-barra .bmd-data__wrap {
-      width: 100%;
-   }
-
-   /* Data ocupa a linha inteira: o controle é rótulo + input nativo com ícone
-     de calendário, e em meia largura o "dd/mm/yyyy" corta (os campos têm
-     `white-space: nowrap`, então ele vazaria em vez de quebrar).
-     `:has()` é Chromium 105+; onde não existir, o campo apenas fica em meia
-     coluna como os demais — apertado, não quebrado. */
-   .bmd-filtro:has(.bmd-data__wrap) {
-      grid-column: 1 / -1;
    }
 
    /* O gráfico é o conteúdo mais largo da seção: sem reduzir o padding lateral
@@ -1337,15 +1162,6 @@
 
 .bmd .bmd-voltar:hover,
 .bmd .bmd-voltar:focus:hover {
-   background: var(--panel);
-}
-
-.bmd .bmd-acao:focus {
-   background: var(--surface);
-}
-
-.bmd .bmd-acao:hover,
-.bmd .bmd-acao:focus:hover {
    background: var(--panel);
 }
 
@@ -1418,15 +1234,6 @@
 
    /* Controle interativo não existe no papel. */
    .bmd-seg {
-      display: none;
-   }
-
-   /* O cabeçalho do PDF já escreve o recorte por extenso. */
-   .bmd-barra-wrap {
-      display: none;
-   }
-
-   .bmd-barra {
       display: none;
    }
 

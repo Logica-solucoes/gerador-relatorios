@@ -1,14 +1,9 @@
 /**
  * Controles de filtro dos dashboards BFM.
  *
- * Vanilla de propósito: o `md-select`/`md-lookup`/`md-datepicker` do Materialize
- * traz o CSS do portal para dentro da área escopada `.bmd` e o visual quebra.
- * Fora do dashboard o portal segue Materialize — a troca vale só aqui dentro.
- *
- * Nada de lib nova. O que a plataforma já faz:
- *   multiselect → <details>/<summary> (disclosure nativo, fecha com Esc)
- *   busca       → <input list> + <datalist> (autocomplete nativo, com teclado)
- *   data        → <input type="date"> (calendário nativo, i18n do SO)
+ * Hoje só `busca`: <input> com lista de sugestões própria, vanilla de propósito
+ * (o `md-lookup` do Materialize traz o CSS do portal para dentro da área
+ * escopada `.bmd` e o visual quebra). Os filtros por chip ficam em `componentes.ts`.
  */
 
 import { esc } from "./formato";
