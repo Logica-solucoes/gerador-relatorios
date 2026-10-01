@@ -4,7 +4,7 @@
  */
 import type { Linha, TabelaFio, Valor } from "../src/types";
 import {
-  casarMunicipio, dividirUF, indiceMunicipios, limparCepea, limparHotspot, normalizarCrop, regiaoDasUfs, ufDoCodigo, ufsDoEstado,
+  casarMunicipio, dividirUF, indiceMunicipios, limparCepea, limparHotspot, normalizarCrop, regiaoDasUfs, ufDoCodigo, ufsDoEstado, estadoCorrigido,
 } from "./normaliza";
 
 const AQUI = new URL(".", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
@@ -65,12 +65,15 @@ await gravar("abcsem", (await ler("abcsem")).map((a) => ({
 })));
 
 await gravar("cepea", limparCepea(await ler("cepea")).map((c) => {
-  const ufs = ufsDoEstado(c.estado);
+  const certo = estadoCorrigido(c.estado, c.regiao);
+  if (certo) pendente("cepea_estado_corrigido", `${c.estado} (${c.regiao}) → ${certo}`);
+  const estado = certo ?? txt(c.estado);
+  const ufs = ufsDoEstado(estado);
   const regiao = regiaoDasUfs(ufs) ?? txt(c.regiao);
   if (regiao !== txt(c.regiao)) pendente("cepea_regiao_corrigida", `${c.estado}: ${c.regiao} → ${regiao}`);
   return {
     ano: num(c.ano), safra: txt(c.safra), regiao, uf: ufs.length === 1 ? ufs[0]! : null,
-    estado: txt(c.estado), regional: txt(c.regional), produto: txt(c.produto), item: txt(c.item), area: num(c.valor),
+    estado, regional: txt(c.regional), produto: txt(c.produto), item: txt(c.item), area: num(c.valor),
   };
 }));
 

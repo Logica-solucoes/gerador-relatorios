@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
-  casarMunicipio, dividirUF, indiceMunicipios, limparCepea, limparHotspot, normalizarCrop, regiaoDasUfs, ufDoCodigo, ufsDoEstado,
+  casarMunicipio, dividirUF, estadoCorrigido, indiceMunicipios, limparCepea, limparHotspot, normalizarCrop, regiaoDasUfs, ufDoCodigo, ufsDoEstado,
 } from "./normaliza";
 
 describe("limparHotspot", () => {
@@ -95,4 +95,15 @@ test("região pela UF; estados de regiões diferentes não decidem", () => {
   expect(regiaoDasUfs(["GO", "DF"])).toBe("Centro-Oeste");
   expect(regiaoDasUfs(["MG", "BA"])).toBeNull();
   expect(regiaoDasUfs([])).toBeNull();
+});
+
+describe("estadoCorrigido", () => {
+  test("RN em Sul é o Rio Grande do Sul", () => {
+    expect(estadoCorrigido("Rio Grande do Norte", "Sul")).toBe("Rio Grande do Sul");
+  });
+  test("RN no Nordeste e outros estados ficam", () => {
+    expect(estadoCorrigido("Rio Grande do Norte", "Nordeste")).toBeNull();
+    expect(estadoCorrigido("Santa Catarina", "Sul")).toBeNull();
+    expect(estadoCorrigido(null, "Sul")).toBeNull();
+  });
 });

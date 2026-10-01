@@ -76,6 +76,13 @@ const UF_POR_NOME: Record<string, string> = {
   "RIO GRANDE DO SUL": "RS", "RONDONIA": "RO", "RORAIMA": "RR", "SANTA CATARINA": "SC",
   "SAO PAULO": "SP", "SERGIPE": "SE", "TOCANTINS": "TO",
 };
+/** Estado errado na fonte, achado pela região declarada ("Rio Grande do Norte" em "Sul" é a área do RS). */
+export const ESTADO_TROCADO: Record<string, string> = { "RIO GRANDE DO NORTE|SUL": "Rio Grande do Sul" };
+export function estadoCorrigido(estado: string | null | undefined, regiao: string | null | undefined): string | null {
+  if (!estado || !regiao) return null;
+  return ESTADO_TROCADO[`${chave(estado)}|${chave(regiao)}`] ?? null;
+}
+
 export function ufsDoEstado(s: string | null | undefined): string[] {
   if (!s) return [];
   const k = chave(s);
