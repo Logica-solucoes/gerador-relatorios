@@ -1,0 +1,7 @@
+[
+  { "ano": 2022, "budget": null, "forecast": null, "taxa": 6.44 },
+  { "ano": 2023, "budget": null, "forecast": null, "taxa": 5.3 },
+  { "ano": 2024, "budget": 46051500, "forecast": 57365000, "taxa": 5.5 },
+  { "ano": 2025, "budget": null, "forecast": null, "taxa": 5.775 },
+  { "ano": 2026, "budget": null, "forecast": null, "taxa": 5.775 }
+]
