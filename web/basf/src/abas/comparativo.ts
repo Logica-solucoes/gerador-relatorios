@@ -2,7 +2,7 @@ import * as Plot from "@observablehq/plot";
 import { agregar, filtrar, variacao, type Filtros } from "../calc";
 import { cartao, seg } from "../componentes";
 import { esc, n0, nf } from "../shared/formato";
-import { C, COR_FONTE } from "../shared/tema";
+import { COR_FONTE } from "../shared/tema";
 import type { DefAba } from "./tipos";
 
 const FONTES_ORDEM = ["ABCSEM", "IBGE", "CEPEA", "BASF"];
@@ -51,9 +51,9 @@ export const comparativo: DefAba = {
         ${cartao(`BASF × ABCSEM por segmento · ${ultimoAnoBA}`, m === "area" ? "área (ha)" : "Total TH", `<div class="bmd-par">${seg2.map((g) => {
           const b = basfSeg.get(g.chave) ?? 0;
           return `<button type="button" data-filtro="segmento" data-v="${esc(g.chave)}"><span>${esc(g.chave)}</span>
-            <span><s style="width:${(g.valor / maxSeg) * 100}%;background:${C.verde}"></s><s style="width:${(b / maxSeg) * 100}%;background:${C.o500}"></s></span>
+            <span><s style="width:${(g.valor / maxSeg) * 100}%;background:${COR_FONTE.ABCSEM}"></s><s style="width:${(b / maxSeg) * 100}%;background:${COR_FONTE.BASF}"></s></span>
             <span class="bmd-mono">${g.valor ? n0(Math.round(g.valor)) : "—"} / ${b ? n0(Math.round(b)) : "—"}</span></button>`;
-        }).join("")}</div><div class="bmd-leg2"><span><i style="background:${C.verde}"></i>ABCSEM</span><span><i style="background:${C.o500}"></i>BASF</span></div>`)}
+        }).join("")}</div><div class="bmd-leg2"><span><i style="background:${COR_FONTE.ABCSEM}"></i>ABCSEM</span><span><i style="background:${COR_FONTE.BASF}"></i>BASF</span></div>`)}
       </div>`;
 
     const finais = FONTES_ORDEM.map((fonte) => pontos.filter((p) => p.fonte === fonte).at(-1)).filter((p): p is NonNullable<typeof p> => !!p);

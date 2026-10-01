@@ -1,6 +1,6 @@
 import { esc, nf } from "./shared/formato";
 import { ICONE } from "./shared/icones";
-import { C } from "./shared/tema";
+import { C, OUTROS } from "./shared/tema";
 import type { Grupo } from "./calc";
 
 /** Controle segmentado. Clique delegado em `[data-seg]` no dashboard. */
@@ -38,7 +38,8 @@ export interface Kpi {
   marcador?: number | null;
 }
 
-function sparkline(serie: (number | null)[]): string {
+/** Cor da linha segue o delta (verde subiu bem, laranja piorou); sem delta fica neutra: verde nunca maquia número ruim. */
+function sparkline(serie: (number | null)[], cor: string): string {
   const vs = serie.map((v) => (v == null ? null : v));
   const nums = vs.filter((v): v is number => v != null);
   if (nums.length < 2) return "";
@@ -51,7 +52,7 @@ function sparkline(serie: (number | null)[]): string {
   vs.forEach((v, i) => { if (v == null) { if (atual.length) trechos.push(atual.join(" ")); atual = []; } else atual.push(`${x(i)},${y(v)}`); });
   if (atual.length) trechos.push(atual.join(" "));
   return `<svg class="bmd-spark" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true">${trechos.map((p) =>
-    `<polyline points="${p}" fill="none" stroke="${C.o500}" stroke-width="2" vector-effect="non-scaling-stroke"/>`).join("")}</svg>`;
+    `<polyline points="${p}" fill="none" stroke="${cor}" stroke-width="2" vector-effect="non-scaling-stroke"/>`).join("")}</svg>`;
 }
 
 function ticks(p: number, marcador?: number | null): string {
@@ -68,7 +69,7 @@ export function kpi(k: Kpi): string {
     <div class="bmd-k__v"${titulo}>${esc(k.valor)}</div>${delta}
     ${k.proporcao != null ? ticks(k.proporcao, k.marcador) : ""}
     ${k.nota ? `<div class="bmd-k__n">${esc(k.nota)}</div>` : ""}
-    ${k.serie ? sparkline(k.serie) : ""}
+    ${k.serie ? sparkline(k.serie, !k.delta ? C.muted : k.delta.ruim ? C.o500 : C.verde) : ""}
   </div>`;
 }
 
@@ -85,18 +86,18 @@ export function barList(grupos: Grupo[], dim: string, fmt: (v: number) => string
 }
 
 /** Barra 100% (dashboardcn distribution-bar). Até 5 fatias + "Outros". */
-export function distribuicao(grupos: Grupo[], dim: string, cores: string[]): string {
+export function distribuicao(grupos: Grupo[], dim: string, cor: (chave: string) => string): string {
   const soma = grupos.reduce((a, g) => a + g.valor, 0);
   if (soma <= 0) return "";
   const top = grupos.slice(0, 5);
   const resto = soma - top.reduce((a, g) => a + g.valor, 0);
   const fatias = resto > 0 ? [...top, { chave: "Outros", valor: resto }] : top;
   const pct = (v: number) => (v / soma) * 100;
-  return `<div class="bmd-dist">${fatias.map((g, i) => `<s style="flex:${g.valor};background:${cores[i % cores.length]}" title="${esc(g.chave)} · ${nf(pct(g.valor), 0)}%"></s>`).join("")}</div>
-    <div class="bmd-leg2">${fatias.map((g, i) => {
+  return `<div class="bmd-dist">${fatias.map((g) => `<s style="flex:${g.valor};background:${g.chave === "Outros" ? OUTROS : cor(g.chave)}" title="${esc(g.chave)} · ${nf(pct(g.valor), 0)}%"></s>`).join("")}</div>
+    <div class="bmd-leg2">${fatias.map((g) => {
       const clic = g.chave === "Outros" ? "span" : `button type="button" data-filtro="${dim}" data-v="${esc(g.chave)}"`;
       const fecha = g.chave === "Outros" ? "span" : "button";
-      return `<${clic}><i style="background:${cores[i % cores.length]}"></i>${esc(g.chave)} ${nf(pct(g.valor), 0)}%</${fecha}>`;
+      return `<${clic}><i style="background:${g.chave === "Outros" ? OUTROS : cor(g.chave)}"></i>${esc(g.chave)} ${nf(pct(g.valor), 0)}%</${fecha}>`;
     }).join("")}</div>`;
 }
 

@@ -7,7 +7,7 @@ import { desenharMapa, type PontoMapa } from "../mapa";
 import { estadoVazio } from "../shared/blocos";
 import { criarDrill } from "../shared/drill";
 import { esc, moedaCompacta, n0, nf } from "../shared/formato";
-import { C, ESCALA } from "../shared/tema";
+import { C, VERDE, coresPorChave } from "../shared/tema";
 import type { Linha } from "../types";
 import type { Ctx, DefAba } from "./tipos";
 
@@ -140,7 +140,7 @@ export const mercado: DefAba = {
           ${cartao(tituloRank, subRank,
             barList(ranking, dimRank, fmt, f[dimRank] ?? [], 8, podeDrill && ufDrill == null ? "drill" : "filtro") || '<p class="bmd-nota">Sem dado neste recorte.</p>',
             `<div style="margin-bottom:8px">${seg("dim", Object.fromEntries(def.rankings.map((d) => [d, ROTULO_DIM[d] ?? d])), e.dim)}${drill.htmlVoltar()}</div>`)}
-          ${comp.length > 1 ? cartao(`Composição por ${ROTULO_DIM[dimSeg]?.toLowerCase() ?? dimSeg}`, esc(def.metricas[mComp] ?? mComp), distribuicao(comp, dimSeg, ESCALA)) : ""}
+          ${comp.length > 1 ? cartao(`Composição por ${ROTULO_DIM[dimSeg]?.toLowerCase() ?? dimSeg}`, esc(def.metricas[mComp] ?? mComp), distribuicao(comp, dimSeg, coresPorChave(agregar(base(ctx, "total"), { ano: fAtual.ano ?? [] }, dimSeg, mComp).map((g) => g.chave)))) : ""}
         </div>
       </div>
       ${cartao("Evolução por ano", esc(def.metricas[m] ?? m), '<div data-el="anos"></div>', "")}`;
@@ -167,7 +167,7 @@ export const mercado: DefAba = {
       x: { type: "band", domain: dominio, ticks: dominio.filter((_, i) => i % passo === 0), label: null, tickFormat: (v: number) => String(v) },
       y: { grid: true, label: null, tickFormat: (v: number) => fmt(v) },
       marks: [
-        Plot.barY(pontosAno.filter((p) => p.v != null), { x: "ano", y: "v", fill: (p: { ano: number }) => (p.ano === anoAtual ? C.o500 : C.o200), rx: 3, title: (p: { ano: number; v: number }) => `${p.ano}: ${fmt(p.v)}` }),
+        Plot.barY(pontosAno.filter((p) => p.v != null), { x: "ano", y: "v", fill: (p: { ano: number }) => (p.ano === anoAtual ? C.o500 : VERDE[2]), rx: 3, title: (p: { ano: number; v: number }) => `${p.ano}: ${fmt(p.v)}` }),
         Plot.ruleY([0]),
       ],
     });

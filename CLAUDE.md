@@ -143,7 +143,10 @@ Tone: Dense system — BI interno de mercado, muitos filtros, tabelas e gráfico
 - Blocks: `shared/` do LogicaDash (branch `masterAlexandreBFM`) retematizado; referência visual shadcnuikit (dashboards) e ReUI (filtros)
 - Motion: só transição CSS
 - Icons: Tabler outline, SVG inline só dos usados
-- Theme: escala 50–950 do laranja `#F39500` (portal), base creme, verde hortaliça para dados, azul BASF `#004A96` só na marca, vermelho `#C60023` só alerta
+- Theme: escala 50–950 do laranja `#F39500` (portal), base creme, azul BASF `#004A96` só na marca, vermelho `#C60023` só erro
+  - Dados (`shared/tema.ts`): magnitude em verde hortaliça (`VERDE`, um tom claro → escuro); laranja só no destaque (maior, ano atual, pontos do mapa); categorias em ordem fixa (`CATEGORIAS`, cor segue a categoria via `coresPorChave`, nunca a posição)
+  - Número ruim (delta negativo, tendência caindo) é laranja, nunca verde: verde só onde o número é bom
+  - Paleta nova? Rode o validador do skill `dataviz` (`validate_palette.js`, `--pairs all` se as séries se cruzam) antes de usar
 - Fonts: Manrope (texto/títulos) + JetBrains Mono (números em tabela), algarismos tabulares
 - Showpiece: mapa do Brasil (Plot + GeoJSON IBGE, sem tiles) — único destaque; loading em skeleton CSS
 - Extras (portar desenho):

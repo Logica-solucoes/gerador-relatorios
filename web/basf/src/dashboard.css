@@ -60,7 +60,7 @@
 .bmd-kpis2 { display: grid; grid-template-columns: 1.25fr repeat(3, 1fr); gap: 12px; }
 .bmd-k__v { font-size: 26px; font-weight: 800; letter-spacing: -.02em; margin: 4px 0 2px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bmd-k__d { font-size: 12px; font-weight: 600; color: var(--verde); }
-.bmd-k__d.is-ruim { color: var(--alerta); }
+.bmd-k__d.is-ruim { color: var(--o700); }
 .bmd-k__n { color: var(--muted); font-size: 12px; margin-top: 6px; }
 .bmd-spark { display: block; width: 100%; height: 28px; margin-top: 6px; }
 .bmd-ticks { position: relative; display: flex; gap: 2px; margin-top: 10px; }
@@ -76,12 +76,12 @@
 .bmd-bl__i:hover { background: var(--o50); }
 .bmd-bl__i.is-on { background: var(--o100); }
 .bmd-bl__k { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bmd-bl__b s { display: block; height: 16px; border-radius: 4px; background: var(--o200); text-decoration: none; }
+.bmd-bl__b s { display: block; height: 16px; border-radius: 4px; background: #6FA850; text-decoration: none; }
 .bmd-bl__i:first-child .bmd-bl__b s, .bmd-bl__i.is-on .bmd-bl__b s { background: var(--o500); }
 .bmd-bl__v { text-align: right; }
 .bmd-bl__mais { color: var(--muted); font-size: 12px; padding: 4px; }
 
-.bmd-dist { display: flex; height: 22px; border-radius: 6px; overflow: hidden; margin: 6px 0 8px; }
+.bmd-dist { display: flex; gap: 2px; height: 22px; border-radius: 6px; overflow: hidden; margin: 6px 0 8px; }
 .bmd-dist s { text-decoration: none; }
 .bmd-leg2 { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); font-size: 12px; }
 .bmd-leg2 button { all: unset; cursor: pointer; }
@@ -109,7 +109,7 @@
 .bmd-ml i { width: 10px; height: 10px; border-radius: 3px; display: block; }
 .bmd-ml .bmd-mono { text-align: right; }
 .bmd-pos, .bmd-neg { text-align: right; font-weight: 600; color: var(--verde); }
-.bmd-neg { color: var(--alerta); }
+.bmd-neg { color: var(--o700); }
 .bmd-par { display: grid; gap: 6px; }
 .bmd-par > button { all: unset; cursor: pointer; display: grid; grid-template-columns: minmax(90px, 150px) 1fr 120px; gap: 10px; align-items: center; padding: 2px 4px; border-radius: 6px; }
 .bmd-par > button:hover { background: var(--o50); }
