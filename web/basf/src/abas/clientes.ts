@@ -62,7 +62,7 @@ export const clientes: DefAba = {
     const linhas = ordem.map(([g, xs]) => {
       const porCliente = new Map<string, Linha[]>();
       for (const l of xs) { const k = String(l.cliente); (porCliente.get(k) ?? porCliente.set(k, []).get(k)!).push(l); }
-      const cab = `<tr class="bmd-grp"><td colspan="5">${esc(g)} · ${porCliente.size} cliente${porCliente.size > 1 ? "s" : ""}</td>
+      const cab = `<tr class="bmd-grp"><td>${esc(g)} · ${porCliente.size} cliente${porCliente.size > 1 ? "s" : ""}</td><td></td><td></td><td></td><td></td>
         <td class="n bmd-mono">${n0(total(xs, "mercado"))}</td><td class="n bmd-mono">${n0(total(xs, "copa") ?? 0)}</td><td>${barraShare(share(total(xs, "copa"), total(xs, "mercado")))}</td></tr>`;
       const cls = [...porCliente].sort((a, b) => (total(b[1], "mercado") ?? 0) - (total(a[1], "mercado") ?? 0)).map(([c, cs]) => {
         const id = `${g}|${c}`;

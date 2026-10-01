@@ -109,7 +109,7 @@
 .bmd-tb2 th { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); font-weight: 600; position: sticky; top: 0; background: var(--surface); }
 .bmd-tb2 td { padding: 8px 10px; border-bottom: 1px solid #F4EDE3; }
 .bmd-tb2 .n { text-align: right; }
-@media (max-width: 760px) { .bmd-tabela .bmd-tb2 :is(th, td):is(:nth-child(2), :nth-child(4), :nth-child(5)) { display: none; } }
+@media (max-width: 760px) { .bmd-tabela > .bmd-tb2 > :is(thead, tbody) > tr > :is(th, td):is(:nth-child(2), :nth-child(4), :nth-child(5)) { display: none; } }
 .bmd-grp td { background: var(--o50); font-weight: 700; color: var(--o700); }
 .bmd-cli { cursor: pointer; transition: background .15s; }
 .bmd-cli:hover, .bmd-cli.is-open { background: #FFFDF9; }
