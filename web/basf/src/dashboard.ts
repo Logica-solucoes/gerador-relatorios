@@ -26,11 +26,12 @@ export function montarDashboard(host: HTMLElement, carregar: Carregar): Montado 
   const dados: Dados = {};
   const pendentes = new Map<Recurso, Promise<void>>();
   const falhas = new Map<Recurso, string>();
+  let vivo = true;
 
   const aba = () => ABAS.find((a) => a.id === estado.aba)!;
 
   function garantir(r: Recurso): Promise<void> {
-    if (dados[r] || pendentes.has(r)) return pendentes.get(r) ?? Promise.resolve();
+    if (dados[r] || falhas.has(r) || pendentes.has(r)) return pendentes.get(r) ?? Promise.resolve();
     const p = carregar(r)
       .then((ls) => { dados[r] = ls; falhas.delete(r); })
       .catch((e: unknown) => { falhas.set(r, e instanceof Error ? e.message : String(e)); })
@@ -52,6 +53,7 @@ export function montarDashboard(host: HTMLElement, carregar: Carregar): Montado 
   }
 
   function render() {
+    if (!vivo) return;
     const a = aba();
     shell.el("tabs").innerHTML = ABAS.map((x) =>
       `<button type="button" role="tab" data-aba="${x.id}" aria-selected="${x.id === estado.aba}"${x.id === estado.aba ? ' class="is-on"' : ""}>${esc(x.rotulo)}</button>`).join("");
@@ -63,6 +65,10 @@ export function montarDashboard(host: HTMLElement, carregar: Carregar): Montado 
     recursos.forEach(garantir);
     const corpo = shell.el("corpo");
     const falha = recursos.find((r) => falhas.has(r));
+    if (falha || recursos.some((r) => !dados[r])) {
+      shell.el("chips").innerHTML = "";
+      shell.el("ctl").innerHTML = "";
+    }
     if (falha) { corpo.innerHTML = erroCarga(falhas.get(falha)!); return; }
     if (recursos.some((r) => !dados[r])) { corpo.innerHTML = skeleton(); return; }
 
@@ -76,7 +82,10 @@ export function montarDashboard(host: HTMLElement, carregar: Carregar): Montado 
     a.render({ shell, estado, dados, mudar }, corpo);
   }
 
-  shell.aoClicarEm("[data-aba]", (el) => mudar((e) => ({ ...e, aba: el.dataset.aba as Aba, drill: [], clienteAberto: null })));
+  shell.aoClicarEm("[data-aba]", (el) => {
+    aviso("");
+    mudar((e) => ({ ...e, aba: el.dataset.aba as Aba, drill: [], clienteAberto: null }));
+  });
   shell.aoClicarEm("[data-cliente]", (el) => mudar((e) => ({ ...e, clienteAberto: e.clienteAberto === el.dataset.cliente ? null : el.dataset.cliente! })));
   shell.aoClicarEm("[data-filtro]", (el) => mudar((e) => alternarFiltro(e, el.dataset.filtro!, el.dataset.v!)));
   shell.aoClicarEm("[data-chip-limpar]", (el) => mudar((e) => definirFiltro(e, el.dataset.chipLimpar!, [])));
@@ -104,5 +113,5 @@ export function montarDashboard(host: HTMLElement, carregar: Carregar): Montado 
   shell.aoRedimensionar(render);
 
   render();
-  return { destruir: () => shell.destruir() };
+  return { destruir: () => { vivo = false; shell.destruir(); } };
 }
