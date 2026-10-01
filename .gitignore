@@ -45,3 +45,5 @@ env/
 
 # build de dashboard web
 web/*/dist/
+
+.superpowers/
