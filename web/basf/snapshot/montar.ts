@@ -4,7 +4,7 @@
  */
 import type { Linha, TabelaFio, Valor } from "../src/types";
 import {
-  casarMunicipio, dividirUF, indiceMunicipios, limparCepea, limparHotspot, normalizarCrop, regiaoDasUfs, ufDoCodigo, ufsDoEstado, estadoCorrigido,
+  casarMunicipio, dividirUF, indiceMunicipios, limparCepea, limparHotspot, normalizarCrop, regiaoDasUfs, rtvDe, ufDoCodigo, ufsDoEstado, estadoCorrigido,
 } from "./normaliza";
 
 const AQUI = new URL(".", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
@@ -99,17 +99,19 @@ const segFinal = new Map((await ler("depara_segmento")).map((d) => [String(d.seg
 const regionalPor = new Map((await ler("sales_specialist")).map((s) => [String(s.cod), txt(s.regional)]));
 const vendasBruto = (await Bun.file(`${BRUTO}vendas.json`).json()) as { ultimaVenda: string; linhas: Bruto[] };
 
+const nomesRtv = new Map(vendasBruto.linhas.filter((v) => txt(v.rtvCod) && txt(v.rtvNome)).map((v) => [String(v.rtvCod).trim(), String(v.rtvNome).trim()]));
 const vendas = new Map<string, Linha>();
 for (const v of vendasBruto.linhas) {
   const crop = normalizarCrop(v.kind);
   const s2 = seg2.get(String(v.item));
+  const r = rtvDe(txt(v.rtvCod), txt(v.cliente), txt(v.kind), nomesRtv);
   const l: Linha = {
-    ano: v.ano, mes: v.mes, crop, rtv: txt(v.rtvNome) ?? txt(v.rtvCod) ?? "Sem RTV",
-    regional: regionalPor.get(String(v.rtvCod)) ?? "Sem regional", cliente: txt(v.cliente),
+    ano: v.ano, mes: v.mes, crop, variedade: txt(v.item)?.replace(/^SEMENTES /, "") ?? "Sem variedade",
+    rtv: r.rtv, regional: regionalPor.get(String(r.cod)) ?? "Sem regional", cliente: txt(v.cliente),
     hotspot: hotspotPor.get(`${v.custNo}|${crop}`) ?? null,
     segmento: s2 ? segFinal.get(s2) ?? s2 : null, valor: 0, th: 0,
   };
-  const k = [l.ano, l.mes, l.crop, l.rtv, l.regional, l.cliente, l.hotspot, l.segmento].join("|");
+  const k = [l.ano, l.mes, l.crop, l.variedade, l.rtv, l.regional, l.cliente, l.hotspot, l.segmento].join("|");
   const acc = vendas.get(k) ?? vendas.set(k, l).get(k)!;
   acc.valor = (acc.valor as number) + (num(v.valor) ?? 0);
   acc.th = (acc.th as number) + (num(v.th) ?? 0);

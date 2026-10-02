@@ -29,7 +29,8 @@ export type Carregar = (r: Recurso) => Promise<Linha[]>;
  * resumoSeg  fonte, ano, especie, segmento, hy, crop, area, th   (Dados Basf e ABCSEM)
  * clientes   cliente, crop, hotspot, rtv, regional, acesso, ano, area, dose, mercado, copa,
  *            enxertia, vendasEnx, mercadoCopaEnx, potencial, vendasPotencial
- * vendas     ano, mes, crop, rtv, regional, cliente, hotspot, segmento, valor, th
+ * vendas     ano, mes, crop, variedade, rtv, regional, cliente, hotspot, segmento, valor, th
+ *            (rtv já com a carteira do PBI Sales: snapshot/normaliza.ts rtvDe)
  * meta       ano, budget, forecast, taxa, ultimaVenda (ISO; só na linha do maior ano)
  * municipios cod, nome, uf, lat, lon
  */

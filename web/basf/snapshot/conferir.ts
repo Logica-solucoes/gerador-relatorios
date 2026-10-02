@@ -1,5 +1,5 @@
 /** Reconciliação com o Power BI. Falhou âncora → exit 1 (o snapshot não está pronto). */
-import { filtrar, share, total } from "../src/calc";
+import { agregar, filtrar, share, total } from "../src/calc";
 import { linhasIbge } from "../src/fontes";
 import type { Linha, TabelaFio } from "../src/types";
 
@@ -16,6 +16,8 @@ const kcl = await ler("clientes");
 const vendas = await ler("vendas");
 const v26 = vendas.filter((v) => v.ano === 2026 && (v.mes as number) <= 6);
 
+const somaPor = (ls: Linha[], dim: string) => agregar(ls, {}, dim, "valor").reduce((a, g) => a + g.valor, 0);
+
 const ancoras: [string, number | null, number, number][] = [
   ["BASF 2024 área semeio", total(basf24, "area"), 111587, 1],
   ["BASF 2024 Total TH", total(basf24, "th"), 34348416, 1],
@@ -24,6 +26,9 @@ const ancoras: [string, number | null, number, number][] = [
   ["IBGE 2024 área BR", total(ibge, "area"), 232102, 1],
   ["Key list share copa", share(total(kcl, "copa"), total(kcl, "mercado")), 0.18949, 0.0005],
   ["Vendas YTD jan-jun 2026 R$", total(v26, "valor"), 29022009.43, 1],
+  ["Vendas YTD jan-jun 2026 TH", total(v26, "th"), 784944, 1],
+  ["Σ por RTV = total jan-jun 2026", somaPor(v26, "rtv"), 29022009.43, 1],
+  ["Σ por variedade = total jan-jun 2026", somaPor(v26, "variedade"), 29022009.43, 1],
 ];
 
 let falhou = false;
