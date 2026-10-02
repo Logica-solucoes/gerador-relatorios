@@ -5,10 +5,11 @@ import { clientes } from "./abas/clientes";
 import { vendas } from "./abas/vendas";
 import { analise } from "./abas/sales/analise";
 import { evolucao } from "./abas/sales/evolucao";
+import { tabela } from "./abas/sales/tabela";
 
 /** Um dashboard = título do hero + abas. O shell, o estado e os dados são os mesmos. */
 export interface Painel { titulo: string; abas: DefAba[] }
 
 export const MERCADO: Painel = { titulo: "Inteligência de Mercado", abas: [mercado, comparativo, clientes, vendas] };
 
-export const SALES: Painel = { titulo: "Vendas", abas: [evolucao, analise] };
+export const SALES: Painel = { titulo: "Vendas", abas: [evolucao, analise, tabela] };

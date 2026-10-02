@@ -125,7 +125,7 @@
 .bmd-tb2 th { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); font-weight: 600; position: sticky; top: 0; background: var(--surface); }
 .bmd-tb2 td { padding: 8px 10px; border-bottom: 1px solid #F4EDE3; }
 .bmd-tb2 .n { text-align: right; }
-@media (max-width: 760px) { .bmd-tabela > .bmd-tb2 > :is(thead, tbody) > tr > :is(th, td):is(:nth-child(2), :nth-child(4), :nth-child(5)) { display: none; } }
+@media (max-width: 760px) { .bmd-tabela > .bmd-tb2:not(.bmd-tb2--anos) > :is(thead, tbody) > tr > :is(th, td):is(:nth-child(2), :nth-child(4), :nth-child(5)) { display: none; } }
 .bmd-grp td { background: var(--o50); font-weight: 700; color: var(--o700); }
 .bmd-cli { cursor: pointer; transition: background .15s; }
 .bmd-cli:hover, .bmd-cli.is-open { background: #FFFDF9; }
@@ -164,3 +164,13 @@
 /* Sales: ranking com Δ ao lado do valor. */
 .bmd-bl--delta .bmd-bl__i { grid-template-columns: minmax(90px, 160px) 1fr 140px; }
 .bmd-bl__v em { font-style: normal; margin-left: 6px; }
+
+/* Sales · Tabela */
+.bmd-tb2--anos td:first-child { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bmd-tb2--anos .bmd-ind { padding-left: 30px; }
+.bmd-ord { all: unset; cursor: pointer; }
+.bmd-ord.is-on { color: var(--ink); }
+.bmd-grp--clic { cursor: pointer; }
+.bmd-grp--clic svg { width: 14px; height: 14px; vertical-align: -2px; }
+.bmd-tot td { font-weight: 800; border-top: 2px solid var(--ink); border-bottom: 0; }
+@media (max-width: 760px) { .bmd-tb2--anos :is(th, td):nth-child(2) { display: none; } .bmd-tb2--anos td:first-child { max-width: 160px; } }
