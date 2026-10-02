@@ -62,3 +62,66 @@ export const atingimento = share;
 export const mesMaximo = (ano: number, ultima: string) => (ano === Number(ultima.slice(0, 4)) ? Number(ultima.slice(5, 7)) : 12);
 
 export const mesDeCorte = (pedido: number | null, ano: number, ultima: string) => Math.min(pedido ?? 12, mesMaximo(ano, ultima));
+
+/** Preço médio por TH. Volume ≤ 0 (só devolução) não tem leitura. */
+export function ticket(valor: N, th: N): number | null {
+  return ok(valor) && ok(th) && th > 0 ? valor / th : null;
+}
+
+/** Quantos `dim` distintos têm saldo positivo: cliente que só devolveu não "comprou". */
+export function distintos(ls: Linha[], dim: string, metrica = "valor"): number {
+  return agregar(ls, {}, dim, metrica).filter((g) => g.valor > 0).length;
+}
+
+export interface LinhaAnos { chave: string; v: (number | null)[]; variacao: number | null }
+export interface GrupoAnos extends LinhaAnos { itens: LinhaAnos[] }
+type Conv = (v: number | null, ano: number) => number | null;
+
+function agrupar(ls: Linha[], dim: string): Map<string, Linha[]> {
+  const m = new Map<string, Linha[]>();
+  for (const l of ls) { const k = String(l[dim] ?? "—"); (m.get(k) ?? m.set(k, []).get(k)!).push(l); }
+  return m;
+}
+
+/**
+ * Aba Tabela do Sales. Colunas `v`: ano-2 e ano-1 cheios, `ano` até o corte. Variação: YTD contra o
+ * YTD do ano anterior. `grupo` null = um grupo só (lista plana). Sem venda = null, nunca 0.
+ */
+export function tabelaAnos(ls: Linha[], dim: string, grupo: string | null, ano: number, mesCorte: number, metrica: string, conv: Conv = (v) => v, baseMinima = 0): { grupos: GrupoAnos[]; total: LinhaAnos } {
+  const doRecorte = ls.filter((l) => {
+    const a = l.ano as number;
+    return (a === ano - 2 || a === ano - 1 || a === ano) && (a !== ano || (l.mes as number) <= mesCorte);
+  });
+  const linha = (chave: string, xs: Linha[]): LinhaAnos => {
+    const doAno = (a: number, ate = 12) => conv(total(xs.filter((l) => l.ano === a && (l.mes as number) <= ate), metrica), a);
+    const ytd = doAno(ano, mesCorte);
+    return { chave, v: [doAno(ano - 2), doAno(ano - 1), ytd], variacao: variacao(ytd, doAno(ano - 1, mesCorte), baseMinima) };
+  };
+  const grupos = [...(grupo ? agrupar(doRecorte, grupo) : new Map([["", doRecorte]]))]
+    .map(([g, xs]) => {
+      const todasAsLinhas = [...agrupar(xs, dim)].map(([k, ys]) => linha(k, ys));
+      const comValorNoAno = todasAsLinhas.filter((l) => l.v[2] != null);
+      let linhaGrupo: LinhaAnos;
+      if (comValorNoAno.length > 0 && grupo != null) {
+        const xsComValor = xs.filter((x) => comValorNoAno.some((item) => x[dim] === item.chave));
+        const linhaComValor = linha(g, xsComValor);
+        const linhaCompleta = linha(g, xs);
+        linhaGrupo = { chave: g, v: linhaComValor.v, variacao: linhaCompleta.variacao };
+      } else {
+        linhaGrupo = linha(g, xs);
+      }
+      return { ...linhaGrupo, itens: todasAsLinhas };
+    });
+  return { grupos, total: linha("Total", doRecorte) };
+}
+
+/** Coluna 0–2 = `v[col]`, 3 = variação, -1 = nome. Vazio vai para o fim nos dois sentidos. */
+export function ordenarAnos<T extends LinhaAnos>(ls: T[], col: number, desc: boolean): T[] {
+  if (col === -1) return [...ls].sort((a, b) => (desc ? -1 : 1) * a.chave.localeCompare(b.chave, "pt-BR"));
+  const val = (l: T) => (col === 3 ? l.variacao : l.v[col] ?? null);
+  return [...ls].sort((a, b) => {
+    const x = val(a), y = val(b);
+    if (x == null || y == null) return x == null ? (y == null ? 0 : 1) : -1;
+    return desc ? y - x : x - y;
+  });
+}
