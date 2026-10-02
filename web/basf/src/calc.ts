@@ -98,20 +98,7 @@ export function tabelaAnos(ls: Linha[], dim: string, grupo: string | null, ano: 
     return { chave, v: [doAno(ano - 2), doAno(ano - 1), ytd], variacao: variacao(ytd, doAno(ano - 1, mesCorte), baseMinima) };
   };
   const grupos = [...(grupo ? agrupar(doRecorte, grupo) : new Map([["", doRecorte]]))]
-    .map(([g, xs]) => {
-      const todasAsLinhas = [...agrupar(xs, dim)].map(([k, ys]) => linha(k, ys));
-      const comValorNoAno = todasAsLinhas.filter((l) => l.v[2] != null);
-      let linhaGrupo: LinhaAnos;
-      if (comValorNoAno.length > 0 && grupo != null) {
-        const xsComValor = xs.filter((x) => comValorNoAno.some((item) => x[dim] === item.chave));
-        const linhaComValor = linha(g, xsComValor);
-        const linhaCompleta = linha(g, xs);
-        linhaGrupo = { chave: g, v: linhaComValor.v, variacao: linhaCompleta.variacao };
-      } else {
-        linhaGrupo = linha(g, xs);
-      }
-      return { ...linhaGrupo, itens: todasAsLinhas };
-    });
+    .map(([g, xs]) => ({ ...linha(g, xs), itens: [...agrupar(xs, dim)].map(([k, ys]) => linha(k, ys)) }));
   return { grupos, total: linha("Total", doRecorte) };
 }
 

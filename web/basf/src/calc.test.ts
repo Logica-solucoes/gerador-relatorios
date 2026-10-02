@@ -105,7 +105,7 @@ describe("tabelaAnos", () => {
   const t = tabelaAnos(V, "variedade", "crop", 2026, 6, "valor");
   const cac = t.grupos.find((g) => g.chave === "CAC")!;
   test("colunas: 2 anos fechados + YTD; mês depois do corte fica fora", () => {
-    expect(cac.v).toEqual([100, 120, 60]);
+    expect(cac.v).toEqual([100, 150, 60]);
     expect(t.total.v).toEqual([100, 150, 100]);
   });
   test("variação é YTD contra YTD do ano anterior, não contra o ano cheio", () => {
