@@ -6,7 +6,7 @@
  * segmento, crop, potencial e regional chegam prontos.
  */
 export type Fonte = "basf" | "ibge" | "abcsem" | "cepea";
-export type Aba = "mercado" | "comparativo" | "clientes" | "vendas";
+export type Aba = "mercado" | "comparativo" | "clientes" | "vendas" | "evolucao" | "analise" | "tabela";
 export type Valor = string | number | null;
 export type Linha = Record<string, Valor>;
 
