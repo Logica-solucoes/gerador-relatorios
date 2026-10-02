@@ -1,5 +1,5 @@
 import { filtrar, mesDeCorte, mesMaximo, total, variacao } from "../../calc";
-import { deltaPct, seg } from "../../componentes";
+import { classeDelta, deltaPct, seg } from "../../componentes";
 import { definirFiltro, type Estado } from "../../estado";
 import { estadoVazio } from "../../shared/blocos";
 import { esc, euroCompacto, moedaCompacta, n0, nf } from "../../shared/formato";
@@ -13,10 +13,15 @@ export const DIMS: Record<string, string> = { ano: "Ano", crop: "Crop", variedad
 const ultimaVenda = (d: Dados) => String(d.meta?.find((m) => m.ultimaVenda)?.ultimaVenda ?? "");
 const taxaDe = (d: Dados, a: number) => d.meta?.find((m) => m.ano === a)?.taxa as number | null | undefined;
 
-/** Maior ano do chip Ano; sem chip, o maior ano com venda. */
+const semAno = (e: Estado) => Object.fromEntries(Object.entries(e.filtros[e.aba]).filter(([dim]) => dim !== "ano"));
+
+/** Maior ano do chip Ano; sem chip, o maior ano com venda dentro dos demais filtros (sem resultado: de todas). */
 export function anoReferencia(e: Estado, d: Dados): number {
   const f = e.filtros[e.aba].ano;
-  return f?.length ? Math.max(...f.map(Number)) : Math.max(...(d.vendas ?? []).map((l) => Number(l.ano)));
+  if (f?.length) return Math.max(...f.map(Number));
+  const todas = d.vendas ?? [];
+  const ls = filtrar(todas, semAno(e));
+  return Math.max(...(ls.length ? ls : todas).map((l) => Number(l.ano)));
 }
 
 /** Corte, R$/€ e Valor/TH, como na aba Vendas. € desabilitado sem taxa do ano. */
@@ -25,7 +30,7 @@ export function controlesBase(e: Estado, d: Dados): string {
   const max = mesMaximo(ano, ultimaVenda(d));
   const corte = `<select class="bmd-sel" data-corte aria-label="Mês de corte" title="Mês de corte"><option value=""${e.mesCorte == null ? " selected" : ""}>Corte: auto</option>${MESES.map((m, i) =>
     `<option value="${i + 1}"${e.mesCorte === i + 1 ? " selected" : ""}${i + 1 > max ? " disabled" : ""}>Até ${m}</option>`).join("")}</select>`;
-  return corte + seg("moeda", { brl: "R$", eur: "€" }, e.moeda, taxaDe(d, ano) ? [] : ["eur"], "taxa do ano não cadastrada") + seg("medida", { valor: "Valor", th: "TH" }, e.medida);
+  return corte + seg("moeda", { brl: "R$", eur: "€" }, taxaDe(d, ano) ? e.moeda : "brl", taxaDe(d, ano) ? [] : ["eur"], "taxa do ano não cadastrada") + seg("medida", { valor: "Valor", th: "TH" }, e.medida);
 }
 
 export interface Recorte {
@@ -60,8 +65,7 @@ export function recorte(ctx: Ctx): Recorte {
   const mesCorte = mesDeCorte(e.mesCorte, ano, ultimaVenda(d));
   const eur = e.moeda === "eur" && !!taxaDe(d, ano);
   const campo = e.medida === "th" ? "th" : "valor";
-  const semAno = Object.fromEntries(Object.entries(e.filtros[e.aba]).filter(([dim]) => dim !== "ano"));
-  const base = filtrar(d.vendas ?? [], semAno);
+  const base = filtrar(d.vendas ?? [], semAno(e));
   const moeda = (v: number | null, a: number) => {
     const t = taxaDe(d, a);
     return v == null || !eur ? v : t ? v / t : null;
@@ -120,7 +124,7 @@ export function ranking(itens: ItemPar[], dim: string, r: Recorte, ativos: strin
     return `<button type="button" class="bmd-bl__i${ativos.includes(i.chave) ? " is-on" : ""}" data-filtro="${dim}" data-v="${esc(i.chave)}" title="${esc(i.chave)}">
       <span class="bmd-bl__k">${esc(i.chave)}</span>
       <span class="bmd-bl__b"><s style="width:${((Math.max(0, i.atual) / max) * 100).toFixed(1)}%"></s></span>
-      <span class="bmd-bl__v bmd-mono">${esc(r.fmt(i.atual))}<em class="${v != null && v < 0 ? "bmd-neg" : "bmd-pos"}">${deltaPct(v)}</em></span>
+      <span class="bmd-bl__v bmd-mono">${esc(r.fmt(i.atual))}<em class="${classeDelta(v)}">${deltaPct(v)}</em></span>
     </button>`;
   }).join("")}</div>`;
 }
