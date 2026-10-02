@@ -110,3 +110,6 @@ export const erroCarga = (msg: string) =>
 
 export const cartao = (titulo: string, sub: string, corpo: string, extra = "") =>
   `<section class="bmd-card bmd-sec2"><header><div class="bmd-lbl">${esc(titulo)}</div><span>${sub}</span></header>${extra}${corpo}</section>`;
+
+/** "+12%" / "−8%" / "—": variação curta para listas e tabelas. */
+export const deltaPct = (v: number | null) => (v == null ? "—" : `${v >= 0 ? "+" : "−"}${nf(Math.abs(v) * 100, 0)}%`);
