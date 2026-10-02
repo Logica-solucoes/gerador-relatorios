@@ -164,6 +164,7 @@
 /* Sales: ranking com Δ ao lado do valor. */
 .bmd-bl--delta .bmd-bl__i { grid-template-columns: minmax(90px, 160px) 1fr 140px; }
 .bmd-bl__v em { font-style: normal; margin-left: 6px; }
+.bmd-bl--delta .bmd-bl__i:first-child:not(.is-on) .bmd-bl__b s { background: #6FA850; }
 
 /* Sales · Tabela */
 .bmd-tb2--anos td:first-child { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

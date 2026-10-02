@@ -115,7 +115,7 @@ export function pares(r: Recorte, dim: string, limite: number): ItemPar[] {
     .slice(0, limite);
 }
 
-/** bar-list com Δ (mesmo markup do `barList`: o maior em laranja, o resto em verde). Clique filtra. */
+/** bar-list com Δ (mesmo markup do `barList`, tudo em verde; laranja só no item filtrado). Clique filtra. */
 export function ranking(itens: ItemPar[], dim: string, r: Recorte, ativos: string[]): string {
   if (!itens.length) return '<p class="bmd-nota">Sem venda no período.</p>';
   const max = Math.max(itens[0]!.atual, 1);
