@@ -8,6 +8,7 @@
     "dash:momentive": "bun build web/momentive/src/preview.ts --outdir web/momentive/dist --target browser --minify",
     "dash:momentive:file": "bun run web/momentive/build-standalone.ts",
     "dash:basf": "bun build web/basf/src/preview.ts --outdir web/basf/dist --target browser --minify",
+    "dash:basf:sales": "bun build web/basf/src/preview-sales.ts --outdir web/basf/dist --target browser --minify",
     "dash:basf:serve": "bun run web/basf/servir.ts",
     "dash:basf:snapshot": "uv run --no-project --with pbixray python web/basf/snapshot/extrair_pbix.py && bun --env-file=clients/basf/.env run web/basf/snapshot/vendas.ts && bun run web/basf/snapshot/montar.ts && bun run web/basf/snapshot/conferir.ts"
   },

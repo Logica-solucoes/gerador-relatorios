@@ -113,3 +113,17 @@ export function limparCepea<T extends Record<string, unknown>>(ls: T[]): T[] {
   const comEstado = new Set(ha.filter((l) => l.estado).map(chaveC));
   return ha.filter((l) => l.estado || !comEstado.has(chaveC(l)));
 }
+
+const CLIENTES_BR10_PARA_BR02 = new Set(["A SEMENTEIRA PROD AGR LTDA", "NATIVA AGRICOLA LTDA", "NATIVO AGRICOLA LTDA"]);
+const EX_RTV = new Set(["BR04", "BR07"]);
+
+/**
+ * Carteira do PBI Sales: WMW desses 3 clientes é da BR02, mesmo vindo como BR10. BR04/BR07 saíram
+ * do time; o PBI apagava o nome ("(Em branco)"), aqui a venda fica com o nome rotulado.
+ */
+export function rtvDe(cod: string | null, cliente: string | null, kind: string | null, nomes: Map<string, string>): { cod: string | null; rtv: string } {
+  const c = cod === "BR10" && kind === "WMW" && cliente != null && CLIENTES_BR10_PARA_BR02.has(cliente.trim()) ? "BR02" : cod;
+  if (!c) return { cod: null, rtv: "Sem RTV" };
+  const nome = nomes.get(c) ?? c;
+  return { cod: c, rtv: EX_RTV.has(c) ? `${nome} (ex-RTV)` : nome };
+}

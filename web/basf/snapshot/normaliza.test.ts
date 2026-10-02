@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
-  casarMunicipio, dividirUF, estadoCorrigido, indiceMunicipios, limparCepea, limparHotspot, normalizarCrop, regiaoDasUfs, ufDoCodigo, ufsDoEstado,
+  casarMunicipio, dividirUF, estadoCorrigido, indiceMunicipios, limparCepea, limparHotspot, normalizarCrop, regiaoDasUfs, rtvDe, ufDoCodigo, ufsDoEstado,
 } from "./normaliza";
 
 describe("limparHotspot", () => {
@@ -105,5 +105,25 @@ describe("estadoCorrigido", () => {
     expect(estadoCorrigido("Rio Grande do Norte", "Nordeste")).toBeNull();
     expect(estadoCorrigido("Santa Catarina", "Sul")).toBeNull();
     expect(estadoCorrigido(null, "Sul")).toBeNull();
+  });
+});
+
+describe("rtvDe", () => {
+  const nomes = new Map([["BR10", "Milena Defensor"], ["BR02", "Mariana Vieira"], ["BR04", "Antonio Junior"], ["BR07", "Antônio Pierro"]]);
+  test("BR10 vira BR02 nos 3 clientes da regra, só no WMW", () => {
+    expect(rtvDe("BR10", "A SEMENTEIRA PROD AGR LTDA", "WMW", nomes)).toEqual({ cod: "BR02", rtv: "Mariana Vieira" });
+    expect(rtvDe("BR10", "NATIVA AGRICOLA LTDA", "WMW", nomes)).toEqual({ cod: "BR02", rtv: "Mariana Vieira" });
+    expect(rtvDe("BR10", "NATIVO AGRICOLA LTDA ", "WMW", nomes)).toEqual({ cod: "BR02", rtv: "Mariana Vieira" });
+  });
+  test("fora da regra o RTV fica", () => {
+    expect(rtvDe("BR10", "A SEMENTEIRA PROD AGR LTDA", "MEM", nomes)).toEqual({ cod: "BR10", rtv: "Milena Defensor" });
+    expect(rtvDe("BR10", "AGRICOLA FAMOSA S/A", "WMW", nomes)).toEqual({ cod: "BR10", rtv: "Milena Defensor" });
+    expect(rtvDe("BR01", "A SEMENTEIRA PROD AGR LTDA", "WMW", nomes).cod).toBe("BR01");
+  });
+  test("ex-RTV rotulado; código sem cadastro mostra o código; sem código é Sem RTV", () => {
+    expect(rtvDe("BR04", "X", "MEM", nomes).rtv).toBe("Antonio Junior (ex-RTV)");
+    expect(rtvDe("BR07", "X", "MEM", nomes).rtv).toBe("Antônio Pierro (ex-RTV)");
+    expect(rtvDe("BR99", "X", "MEM", nomes)).toEqual({ cod: "BR99", rtv: "BR99" });
+    expect(rtvDe(null, "X", "MEM", nomes)).toEqual({ cod: null, rtv: "Sem RTV" });
   });
 });

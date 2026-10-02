@@ -1,19 +1,14 @@
 import { alternarFiltro, deHash, definirFiltro, paraHash, trocarFonte, type Estado } from "./estado";
-import type { DefAba, Dados } from "./abas/tipos";
+import type { Dados } from "./abas/tipos";
 import { chips, erroCarga, skeleton } from "./componentes";
 import { criarShell } from "./shared/shell";
 import { esc } from "./shared/formato";
 import type { Aba, Carregar, Fonte, Recurso } from "./types";
-import { mercado } from "./abas/mercado";
-import { comparativo } from "./abas/comparativo";
-import { clientes } from "./abas/clientes";
-import { vendas } from "./abas/vendas";
+import type { Painel } from "./paineis";
 
-const ABAS: DefAba[] = [mercado, comparativo, clientes, vendas];
-
-const GABARITO = `
+const gabarito = (titulo: string) => `
   <header class="bmd-hero2">
-    <div class="bmd-hero2__titulo"><h1>Inteligência de Mercado</h1><small data-el="ultima"></small></div>
+    <div class="bmd-hero2__titulo"><h1>${esc(titulo)}</h1><small data-el="ultima"></small></div>
     <div class="bmd-hero2__marca" aria-label="SHIFT BI · BASF Nunhems"><em>SHIFT BI</em><div><b>BASF</b><i></i><span>nunhems</span></div></div>
   </header>
   <nav class="bmd-tabs" role="tablist" data-el="tabs"></nav>
@@ -23,15 +18,15 @@ const GABARITO = `
 
 export interface Montado { destruir(): void }
 
-export function montarDashboard(host: HTMLElement, carregar: Carregar): Montado {
-  const shell = criarShell(host, GABARITO);
-  let estado: Estado = deHash(location.hash);
+export function montarDashboard(host: HTMLElement, carregar: Carregar, painel: Painel): Montado {
+  const shell = criarShell(host, gabarito(painel.titulo));
+  let estado: Estado = deHash(location.hash, painel.abas.map((a) => a.id));
   const dados: Dados = {};
   const pendentes = new Map<Recurso, Promise<void>>();
   const falhas = new Map<Recurso, string>();
   let vivo = true;
 
-  const aba = () => ABAS.find((a) => a.id === estado.aba)!;
+  const aba = () => painel.abas.find((a) => a.id === estado.aba)!;
 
   function garantir(r: Recurso): Promise<void> {
     if (dados[r] || falhas.has(r) || pendentes.has(r)) return pendentes.get(r) ?? Promise.resolve();
@@ -58,7 +53,7 @@ export function montarDashboard(host: HTMLElement, carregar: Carregar): Montado 
   function render() {
     if (!vivo) return;
     const a = aba();
-    shell.el("tabs").innerHTML = ABAS.map((x) =>
+    shell.el("tabs").innerHTML = painel.abas.map((x) =>
       `<button type="button" role="tab" data-aba="${x.id}" aria-selected="${x.id === estado.aba}"${x.id === estado.aba ? ' class="is-on"' : ""}>${esc(x.rotulo)}</button>`).join("");
     const meta = dados.meta?.find((m) => m.ultimaVenda);
     shell.el("ultima").textContent = meta ? `última venda ${String(meta.ultimaVenda).split("-").reverse().join("/")}` : "";

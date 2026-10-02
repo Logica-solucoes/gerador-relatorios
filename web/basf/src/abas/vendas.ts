@@ -1,7 +1,7 @@
 import * as Plot from "@observablehq/plot";
 import { agregar, atingimento, filtrar, mesDeCorte, mesMaximo, total, variacao, type Filtros } from "../calc";
-import { cartao, kpi, seg } from "../componentes";
-import { esc, euroCompacto, moedaCompacta, n0, nf } from "../shared/formato";
+import { cartao, kpi, pareado, seg } from "../componentes";
+import { euroCompacto, moedaCompacta, n0, nf } from "../shared/formato";
 import { C } from "../shared/tema";
 import type { Linha } from "../types";
 import type { Dados, DefAba } from "./tipos";
@@ -71,18 +71,10 @@ export const vendas: DefAba = {
     };
     const curva = [...acum(ano - 1), ...acum(ano)];
 
-    const pareado = (dim: string) => {
-      const atual = agregar(recorte(ano, mesCorte), {}, dim, campo).slice(0, 6);
+    const parear = (dim: string) => {
       const ant = new Map(agregar(recorte(ano - 1, mesCorte), {}, dim, campo).map((g) => [g.chave, conv(g.valor, ano - 1)]));
-      const atualConv = atual.map((g) => conv(g.valor, ano) ?? 0);
-      const max = Math.max(...atualConv, ...atual.map((g) => ant.get(g.chave) ?? 0), 1);
-      return `<div class="bmd-par2">${atual.map((g, i) => {
-        const a = ant.get(g.chave) ?? null;
-        const v = variacao(atualConv[i]!, a, baseMinima);
-        return `<button type="button" data-filtro="${dim}" data-v="${esc(g.chave)}"><span title="${esc(g.chave)}">${esc(g.chave)}</span>
-          <span><s style="width:${(atualConv[i]! / max) * 100}%;background:${C.o500}"></s><s style="width:${((a ?? 0) / max) * 100}%;background:${C.anterior}"></s></span>
-          <span class="bmd-mono">${fmt(atualConv[i]!)} <em class="${v != null && v < 0 ? "bmd-neg" : "bmd-pos"}">${v == null ? "—" : `${v >= 0 ? "+" : "−"}${nf(Math.abs(v) * 100, 0)}%`}</em></span></button>`;
-      }).join("")}</div>`;
+      return pareado(agregar(recorte(ano, mesCorte), {}, dim, campo).slice(0, 6)
+        .map((g) => ({ chave: g.chave, atual: conv(g.valor, ano) ?? 0, anterior: ant.get(g.chave) ?? null })), dim, (v) => fmt(v), baseMinima);
     };
 
     corpo.innerHTML = `
@@ -96,8 +88,8 @@ export const vendas: DefAba = {
       </div>
       ${cartao("Vendas acumuladas no ano", `${ano} contra ${ano - 1}`, '<div data-el="curva"></div>')}
       <div class="bmd-grid2">
-        ${cartao(`Por crop · ${periodo}`, `${ano} vs ${ano - 1}`, pareado("crop"))}
-        ${cartao(`Por RTV · ${periodo}`, `${ano} vs ${ano - 1}`, pareado("rtv"))}
+        ${cartao(`Por crop · ${periodo}`, `${ano} vs ${ano - 1}`, parear("crop"))}
+        ${cartao(`Por RTV · ${periodo}`, `${ano} vs ${ano - 1}`, parear("rtv"))}
       </div>`;
 
     const finais = [String(ano - 1), String(ano)].map((s) => curva.filter((p) => p.serie === s).at(-1)).filter((p): p is NonNullable<typeof p> => !!p);

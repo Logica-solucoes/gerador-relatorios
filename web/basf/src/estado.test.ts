@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { alternarFiltro, deHash, definirFiltro, inicial, paraHash, trocarFonte } from "./estado";
+import { ABAS_SALES, alternarFiltro, deHash, definirFiltro, inicial, paraHash, trocarFonte } from "./estado";
 
 describe("trocarFonte", () => {
   test("descarta filtro que a fonte nova não tem e avisa", () => {
@@ -109,5 +109,38 @@ describe("mês de corte", () => {
     for (const v of ["0", "13", "-1", "3.5", "abc", ""]) expect(deHash(`#vendas?corte=${v}`).mesCorte).toBeNull();
     expect(deHash("#vendas?corte=12").mesCorte).toBe(12);
     expect(deHash("#vendas?corte=1").mesCorte).toBe(1);
+  });
+});
+
+describe("painel Sales", () => {
+  test("hash com aba fora do painel cai na primeira aba do painel", () => {
+    expect(deHash("#mercado", ABAS_SALES).aba).toBe("evolucao");
+    expect(deHash("", ABAS_SALES).aba).toBe("evolucao");
+    expect(deHash("#evolucao").aba).toBe("mercado");
+  });
+  test("filtro do Sales vale nas 3 abas e não vaza para o Mercado", () => {
+    const e = definirFiltro(inicial("analise"), "crop", ["MEM"]);
+    expect(e.filtros.evolucao.crop).toEqual(["MEM"]);
+    expect(e.filtros.tabela.crop).toEqual(["MEM"]);
+    expect(e.filtros.vendas.crop).toBeUndefined();
+  });
+  test("ida e volta: aba, filtros, corte e modo da tabela", () => {
+    let e: ReturnType<typeof inicial> = { ...inicial("tabela"), mesCorte: 4, tabela: "cliente" };
+    e = definirFiltro(e, "rtv", ["Mariana Vieira"]);
+    const volta = deHash(paraHash(e), ABAS_SALES);
+    expect(volta.aba).toBe("tabela");
+    expect(volta.mesCorte).toBe(4);
+    expect(volta.tabela).toBe("cliente");
+    expect(volta.filtros.evolucao.rtv).toEqual(["Mariana Vieira"]);
+  });
+  test("modo da tabela só vai no hash da aba Tabela", () => {
+    expect(paraHash({ ...inicial("evolucao"), tabela: "cliente" })).not.toContain("tab=");
+    expect(deHash("#tabela?tab=zzz", ABAS_SALES).tabela).toBe("variedade");
+  });
+  test("ordem e grupos recolhidos têm padrão e não vão no hash", () => {
+    const e = inicial("tabela");
+    expect(e.ordem).toEqual({ col: 2, desc: true });
+    expect(e.recolhidos).toEqual([]);
+    expect(paraHash({ ...e, recolhidos: ["CAC"] })).not.toContain("CAC");
   });
 });
