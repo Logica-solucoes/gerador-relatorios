@@ -1,5 +1,5 @@
 import { ordenarAnos, tabelaAnos, type LinhaAnos } from "../../calc";
-import { deltaPct, seg } from "../../componentes";
+import { classeDelta, deltaPct, seg } from "../../componentes";
 import { busca, normalizar } from "../../shared/filtros";
 import { esc, n0 } from "../../shared/formato";
 import { ICONE } from "../../shared/icones";
@@ -36,7 +36,7 @@ export const tabela: DefAba = {
     const th = (rot: string, i: number, cls = "n") =>
       `<th class="${cls}"><button type="button" class="bmd-ord${col === i ? " is-on" : ""}" data-ordem="${i}">${esc(rot)}${col === i ? (desc ? " ↓" : " ↑") : ""}</button></th>`;
     const cel = (l: LinhaAnos) => l.v.map((v) => `<td class="n bmd-mono">${v == null ? "" : n0(v)}</td>`).join("") +
-      `<td class="n bmd-mono ${l.variacao != null && l.variacao < 0 ? "bmd-neg" : "bmd-pos"}">${deltaPct(l.variacao)}</td>`;
+      `<td class="n bmd-mono ${classeDelta(l.variacao)}">${deltaPct(l.variacao)}</td>`;
     const item = (l: LinhaAnos, recuo: boolean) => `<tr><td${recuo ? ' class="bmd-ind"' : ""} title="${esc(l.chave)}">${esc(l.chave)}</td>${cel(l)}</tr>`;
 
     const corpoTabela = ordenarAnos(t.grupos, col, desc).map((g) => {
@@ -51,7 +51,7 @@ export const tabela: DefAba = {
       <div class="bmd-card bmd-tabela">
         <div class="bmd-tabela__topo" data-el="busca"></div>
         <table class="bmd-tb2 bmd-tb2--anos"><thead><tr>${th(`${porVariedade ? "Variedade" : "Cliente"} · ${unidade}`, -1, "")}${cab.map((c, i) => th(c, i)).join("")}</tr></thead>
-        <tbody>${corpoTabela || '<tr><td colspan="5" class="bmd-nota">Nada encontrado para esta busca.</td></tr>'}</tbody>
+        <tbody>${corpoTabela || '<tr><td colspan="5" class="bmd-nota">${termo ? "Nada encontrado para esta busca." : `Sem venda de ${r.ano - 2} a ${r.periodo} neste recorte.`}</td></tr>'}</tbody>
         <tfoot><tr class="bmd-tot"><td>Total</td>${cel(t.total)}</tr></tfoot></table>
       </div>`;
 

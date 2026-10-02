@@ -114,6 +114,8 @@ export const cartao = (titulo: string, sub: string, corpo: string, extra = "") =
 /** "+12%" / "−8%" / "—": variação curta para listas e tabelas. */
 export const deltaPct = (v: number | null) => (v == null ? "—" : `${v >= 0 ? "+" : "−"}${nf(Math.abs(v) * 100, 0)}%`);
 
+export const classeDelta = (v: number | null) => (v == null ? "" : v < 0 ? "bmd-neg" : "bmd-pos");
+
 /** Barras pareadas atual × anterior com variação (abas Vendas e Análise). Clique filtra por `dim`. */
 export function pareado(itens: { chave: string; atual: number; anterior: number | null }[], dim: string, fmt: (v: number) => string, baseMinima = 0): string {
   if (!itens.length) return '<p class="bmd-nota">Sem venda no período.</p>';
@@ -123,6 +125,6 @@ export function pareado(itens: { chave: string; atual: number; anterior: number 
     const v = variacao(i.atual, i.anterior, baseMinima);
     return `<button type="button" data-filtro="${dim}" data-v="${esc(i.chave)}"><span title="${esc(i.chave)}">${esc(i.chave)}</span>
       <span><s style="width:${w(i.atual)}%;background:${C.o500}"></s><s style="width:${w(i.anterior)}%;background:${C.anterior}"></s></span>
-      <span class="bmd-mono">${esc(fmt(i.atual))} <em class="${v != null && v < 0 ? "bmd-neg" : "bmd-pos"}">${deltaPct(v)}</em></span></button>`;
+      <span class="bmd-mono">${esc(fmt(i.atual))} <em class="${classeDelta(v)}">${deltaPct(v)}</em></span></button>`;
   }).join("")}</div>`;
 }

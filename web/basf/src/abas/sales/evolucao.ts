@@ -25,7 +25,7 @@ export const evolucao: DefAba = {
     const vend = r.moeda(total(atual, "valor"), ano), vendAnt = r.moeda(total(ant, "valor"), ano - 1);
     const vol = total(atual, "th"), volAnt = total(ant, "th");
     const med = r.medir(atual, ano), medAnt = r.medir(ant, ano - 1);
-    const dif = med != null && medAnt != null ? med - medAnt : null;
+    const dif = med == null && medAnt == null ? null : (med ?? 0) - (medAnt ?? 0);
     const tk = ticket(vend, vol), tkAnt = ticket(vendAnt, volAnt);
     const fmtTicket = (v: number | null) => (v == null ? "—" : `${r.eur ? "€" : "R$"} ${nf(v, 2)}/TH`);
 
