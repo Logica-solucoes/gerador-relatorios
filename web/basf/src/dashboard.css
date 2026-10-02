@@ -160,3 +160,7 @@
 
 /* Mercado numa coluna: mapa depois do ranking (spec §5). */
 @media (max-width: 760px) { .bmd-grid2--mapa > .bmd-pilha { order: -1; } }
+
+/* Sales: ranking com Δ ao lado do valor. */
+.bmd-bl--delta .bmd-bl__i { grid-template-columns: minmax(90px, 160px) 1fr 140px; }
+.bmd-bl__v em { font-style: normal; margin-left: 6px; }
