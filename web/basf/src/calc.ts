@@ -63,6 +63,16 @@ export const mesMaximo = (ano: number, ultima: string) => (ano === Number(ultima
 
 export const mesDeCorte = (pedido: number | null, ano: number, ultima: string) => Math.min(pedido ?? 12, mesMaximo(ano, ultima));
 
+/** No mês da última venda o corte vai até o dia dela: o ano anterior compara até o mesmo dia, como o PBI. */
+export const diaDeCorte = (mes: number, ano: number, ultima: string) =>
+  ano === Number(ultima.slice(0, 4)) && mes === Number(ultima.slice(5, 7)) ? Number(ultima.slice(8, 10)) : 31;
+
+/** Linha sem `dia` (snapshot antigo) conta o mês inteiro. */
+export const ateCorte = (l: Linha, mes: number, dia = 31) => {
+  const m = l.mes as number;
+  return m < mes || (m === mes && Number(l.dia ?? 0) <= dia);
+};
+
 /** Preço médio por TH. Volume ≤ 0 (só devolução) não tem leitura. */
 export function ticket(valor: N, th: N): number | null {
   return ok(valor) && ok(th) && th > 0 ? valor / th : null;
@@ -87,15 +97,15 @@ function agrupar(ls: Linha[], dim: string): Map<string, Linha[]> {
  * Aba Tabela do Sales. Colunas `v`: ano-2 e ano-1 cheios, `ano` até o corte. Variação: YTD contra o
  * YTD do ano anterior. `grupo` null = um grupo só (lista plana). Sem venda = null, nunca 0.
  */
-export function tabelaAnos(ls: Linha[], dim: string, grupo: string | null, ano: number, mesCorte: number, metrica: string, conv: Conv = (v) => v, baseMinima = 0): { grupos: GrupoAnos[]; total: LinhaAnos } {
+export function tabelaAnos(ls: Linha[], dim: string, grupo: string | null, ano: number, mesCorte: number, metrica: string, conv: Conv = (v) => v, baseMinima = 0, diaCorte = 31): { grupos: GrupoAnos[]; total: LinhaAnos } {
   const doRecorte = ls.filter((l) => {
     const a = l.ano as number;
-    return (a === ano - 2 || a === ano - 1 || a === ano) && (a !== ano || (l.mes as number) <= mesCorte);
+    return (a === ano - 2 || a === ano - 1 || a === ano) && (a !== ano || ateCorte(l, mesCorte, diaCorte));
   });
   const linha = (chave: string, xs: Linha[]): LinhaAnos => {
-    const doAno = (a: number, ate = 12) => conv(total(xs.filter((l) => l.ano === a && (l.mes as number) <= ate), metrica), a);
-    const ytd = doAno(ano, mesCorte);
-    return { chave, v: [doAno(ano - 2), doAno(ano - 1), ytd], variacao: variacao(ytd, doAno(ano - 1, mesCorte), baseMinima) };
+    const doAno = (a: number, mes = 12, dia = 31) => conv(total(xs.filter((l) => l.ano === a && ateCorte(l, mes, dia)), metrica), a);
+    const ytd = doAno(ano, mesCorte, diaCorte);
+    return { chave, v: [doAno(ano - 2), doAno(ano - 1), ytd], variacao: variacao(ytd, doAno(ano - 1, mesCorte, diaCorte), baseMinima) };
   };
   const grupos = [...(grupo ? agrupar(doRecorte, grupo) : new Map([["", doRecorte]]))]
     .map(([g, xs]) => ({ ...linha(g, xs), itens: [...agrupar(xs, dim)].map(([k, ys]) => linha(k, ys)) }));

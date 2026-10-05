@@ -1,4 +1,4 @@
-import { filtrar, mesDeCorte, mesMaximo, total, variacao } from "../../calc";
+import { ateCorte, diaDeCorte, filtrar, mesDeCorte, mesMaximo, total, variacao } from "../../calc";
 import { classeDelta, deltaPct, seg } from "../../componentes";
 import { definirFiltro, type Estado } from "../../estado";
 import { estadoVazio } from "../../shared/blocos";
@@ -36,7 +36,11 @@ export function controlesBase(e: Estado, d: Dados): string {
 export interface Recorte {
   ano: number;
   mesCorte: number;
-  /** "2026 até jun" ou "2025" (ano fechado). */
+  /** 31 = mês inteiro. No mês da última venda é o dia dela. */
+  diaCorte: number;
+  /** " até 26 jun", " até mai" ou "" (ano fechado). */
+  ate: string;
+  /** "2026 até 26 jun" ou "2025" (ano fechado). */
   periodo: string;
   campo: "valor" | "th";
   /** € efetivo: pedido E taxa do ano cadastrada. */
@@ -45,7 +49,7 @@ export interface Recorte {
   minimo: number;
   /** Vendas com os filtros da aba menos o de ano: o ano anterior entra na comparação. */
   base: Linha[];
-  /** Linhas do ano `a` até o mês de corte. */
+  /** Linhas do ano `a` até o corte (mês e dia). */
   ytd(a: number): Linha[];
   /** R$ → € pela taxa do ano `a` (identidade em R$). */
   moeda(v: number | null, a: number): number | null;
@@ -63,6 +67,8 @@ export function recorte(ctx: Ctx): Recorte {
   const e = ctx.estado, d = ctx.dados;
   const ano = anoReferencia(e, d);
   const mesCorte = mesDeCorte(e.mesCorte, ano, ultimaVenda(d));
+  const diaCorte = diaDeCorte(mesCorte, ano, ultimaVenda(d));
+  const ate = mesCorte === 12 && diaCorte === 31 ? "" : ` até ${diaCorte < 31 ? `${diaCorte} ` : ""}${MESES[mesCorte - 1]}`;
   const eur = e.moeda === "eur" && !!taxaDe(d, ano);
   const campo = e.medida === "th" ? "th" : "valor";
   const base = filtrar(d.vendas ?? [], semAno(e));
@@ -74,10 +80,10 @@ export function recorte(ctx: Ctx): Recorte {
   const fmtValor = (v: number | null) => (eur ? euroCompacto(v) : moedaCompacta(v));
   const fmtTH = (v: number | null) => (v == null ? "—" : Math.abs(v) >= 1e4 ? `${n0(Math.round(v / 1000))} mil TH` : `${n0(v)} TH`);
   return {
-    ano, mesCorte, campo, eur, base, moeda, conv, fmtValor, fmtTH,
+    ano, mesCorte, diaCorte, ate, campo, eur, base, moeda, conv, fmtValor, fmtTH,
     minimo: campo === "valor" ? BASE_MINIMA : 0,
-    periodo: mesCorte === 12 ? String(ano) : `${ano} até ${MESES[mesCorte - 1]}`,
-    ytd: (a) => base.filter((l) => l.ano === a && (l.mes as number) <= mesCorte),
+    periodo: `${ano}${ate}`,
+    ytd: (a) => base.filter((l) => l.ano === a && ateCorte(l, mesCorte, diaCorte)),
     medir: (ls, a) => conv(total(ls, campo), a),
     fmt: (v) => (campo === "th" ? fmtTH(v) : fmtValor(v)),
     delta: (a, b, min = 0) => {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { agregar, atingimento, distintos, filtrar, mesDeCorte, mesMaximo, ordenarAnos, share, tabelaAnos, ticket, total, variacao } from "./calc";
+import { agregar, ateCorte, atingimento, diaDeCorte, distintos, filtrar, mesDeCorte, mesMaximo, ordenarAnos, share, tabelaAnos, ticket, total, variacao } from "./calc";
 
 const L = [
   { uf: "MG", crop: "ONX", ano: 2024, area: 100, dose: 10 },
@@ -131,6 +131,31 @@ describe("tabelaAnos", () => {
   });
   test("base mínima anula a variação", () => {
     expect(tabelaAnos(V, "variedade", "crop", 2026, 6, "valor", (v) => v, 1000).total.variacao).toBeNull();
+  });
+  test("dia de corte: o ano anterior compara até o mesmo dia; os anos cheios não mudam", () => {
+    const D = [
+      { ano: 2025, mes: 6, dia: 10, crop: "CAC", variedade: "HANA", valor: 40 },
+      { ano: 2025, mes: 6, dia: 28, crop: "CAC", variedade: "HANA", valor: 60 },
+      { ano: 2026, mes: 6, dia: 26, crop: "CAC", variedade: "HANA", valor: 30 },
+    ];
+    const t = tabelaAnos(D, "variedade", null, 2026, 6, "valor", (v) => v, 0, 26);
+    expect(t.total.v).toEqual([null, 100, 30]);
+    expect(t.total.variacao).toBeCloseTo(30 / 40 - 1);
+  });
+});
+
+describe("corte por dia", () => {
+  test("só o mês da última venda corta no dia", () => {
+    expect(diaDeCorte(6, 2026, "2026-06-26")).toBe(26);
+    expect(diaDeCorte(5, 2026, "2026-06-26")).toBe(31);
+    expect(diaDeCorte(6, 2025, "2026-06-26")).toBe(31);
+  });
+  test("ateCorte: mês anterior inteiro, mês do corte até o dia; sem dia conta o mês", () => {
+    expect(ateCorte({ mes: 5, dia: 31 }, 6, 26)).toBe(true);
+    expect(ateCorte({ mes: 6, dia: 26 }, 6, 26)).toBe(true);
+    expect(ateCorte({ mes: 6, dia: 27 }, 6, 26)).toBe(false);
+    expect(ateCorte({ mes: 7, dia: 1 }, 6, 26)).toBe(false);
+    expect(ateCorte({ mes: 6 }, 6, 26)).toBe(true);
   });
 });
 

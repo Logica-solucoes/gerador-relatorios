@@ -1,5 +1,5 @@
 import * as Plot from "@observablehq/plot";
-import { agregar, atingimento, filtrar, mesDeCorte, mesMaximo, total, variacao, type Filtros } from "../calc";
+import { agregar, ateCorte, atingimento, diaDeCorte, filtrar, mesDeCorte, mesMaximo, total, variacao, type Filtros } from "../calc";
 import { cartao, kpi, pareado, seg } from "../componentes";
 import { euroCompacto, moedaCompacta, n0, nf } from "../shared/formato";
 import { C } from "../shared/tema";
@@ -30,6 +30,7 @@ export const vendas: DefAba = {
     const meta = ctx.dados.meta ?? [];
     const ano = anoDe(f, ctx.dados);
     const mesCorte = mesDeCorte(e.mesCorte, ano, ultimaVenda(ctx.dados));
+    const diaCorte = diaDeCorte(mesCorte, ano, ultimaVenda(ctx.dados));
     const metaAno = meta.find((m) => m.ano === ano);
     const taxa = (a: number) => meta.find((m) => m.ano === a)?.taxa as number | null | undefined;
     const semTaxa = e.moeda === "eur" && !taxa(ano);
@@ -37,7 +38,7 @@ export const vendas: DefAba = {
     const conv = (v: number | null, a: number) => (v == null || campo === "th" || e.moeda === "brl" ? v : taxa(a) ? v / taxa(a)! : null);
     const fmt = (v: number | null) => campo === "th" ? (v == null ? "—" : `${n0(Math.round(v / 1000))} mil TH`) : e.moeda === "eur" ? euroCompacto(v) : moedaCompacta(v);
 
-    const recorte = (a: number, ate: number): Linha[] => filtrar(todas, { ...f, ano: [String(a)] }).filter((l) => Number(l.mes) <= ate);
+    const recorte = (a: number, ate: number): Linha[] => filtrar(todas, { ...f, ano: [String(a)] }).filter((l) => ateCorte(l, ate, diaCorte));
     const ytd = conv(total(recorte(ano, mesCorte), campo), ano);
     const ytdAnt = conv(total(recorte(ano - 1, mesCorte), campo), ano - 1);
     const vol = total(recorte(ano, mesCorte), "th");
@@ -50,7 +51,7 @@ export const vendas: DefAba = {
     const ating = metaValida ? atingimento(ytd, forecast) : null;
     const notaMeta = campo === "th" ? "meta só em R$" : recortado ? "meta é do total, sem filtros" : "";
     const baseMinima = campo === "valor" ? BASE_MINIMA : 0;
-    const periodo = mesCorte === 12 ? String(ano) : `${ano} até ${MESES[mesCorte - 1]}`;
+    const periodo = mesCorte === 12 && diaCorte === 31 ? String(ano) : `${ano} até ${diaCorte < 31 ? `${diaCorte} ` : ""}${MESES[mesCorte - 1]}`;
     const d = (a: number | null, b: number | null, base = 0) => {
       const v = variacao(a, b, base);
       return v == null ? null : { txt: `${v >= 0 ? "+" : "−"}${nf(Math.abs(v) * 100, 1)}% vs ${ano - 1}`, ruim: v < 0 };

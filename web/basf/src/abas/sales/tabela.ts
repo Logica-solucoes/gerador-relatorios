@@ -4,7 +4,7 @@ import { busca, normalizar } from "../../shared/filtros";
 import { esc, n0 } from "../../shared/formato";
 import { ICONE } from "../../shared/icones";
 import type { DefAba } from "../tipos";
-import { DIMS, MESES, controlesBase, recorte, semResultado } from "./comum";
+import { DIMS, controlesBase, recorte, semResultado } from "./comum";
 
 export const tabela: DefAba = {
   id: "tabela",
@@ -29,10 +29,10 @@ export const tabela: DefAba = {
     const termo = normalizar(buscaAtual.trim());
     const ls = termo ? r.base.filter((l) => normalizar(String(l[dim] ?? "")).includes(termo)) : r.base;
 
-    const t = tabelaAnos(ls, dim, porVariedade ? "crop" : null, r.ano, r.mesCorte, r.campo, r.conv, r.minimo);
+    const t = tabelaAnos(ls, dim, porVariedade ? "crop" : null, r.ano, r.mesCorte, r.campo, r.conv, r.minimo, r.diaCorte);
     const { col, desc } = e.ordem;
     const unidade = r.campo === "th" ? "TH" : r.eur ? "€" : "R$";
-    const cab = [String(r.ano - 2), String(r.ano - 1), r.periodo, `Var. vs ${r.ano - 1}${r.mesCorte < 12 ? ` até ${MESES[r.mesCorte - 1]}` : ""}`];
+    const cab = [String(r.ano - 2), String(r.ano - 1), r.periodo, `Var. vs ${r.ano - 1}${r.ate}`];
     const th = (rot: string, i: number, cls = "n") =>
       `<th class="${cls}"><button type="button" class="bmd-ord${col === i ? " is-on" : ""}" data-ordem="${i}">${esc(rot)}${col === i ? (desc ? " ↓" : " ↑") : ""}</button></th>`;
     const cel = (l: LinhaAnos) => l.v.map((v) => `<td class="n bmd-mono">${v == null ? "" : n0(v)}</td>`).join("") +
