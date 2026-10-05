@@ -1,6 +1,7 @@
 /**
  * Vendas do banco do portal (`Basf`) → dados/_bruto/vendas.json.
- * Regras de clients/basf/CLAUDE.md: data da nota, sem DUMMY, só BR, líquido com devoluções.
+ * Regra da BASF (05/10/2026), a mesma do PBI Sales: data da nota, só order_type SBB e SDB.
+ * TH = inv_qty, também por pedido da BASF (em cebola e cenoura é 1/100 do inv_qty_alt).
  * Uso: bun --env-file=clients/basf/.env run web/basf/snapshot/vendas.ts
  * DB_NAME do .env é Basf-Relatorio; aqui forçamos o banco do portal.
  */
@@ -16,17 +17,17 @@ const pool = await sql.connect({
 });
 
 const linhas = (await pool.request().query(`
-  SELECT YEAR(v.inv_date) ano, MONTH(v.inv_date) mes, v.kind, v.primary_contact rtvCod,
+  SELECT YEAR(v.inv_date) ano, MONTH(v.inv_date) mes, DAY(v.inv_date) dia, v.kind, v.primary_contact rtvCod,
          f.nome rtvNome, v.cust_no custNo, v.cust_name cliente, v.item_desc item,
-         SUM(v.total_line_amt) valor, SUM(v.inv_qty_th) th
+         SUM(v.total_line_amt) valor, SUM(v.inv_qty) th
   FROM basf_vendas v LEFT JOIN basf_fte f ON f.cod = v.primary_contact
-  WHERE v.cust_name NOT LIKE '%DUMMY%' AND v.ship_to_country = 'BR' AND v.inv_date IS NOT NULL
-  GROUP BY YEAR(v.inv_date), MONTH(v.inv_date), v.kind, v.primary_contact, f.nome,
+  WHERE v.order_type IN ('SBB', 'SDB') AND v.inv_date IS NOT NULL
+  GROUP BY YEAR(v.inv_date), MONTH(v.inv_date), DAY(v.inv_date), v.kind, v.primary_contact, f.nome,
            v.cust_no, v.cust_name, v.item_desc`)).recordset;
 
 const [{ ultima }] = (await pool.request().query(`
   SELECT CONVERT(varchar(10), MAX(inv_date), 23) ultima FROM basf_vendas
-  WHERE cust_name NOT LIKE '%DUMMY%' AND ship_to_country = 'BR'`)).recordset;
+  WHERE order_type IN ('SBB', 'SDB')`)).recordset;
 
 await pool.close();
 await Bun.write(`${AQUI}../dados/_bruto/vendas.json`, JSON.stringify({ ultimaVenda: ultima, linhas }));

@@ -22,14 +22,14 @@ export type Carregar = (r: Recurso) => Promise<Linha[]>;
  * basf       ano, uf, cod, municipio, hotspot, regional, rtv, crop, cropDesc, segmento, hy,
  *            area, dose, th, potencial, potencialEur
  * ibge       nivel ("BR"|"UF"|"ME"|"MU"), ano, especie, uf, meso, cod, nome, area
- * abcsem     ano, especie, tipo, segmento, crop, selecionado (0|1), area, volume, valor
+ * abcsem     ano, especie, tipo, segmento (bruto: Híbrido, OP...), crop, selecionado (0|1), area, volume, valor
  * cepea      ano, safra, regiao, uf, estado, regional, produto, item, area (ha; só "Consolidado",
  *            sem linha de região já aberta por estado; região corrigida pela UF)
  * resumo     fonte, ano, especie, area, th                       (Dados Mercado Total)
  * resumoSeg  fonte, ano, especie, segmento, hy, crop, area, th   (Dados Basf e ABCSEM)
  * clientes   cliente, crop, hotspot, rtv, regional, acesso, ano, area, dose, mercado, copa,
  *            enxertia, vendasEnx, mercadoCopaEnx, potencial, vendasPotencial
- * vendas     ano, mes, crop, variedade, rtv, regional, cliente, hotspot, segmento, valor, th
+ * vendas     ano, mes, dia, crop, variedade, rtv, regional, cliente, hotspot, segmento, valor, th
  *            (rtv já com a carteira do PBI Sales: snapshot/normaliza.ts rtvDe)
  * meta       ano, budget, forecast, taxa, ultimaVenda (ISO; só na linha do maior ano)
  * municipios cod, nome, uf, lat, lon

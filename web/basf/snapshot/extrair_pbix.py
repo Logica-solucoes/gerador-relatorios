@@ -37,7 +37,8 @@ gravar("ibge", ibge, {"Nível": "nivel", "Ano": "ano", "Espécie": "especie", "e
                       "Cód.": "cod", "Descrição": "nome", A: "area"})
 
 gravar("abcsem", m.get_table("ABCSEM"), {
-    "Ano": "ano", "Espécie": "especie", "Tipo": "tipo", "segmento_dexpara": "segmento", "CROP": "crop",
+    # Segmento bruto (Híbrido, OP...), como a página ABCSEM do PBI: o segmento_dexpara repete o Tipo.
+    "Ano": "ano", "Espécie": "especie", "Tipo": "tipo", "Segmento": "segmento", "CROP": "crop",
     "produtos_selecionados": "selecionado",
     "Área Total Estimada do Mercado de Sementes (ha)": "area",
     "Volume Total Estimado do Mercado (M ou Kg) TH": "volume",
@@ -45,11 +46,12 @@ gravar("abcsem", m.get_table("ABCSEM"), {
 })
 
 cepea = m.get_table("CEPEA")
-# Filtros da página CEPEA: Estimativa = Consolidado; Região ≠ Brasil e não nula.
-cepea = cepea[(cepea["Estimativa"] == "Consolidado") & cepea["Região"].notna() & (cepea["Região"] != "Brasil")]
+# Região ≠ Brasil e não nula. As duas estimativas entram: Consolidado vai até 2023 e "Estimativa agosto/24"
+# cobre os produtos de 2023 que faltam e 2024 inteiro. Se complementam por produto, não se repetem.
+cepea = cepea[cepea["Região"].notna() & (cepea["Região"] != "Brasil")]
 gravar("cepea", cepea, {"Ano Civil": "ano", "Ano Safra": "safra", "Região": "regiao", "Estado": "estado",
                         "Regional": "regional", "Produto": "produto", "Itens Projeção": "item", "Valor": "valor",
-                        "Unidade": "unidade"})
+                        "Unidade": "unidade", "Estimativa": "estimativa"})
 
 gravar("resumo", m.get_table("Dados Mercado Total"),
        {"Fonte": "fonte", "Ano": "ano", "Espécie": "especie", "Área total": "area", "Total TH": "th"})

@@ -20,9 +20,10 @@ não conseguiu resolver (município sem código IBGE, grafia não mapeada) — l
 
 ## Decisões que não são óbvias
 
-- **WMR fica** nas vendas (o PBI tira): é o que faz o dashboard bater com o SQL e o relatório PDF.
+- **Regra de venda** (BASF, 05/10/2026): a do PBI Sales, data da nota e só `order_type` SBB e SDB, sem descontar devolução. TH = `inv_qty`. Difere do relatório PDF (`clients/basf`), que usa BR, sem DUMMY e líquido. WMR fica nas vendas.
 - **IBGE: os níveis BR, UF, ME e MU não somam entre si.** Total usa BR (UF com estado filtrado); pontos do mapa usam MU. O mesmo município aparece uma vez por espécie, de propósito. O `Cód.` do PBI não é confiável como código IBGE: em MU o `cod` é resolvido por nome + UF contra `municipios`, e o que não casa vai para `pendencias.json`.
-- **CEPEA:** o item é seleção única, padrão "Área Cepea" como no PBI; linhas só com região (sem estado) são descartadas.
-- **ABCSEM:** a aba Mercado mostra todas as espécies, como o PBI; Comparativo e a âncora de conferência usam só as espécies BASF.
-- **Vendas:** o mês de corte do YTD é automático (mês da última venda no ano corrente, 12 em ano fechado) ou escolhido no seletor (`corte` no hash).
-- **Sales** (`sales.html`, spec `2026-10-02-basf-sales-design.md`): mesmo `montarDashboard` com o painel `SALES`. Lê o mesmo `vendas` do BI Mercado; o RTV já vem com a carteira do PBI Sales (BR10→BR02 em 3 clientes no WMW, BR04/BR07 como "(ex-RTV)"). As 3 abas compartilham filtros.
+- **CEPEA:** o item é seleção única, padrão "Área Cepea" como no PBI. Entram o "Consolidado" e a "Estimativa agosto/24", que se complementam por produto (2023 mistura as duas, 2024 só tem a estimativa). Só hectare: "Mi. Planta" fica fora. Linha só de região cai quando o mesmo produto/ano/estimativa vem por estado.
+- **ABCSEM:** a aba Mercado mostra todas as espécies e o segmento bruto (Híbrido, OP...), como o PBI; Comparativo e a âncora de conferência usam só as espécies BASF.
+- **BASF no Comparativo:** área de semeio direto (2020: 122.060 ha, confirmado pela BASF), recalculada da tabela do estudo. O resumo do PBI soma o transplantio (125.428).
+- **Vendas:** o corte do YTD é automático (dia da última venda no ano corrente, como o PBI; 12 em ano fechado) ou um mês escolhido no seletor (`corte` no hash).
+- **Sales** (`sales.html`, spec `2026-10-02-basf-sales-design.md`): mesmo `montarDashboard` com o painel `SALES`. Lê o mesmo `vendas` do BI Mercado; o RTV já vem com a carteira do PBI Sales (BR10→BR02 em 3 clientes no WMW, BR04/BR07 com o nome, junto com os demais. As 3 abas compartilham filtros.

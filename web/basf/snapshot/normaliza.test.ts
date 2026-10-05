@@ -83,6 +83,10 @@ describe("limparCepea", () => {
     const ls = [l(null, "Área IBGE", 300), l("Paraná", "Área IBGE", 200), l("Santa Catarina", "Área IBGE", 100)];
     expect(limparCepea(ls).map((x) => x.valor)).toEqual([200, 100]);
   });
+  test("estimativas diferentes se complementam: a de uma não derruba a linha de região da outra", () => {
+    const ls = [{ ...l(null, "Área Cepea", 300, "ha.", 2023), estimativa: "Consolidado" }, { ...l("Paraná", "Área Cepea", 200, "ha.", 2023), estimativa: "Estimativa agosto/24" }];
+    expect(limparCepea(ls).map((x) => x.valor)).toEqual([300, 200]);
+  });
   test("linha só de região fica quando não há estado para o produto/ano/item", () => {
     const ls = [l(null, "Área IBGE", 300, "ha.", 2003), l("Paraná", "Área IBGE", 200, "ha.", 2004)];
     expect(limparCepea(ls).map((x) => x.valor)).toEqual([300, 200]);
@@ -120,9 +124,9 @@ describe("rtvDe", () => {
     expect(rtvDe("BR10", "AGRICOLA FAMOSA S/A", "WMW", nomes)).toEqual({ cod: "BR10", rtv: "Milena Defensor" });
     expect(rtvDe("BR01", "A SEMENTEIRA PROD AGR LTDA", "WMW", nomes).cod).toBe("BR01");
   });
-  test("ex-RTV rotulado; código sem cadastro mostra o código; sem código é Sem RTV", () => {
-    expect(rtvDe("BR04", "X", "MEM", nomes).rtv).toBe("Antonio Junior (ex-RTV)");
-    expect(rtvDe("BR07", "X", "MEM", nomes).rtv).toBe("Antônio Pierro (ex-RTV)");
+  test("ex-RTV com o nome, junto com os demais; código sem cadastro mostra o código; sem código é Sem RTV", () => {
+    expect(rtvDe("BR04", "X", "MEM", nomes).rtv).toBe("Antonio Junior");
+    expect(rtvDe("BR07", "X", "MEM", nomes).rtv).toBe("Antônio Pierro");
     expect(rtvDe("BR99", "X", "MEM", nomes)).toEqual({ cod: "BR99", rtv: "BR99" });
     expect(rtvDe(null, "X", "MEM", nomes)).toEqual({ cod: null, rtv: "Sem RTV" });
   });

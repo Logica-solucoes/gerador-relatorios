@@ -77,13 +77,28 @@ await gravar("cepea", limparCepea(await ler("cepea")).map((c) => {
   };
 }));
 
-await gravar("resumo", (await ler("resumo")).map((r) => ({
+// O resumo do PBI traz a BASF com semeio + transplantio (2020: 125.428 ha). A BASF confirmou a de semeio
+// direto (122.060), a da página BASF BI: as linhas BASF saem da própria tabela do estudo.
+const basfBruto = await ler("basf");
+const somarBasf = (dims: string[]) => {
+  const m = new Map<string, Linha>();
+  for (const b of basfBruto) {
+    if (num(b.ano) == null) continue;
+    const l: Linha = { fonte: "BASF", ano: num(b.ano), especie: txt(b.cropDesc), ...Object.fromEntries(dims.map((d) => [d, txt(b[d])])), area: 0, th: 0 };
+    const k = JSON.stringify(Object.values(l).slice(0, -2));
+    const acc = m.get(k) ?? m.set(k, l).get(k)!;
+    acc.area = (acc.area as number) + (num(b.area) ?? 0);
+    acc.th = (acc.th as number) + (num(b.th) ?? 0);
+  }
+  return [...m.values()];
+};
+await gravar("resumo", [...(await ler("resumo")).filter((r) => r.fonte !== "BASF").map((r) => ({
   fonte: r.fonte, ano: num(r.ano), especie: txt(r.especie), area: num(r.area), th: num(r.th),
-})));
-await gravar("resumoSeg", (await ler("resumoSeg")).map((r) => ({
+})), ...somarBasf([])]);
+await gravar("resumoSeg", [...(await ler("resumoSeg")).filter((r) => r.fonte !== "BASF").map((r) => ({
   fonte: r.fonte, ano: num(r.ano), especie: txt(r.especie), segmento: txt(r.segmento), hy: txt(r.hy),
   crop: txt(r.crop), area: num(r.area), th: num(r.th),
-})));
+})), ...somarBasf(["segmento", "hy", "crop"])]);
 
 await gravar("clientes", (await ler("clientes")).map((k) => ({
   cliente: txt(k.cliente), crop: txt(k.crop), hotspot: limparHotspot(k.hotspot), rtv: txt(k.rtv),
@@ -106,12 +121,12 @@ for (const v of vendasBruto.linhas) {
   const s2 = seg2.get(String(v.item));
   const r = rtvDe(txt(v.rtvCod), txt(v.cliente), txt(v.kind), nomesRtv);
   const l: Linha = {
-    ano: v.ano, mes: v.mes, crop, variedade: txt(v.item)?.replace(/^SEMENTES /, "") ?? "Sem variedade",
+    ano: v.ano, mes: v.mes, dia: v.dia, crop, variedade: txt(v.item)?.replace(/^SEMENTES /, "") ?? "Sem variedade",
     rtv: r.rtv, regional: regionalPor.get(String(r.cod)) ?? "Sem regional", cliente: txt(v.cliente),
     hotspot: hotspotPor.get(`${v.custNo}|${crop}`) ?? null,
     segmento: s2 ? segFinal.get(s2) ?? s2 : null, valor: 0, th: 0,
   };
-  const k = [l.ano, l.mes, l.crop, l.variedade, l.rtv, l.regional, l.cliente, l.hotspot, l.segmento].join("|");
+  const k = [l.ano, l.mes, l.dia, l.crop, l.variedade, l.rtv, l.regional, l.cliente, l.hotspot, l.segmento].join("|");
   const acc = vendas.get(k) ?? vendas.set(k, l).get(k)!;
   acc.valor = (acc.valor as number) + (num(v.valor) ?? 0);
   acc.th = (acc.th as number) + (num(v.th) ?? 0);
