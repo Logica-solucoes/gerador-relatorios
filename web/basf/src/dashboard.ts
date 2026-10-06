@@ -6,12 +6,13 @@ import { esc } from "./shared/formato";
 import type { Aba, Carregar, Fonte, Recurso } from "./types";
 import type { Painel } from "./paineis";
 
-const gabarito = (titulo: string) => `
+// Sem título: no portal o cabeçalho da página já diz qual dashboard é.
+const GABARITO = `
   <header class="bmd-hero2">
-    <div class="bmd-hero2__titulo"><h1>${esc(titulo)}</h1><small data-el="ultima"></small></div>
+    <nav class="bmd-tabs" role="tablist" data-el="tabs"></nav>
+    <small data-el="ultima"></small>
     <div class="bmd-hero2__marca" aria-label="SHIFT BI · BASF Nunhems"><em>SHIFT BI</em><div><b>BASF</b><i></i><span>nunhems</span></div></div>
   </header>
-  <nav class="bmd-tabs" role="tablist" data-el="tabs"></nav>
   <div class="bmd-barra2"><div class="bmd-barra2__chips" data-el="chips"></div><div class="bmd-barra2__ctl" data-el="ctl"></div></div>
   <div class="bmd-aviso" data-el="aviso" hidden></div>
   <main class="bmd-corpo" data-el="corpo"></main>`;
@@ -20,7 +21,7 @@ export interface Montado { destruir(): void }
 
 /** `usarHash = false` no portal: o router do Aurelia é dono da URL e o estado não persiste. */
 export function montarDashboard(host: HTMLElement, carregar: Carregar, painel: Painel, usarHash = true): Montado {
-  const shell = criarShell(host, gabarito(painel.titulo));
+  const shell = criarShell(host, GABARITO);
   let estado: Estado = deHash(usarHash ? location.hash : "", painel.abas.map((a) => a.id));
   const dados: Dados = {};
   const pendentes = new Map<Recurso, Promise<void>>();
