@@ -29,7 +29,7 @@
 - **`tsconfig` do portal tem `lib: ["es2015","dom"]` e `target: es5`.** O código do lab compilado com essas opções dá 71 erros (`includes`, `Object.entries/fromEntries`, `flatMap`, `at`, `Object.hasOwn`, `finally`, spread de `Set`/`Map`). Com `lib: ["es2022","dom","dom.iterable"]` + `downlevelIteration: true` dá 0. Testado com o `tsc` 4.9.4 do portal.
 - **Router com `pushState: true`** (`app.ts:121`). O lab grava estado em `location.hash` via `history.replaceState` — por isso o parâmetro `usarHash` (Task 1).
 - **`core_route` não tem sequence** (máx. local = 19); `core_menu` usa `sq_core_menu`. Rotas e menus só aparecem após novo login (ficam no JWT/no carregamento do `app.ts`).
-- **Push na `master` do repo Basf faz deploy na Azure** (`.github/workflows/master_portalbasf.yml`). Todo trabalho no Basf vai na branch `feat/shift-bi-dashboards`; merge/push só na Task 8, com confirmação do usuário.
+- **Push na `master` do repo Basf faz deploy na Azure** (`.github/workflows/master_portalbasf.yml`). Todo trabalho no Basf vai na branch `feat/shift-bi-dashboards`. Este plano **nunca** faz merge nem push no Basf — deploy é do usuário, fora do plano.
 - O dev server do front não tem proxy para a API: teste ponta a ponta = `npm run build` → `copytoprod.sh` → back em https://localhost:5001.
 
 ## Mapa de arquivos
@@ -53,7 +53,7 @@
 - Lote 1 (paralelo): Task 1, Task 3, Task 4, Task 5.
 - Lote 2: Task 2 (precisa das tabelas da Task 3 no banco local), Task 6 (precisa da 1 e da 5).
 - Lote 3: Task 7 (verificação ponta a ponta, parte manual com o usuário).
-- Task 8 (produção) **só com ordem explícita do usuário**.
+- Lote 4: Task 8 (ensaio de produção no clone local).
 
 ---
 
@@ -627,16 +627,44 @@ Liste para o usuário o que passou e o que não passou, com print/erro. Não fec
 
 ---
 
-### Task 8: Produção (só com ordem explícita do usuário)
+### Task 8: Ensaio de produção no clone local
 
-Cada passo aqui é de mão única (deploy automático, banco da Azure). Peça confirmação antes de **cada** um.
+Depende da Task 7. O banco local `Basf` é clone do de produção: aqui se ensaia, do zero e na ordem real, o que o usuário vai rodar na Azure. **Nada sai da máquina** — sem merge, sem push, sem conexão com a Azure.
 
-- [ ] **Step 1: Deploy do código** — merge de `feat/shift-bi-dashboards` na `master` do Basf e push (dispara `master_portalbasf.yml`). Sem as linhas de menu, ninguém vê a rota nova; seguro ir antes do SQL.
-- [ ] **Step 2: SQL na Azure** — rodar `001_shift_bi_dashboards.sql` no banco do portal na Azure. Os `THROW` do começo param o script se os ids 89/94/18/26 forem diferentes lá; nesse caso, pare e reporte.
-- [ ] **Step 3: Carga na Azure** — `PORTAL_DB=<banco da Azure> bun --env-file=<env com credenciais da Azure> run web/basf/snapshot/banco.ts`. Sem `DB_TRUST_CERT` (ver `## Banco` no `CLAUDE.md`).
-- [ ] **Step 4: Avisar os usuários** para deslogar e logar de novo.
+- [ ] **Step 1: Voltar o banco ao estado de produção**
+
+```bash
+cd C:/Users/floppydisk/Documents/Trabalho/Basf
+PW=$(grep -o 'Initial Catalog=Basf; User Id=sa;Password=[^;]*' .vscode/launch.json | head -1 | sed 's/.*Password=//')
+sqlcmd -S localhost -U sa -P "$PW" -d Basf -b -i LogicaBasfBack/migrations/rollback_001.sql
+sqlcmd -S localhost -U sa -P "$PW" -d Basf -W -Q "SELECT COUNT(*) FROM core_route WHERE route_name='dashboard-shift'; SELECT COUNT(*) FROM sys.tables WHERE name LIKE 'basf_dash_%'"
+```
+
+Expected: `0` e `0`.
+
+- [ ] **Step 2: SQL, como seria na Azure**
+
+```bash
+sqlcmd -S localhost -U sa -P "$PW" -d Basf -b -i LogicaBasfBack/migrations/001_shift_bi_dashboards.sql
+```
+
+Expected: roda sem `THROW`. Se algum `THROW` disparar, pare e reporte — na Azure ia disparar igual.
+
+- [ ] **Step 3: Carga, como seria na Azure**
+
+No Gerador-Relatorios: `PORTAL_DB=Basf bun run dash:basf:banco`. Expected: as mesmas 10 linhas da Task 2 Step 3.
+
+- [ ] **Step 4: Portal com o banco recém-montado**
+
+Com o back da Task 7 Step 3 no ar (suba de novo se caiu), o usuário desloga, loga e repete os itens 1, 3, 4 e 5 do checklist da Task 7.
+
+- [ ] **Step 5: Reportar**
+
+Passe ao usuário o resultado e a sequência exata que funcionou (SQL → carga → relogin) — é o roteiro que ele usa na Azure. Não feche a branch.
 
 ## Fora deste plano
+
+- **Produção (com o usuário, depois do ensaio da Task 8):** merge de `feat/shift-bi-dashboards` na `master` do Basf + push (dispara `master_portalbasf.yml`; sem as linhas de menu ninguém vê a rota, então o código pode ir antes do SQL) → `001_shift_bi_dashboards.sql` no banco da Azure → carga com `PORTAL_DB=<banco da Azure>` e o env da Azure, **sem** `DB_TRUST_CERT` (ver `## Banco` no `CLAUDE.md`) → avisar os usuários para deslogar e logar.
 
 - Importação pelo portal (`etl_mapping`) das fontes do Mercado — quando a BASF precisar atualizar sozinha.
 - `vendas` ao vivo a partir de `basf_vendas` — hoje é snapshot (decisão 2).
