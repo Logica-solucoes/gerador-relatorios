@@ -18,9 +18,10 @@ const gabarito = (titulo: string) => `
 
 export interface Montado { destruir(): void }
 
-export function montarDashboard(host: HTMLElement, carregar: Carregar, painel: Painel): Montado {
+/** `usarHash = false` no portal: o router do Aurelia é dono da URL e o estado não persiste. */
+export function montarDashboard(host: HTMLElement, carregar: Carregar, painel: Painel, usarHash = true): Montado {
   const shell = criarShell(host, gabarito(painel.titulo));
-  let estado: Estado = deHash(location.hash, painel.abas.map((a) => a.id));
+  let estado: Estado = deHash(usarHash ? location.hash : "", painel.abas.map((a) => a.id));
   const dados: Dados = {};
   const pendentes = new Map<Recurso, Promise<void>>();
   const falhas = new Map<Recurso, string>();
@@ -46,7 +47,7 @@ export function montarDashboard(host: HTMLElement, carregar: Carregar, painel: P
 
   function mudar(f: (e: Estado) => Estado) {
     estado = f(estado);
-    history.replaceState(null, "", paraHash(estado));
+    if (usarHash) history.replaceState(null, "", paraHash(estado));
     render();
   }
 
