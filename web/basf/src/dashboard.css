@@ -49,7 +49,7 @@
 .bmd-seg2 + .bmd-voltar { margin-left: 16px; vertical-align: middle; }
 .bmd-seg2 button.is-on { background: var(--o100); color: var(--o700); }
 .bmd-seg2 button:disabled { cursor: not-allowed; opacity: .45; }
-.bmd-sel { font: inherit; font-weight: 600; font-size: 13px; color: var(--muted); padding: 5px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); cursor: pointer; }
+.bmd-sel { display: inline-block; width: auto; height: auto; font: inherit; font-weight: 600; font-size: 13px; color: var(--muted); padding: 5px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); cursor: pointer; }
 
 .bmd-aviso { margin: 12px var(--lado) 0; padding: 8px 12px; border-radius: 8px; background: var(--o50); border: 1px solid var(--accent-line); color: var(--o700); font-size: 13px; }
 .bmd-corpo { padding: 16px var(--lado) 24px; display: grid; gap: 12px; animation: bmd-entra .2s ease-out; }
@@ -175,3 +175,17 @@
 .bmd-grp--clic svg { width: 14px; height: 14px; vertical-align: -2px; }
 .bmd-tot td { font-weight: 800; border-top: 2px solid var(--ink); border-bottom: 0; }
 @media (max-width: 760px) { .bmd-tb2--anos :is(th, td):nth-child(2) { display: none; } .bmd-tb2--anos td:first-child { max-width: 160px; } }
+
+/* Materialize do portal: `button:focus { background-color }` (0,1,1) pinta o botão após o clique.
+   Reafirma o fundo próprio com `.bmd` na frente (0,2,1); o outline vem de `.bmd :focus-visible`. */
+.bmd .bmd-tabs button:focus, .bmd .bmd-seg2 button:focus, .bmd .bmd-leg2 button:focus,
+.bmd .bmd-erro button:focus, .bmd .bmd-ord:focus { background: none; }
+.bmd .bmd-seg2 button.is-on:focus { background: var(--o100); }
+.bmd .bmd-chip-x:focus { background: none; }
+.bmd .bmd-chip-x:hover, .bmd .bmd-chip-x:focus:hover { background: var(--o100); }
+.bmd .bmd-par > button:focus, .bmd .bmd-par2 button:focus { background: none; }
+.bmd .bmd-par > button:hover, .bmd .bmd-par > button:focus:hover { background: var(--o50); }
+.bmd .bmd-par2 button:hover, .bmd .bmd-par2 button:focus:hover { background: rgba(0,0,0,.04); }
+.bmd .bmd-bl__i:focus { background: none; }
+.bmd .bmd-bl__i:hover, .bmd .bmd-bl__i:focus:hover { background: var(--o50); }
+.bmd .bmd-bl__i.is-on, .bmd .bmd-bl__i.is-on:focus { background: var(--o100); }
