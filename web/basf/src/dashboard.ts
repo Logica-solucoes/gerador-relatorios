@@ -7,9 +7,10 @@ import type { Aba, Carregar, Fonte, Recurso } from "./types";
 import type { Painel } from "./paineis";
 
 // Sem título: no portal o cabeçalho da página já diz qual dashboard é.
+// Abas em `div`, não `nav`: o Materialize do portal pinta todo `nav` de laranja com altura fixa.
 const GABARITO = `
   <header class="bmd-hero2">
-    <nav class="bmd-tabs" role="tablist" data-el="tabs"></nav>
+    <div class="bmd-tabs" role="tablist" data-el="tabs"></div>
     <small data-el="ultima"></small>
     <div class="bmd-hero2__marca" aria-label="SHIFT BI · BASF Nunhems"><em>SHIFT BI</em><div><b>BASF</b><i></i><span>nunhems</span></div></div>
   </header>
