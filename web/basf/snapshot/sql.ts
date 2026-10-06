@@ -18,7 +18,11 @@ const valor = (v: unknown, col: string) =>
   : INTEIRAS.has(col) || /e/i.test(String(v)) ? String(v)
   : `${v}E0`;
 
-const partes = ["SET NOCOUNT ON;", "SET XACT_ABORT ON;", "BEGIN TRAN;"];
+const partes = [
+  "-- Dados dos dashboards SHIFT BI (basf_dash_*). Gerado por Gerador-Relatorios: bun run dash:basf:sql.",
+  "-- Não editar à mão: refaça o snapshot e gere de novo. Apaga e regrava; pode rodar mais de uma vez.",
+  "SET NOCOUNT ON;", "SET XACT_ABORT ON;", "BEGIN TRAN;",
+];
 for (const r of RECURSOS) {
   const t = (await Bun.file(`${AQUI}../dados/${r}.json`).json()) as TabelaFio;
   const tabela = `basf_dash_${r}`;
