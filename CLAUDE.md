@@ -44,6 +44,8 @@ A imagem sobe `core/server.ts`: o n8n chama `POST /gerar/<cliente>` e cada chama
 credencial de cliente nenhum. `--publicar` chama `clients/<id>/publicar.ts` depois do PDF; cliente
 sem esse arquivo não publica. Deploy, verificação e atualização: `deploy/README.md`.
 Publicar imagem: `bun run imagem <versão>` (recusa com git sujo).
+Cada execução grava `out/logs/AAAA-MM-DD.log` (pino, 90 dias, rotação à mão em `core/log.ts`) e
+responde ao n8n `{ ok, id, resumo }` — o `resumo` é o corpo do e-mail de falha.
 
 ## Tamanho da imagem: dois números, um deles engana
 
@@ -131,7 +133,7 @@ Alvo: 88–99%. Abaixo de 85% sobra vão visível; acima de 99% a página parte 
 - Reintroduzir Chart.js ou qualquer render em canvas — rasteriza e borra no PDF.
 - Adicionar Playwright/Puppeteer. Foi avaliado e descartado: pesa 6× mais e não suporta Paged
   Media, que é justamente o motivo do WeasyPrint.
-- Adicionar dependência para o que resolve em algumas linhas. Hoje são 3.
+- Adicionar dependência para o que resolve em algumas linhas. Hoje são 5.
 
 ## UI stack (`web/basf/`)
 

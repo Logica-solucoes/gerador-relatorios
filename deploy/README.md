@@ -56,3 +56,16 @@ Versão publicada: `bun run imagem <versão>` na máquina de desenvolvimento, co
 
 Mesmo POST com `{"hoje":"AAAA-MM-DD"}` de um dia da semana **seguinte** à que se quer.
 Semana já publicada (mesmo título e referência) é pulada — para republicar, apague no portal antes.
+
+## Logs
+
+Cada chamada que roda o build grava uma linha JSON em `out/logs/AAAA-MM-DD.log` (dia de
+Brasília), com a saída completa do build. Arquivos com mais de 90 dias são apagados sozinhos.
+
+O e-mail de falha traz o id da execução. Para ver a saída completa dela:
+
+    cd /opt/gerador-relatorios
+    grep -h '"id":"<id>"' out/logs/*.log | docker compose exec -T gerador \
+      bun -e 'console.log(JSON.parse(await Bun.stdin.text()).saida)'
+
+Falhas do dia: `grep -h '"level":"error"' out/logs/$(date +%F).log`.
