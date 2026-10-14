@@ -1,5 +1,8 @@
 import { expect, test } from "bun:test";
-import { resumir } from "./log";
+import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { gravar, limpar, novoId, resumir, textoResumo } from "./log";
 
 // Saídas reais coletadas no deploy de 2026-10-14 (stdout + stderr, nessa ordem).
 const LOGIN_FALHOU = `→ [vw_auditoria_semanal] carregando dados…
@@ -61,4 +64,52 @@ test("falha sem linha error: usa a última linha não vazia", () => {
 
 test("ignora cores ANSI", () => {
   expect(resumir("\x1b[31merror\x1b[0m: boom", 1).erro).toBe("boom");
+});
+
+// Meio-dia em Brasília: o dia local é o mesmo em qualquer fuso de -11h a +11h.
+const AGORA = new Date("2026-10-14T12:00:00-03:00");
+
+test("id tem data, hora e sufixo aleatório", () => {
+  expect(novoId(AGORA)).toMatch(/^20261014-\d{6}-[0-9a-f]{4}$/);
+  expect(novoId(AGORA)).not.toBe(novoId(AGORA));
+});
+
+test("texto do resumo omite linhas sem valor e só diz 'parou em' quando falhou", () => {
+  const falha = textoResumo({
+    cliente: "vw_auditoria_semanal", id: "20261014-120000-abcd", arquivo: "out/logs/2026-10-14.log",
+    duracaoMs: 42_300, exitCode: 1, resumo: { etapa: "gerando PDF…", erro: "weasyprint falhou" },
+  });
+  expect(falha).toBe([
+    "Cliente: vw_auditoria_semanal",
+    "Parou em: gerando PDF…",
+    "Erro: weasyprint falhou",
+    "Duração: 42s",
+    "Log completo: out/logs/2026-10-14.log (id 20261014-120000-abcd)",
+  ].join("\n"));
+
+  const ok = textoResumo({
+    cliente: "x", id: "i", arquivo: "a", duracaoMs: 1000, exitCode: 0,
+    resumo: { etapa: "gerando PDF…", semana: "2026-10-05 a 2026-10-11" },
+  });
+  expect(ok).not.toContain("Parou em");
+  expect(ok).toContain("Semana: 2026-10-05 a 2026-10-11");
+});
+
+test("gravar escreve uma linha JSON no arquivo do dia, com nível legível", () => {
+  const dir = mkdtempSync(join(tmpdir(), "log-"));
+  const arquivo = gravar(dir, AGORA, { id: "a", saida: "linha 1\nlinha 2" }, false);
+  gravar(dir, AGORA, { id: "b" }, true);
+
+  expect(arquivo).toBe(join(dir, "2026-10-14.log"));
+  const [r1, r2] = readFileSync(arquivo, "utf8").trim().split("\n").map((l) => JSON.parse(l));
+  expect(r1).toMatchObject({ level: "info", id: "a", saida: "linha 1\nlinha 2" });
+  expect(r2).toMatchObject({ level: "error", id: "b" });
+  expect(typeof r1.time).toBe("string"); // ISO, não epoch
+});
+
+test("limpar apaga só logs com mais de 90 dias", () => {
+  const dir = mkdtempSync(join(tmpdir(), "log-"));
+  for (const f of ["2026-07-15.log", "2026-07-16.log", "2026-10-14.log", "anotacao.txt"]) writeFileSync(join(dir, f), "");
+  limpar(dir, AGORA);
+  expect(readdirSync(dir).sort()).toEqual(["2026-07-16.log", "2026-10-14.log", "anotacao.txt"]);
 });
