@@ -24,6 +24,7 @@
     "@observablehq/plot": "^0.6.17",
     "d3-array": "^3.2.4",
     "linkedom": "^0.18.13",
-    "mssql": "^12.7.0"
+    "mssql": "^12.7.0",
+    "pino": "^10.4.0"
   }
 }
