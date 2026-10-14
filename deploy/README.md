@@ -6,8 +6,8 @@ O gerador roda como container na mesma rede Docker do n8n. O n8n chama
 ## Primeira vez
 
 ```bash
-mkdir -p /opt/gerador-relatorios/env /opt/gerador-relatorios/out
-cd /opt/gerador-relatorios
+mkdir -p ~/Projetos/gerador-relatorios/env ~/Projetos/gerador-relatorios/out
+cd ~/Projetos/gerador-relatorios
 # copie deploy/compose.yaml deste repositório para cá
 chown 1000:1000 out            # o container roda como usuário bun (uid 1000)
 
@@ -47,7 +47,7 @@ Falhou o 1 com timeout de conexão? Liberar o IP de saída do servidor no firewa
 ## Atualizar
 
 ```bash
-cd /opt/gerador-relatorios && docker compose pull && docker compose up -d
+cd ~/Projetos/gerador-relatorios && docker compose pull && docker compose up -d
 ```
 
 Versão publicada: `bun run imagem <versão>` na máquina de desenvolvimento, com git limpo.
@@ -64,7 +64,7 @@ Brasília), com a saída completa do build. Arquivos com mais de 90 dias são ap
 
 O e-mail de falha traz o id da execução. Para ver a saída completa dela:
 
-    cd /opt/gerador-relatorios
+    cd ~/Projetos/gerador-relatorios
     grep -h '"id":"<id>"' out/logs/*.log | docker compose exec -T gerador \
       bun -e 'console.log(JSON.parse(await Bun.stdin.text()).saida)'
 

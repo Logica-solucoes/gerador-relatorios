@@ -1,4 +1,4 @@
-# Produção: servidor do n8n. Copie esta pasta para /opt/gerador-relatorios/ (ver README.md).
+# Produção: servidor do n8n. Copie esta pasta para ~/Projetos/gerador-relatorios/ (ver README.md).
 services:
   gerador:
     image: logicasolucoesanaliticas/logicaprivado:gerador-relatorios-latest
