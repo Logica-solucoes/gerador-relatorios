@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { janela, semanaPassada } from "./queries";
-import { campos, jaPublicado } from "./publicar";
+import { campos, extrairId, jaPublicado } from "./publicar";
 
 const dia = (s: string) => new Date(s + "T00:00:00Z");
 
@@ -24,4 +24,10 @@ test("duplicado exige título e referência iguais", () => {
   expect(jaPublicado(lista, { titulo: "Relatório Semanal Auditoria - Semana 3", referencia: "Setembro/2026" })).toBe(true);
   expect(jaPublicado(lista, { titulo: "Relatório Semanal Auditoria - Semana 3", referencia: "Outubro/2026" })).toBe(false);
   expect(jaPublicado(lista, { titulo: "Relatório Semanal Auditoria - Semana 4", referencia: "Setembro/2026" })).toBe(false);
+});
+
+test("id do relatório vem em data.id", () => {
+  expect(extrairId({ id: 10 })).toBe("10");
+  expect(extrairId({})).toBeUndefined();
+  expect(extrairId(null)).toBeUndefined();
 });

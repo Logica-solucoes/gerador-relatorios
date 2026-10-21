@@ -80,7 +80,8 @@ if (import.meta.main) {
       console.log(`· ${client} não tem publicar.ts — só gera`);
     } else {
       const { publicar } = await import(`../clients/${client}/publicar.ts`);
-      await publicar(`out/${client}/relatorio.pdf`);
+      const id = await publicar(`out/${client}/relatorio.pdf`);
+      if (id) console.log(`relatorio_id: ${id}`);
     }
   }
 }

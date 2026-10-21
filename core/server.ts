@@ -51,7 +51,7 @@ export function app(token: string, rodar: Rodar = rodarBuild, dirLog = "out/logs
       try {
         arquivo = gravar(dirLog, inicio, {
           id, cliente: client, hoje: hoje ?? null, semana: r.semana ?? null,
-          exitCode, duracaoMs, etapa: r.etapa ?? null, erro: r.erro ?? null, saida,
+          exitCode, duracaoMs, relatorioId: r.relatorioId ?? null, etapa: r.etapa ?? null, erro: r.erro ?? null, saida,
         }, exitCode !== 0);
         limpar(dirLog, inicio);
       } catch (e) {
@@ -59,7 +59,7 @@ export function app(token: string, rodar: Rodar = rodarBuild, dirLog = "out/logs
       }
       console.log(`[${client}] ${id} exit ${exitCode}${r.erro ? ` — ${r.erro}` : ""}`);
       const resumo = textoResumo({ cliente: client, id, arquivo, duracaoMs, exitCode, resumo: r });
-      return Response.json({ ok: exitCode === 0, id, resumo }, { status: exitCode === 0 ? 200 : 500 });
+      return Response.json({ ok: exitCode === 0, id, relatorioId: r.relatorioId ?? null, resumo }, { status: exitCode === 0 ? 200 : 500 });
     } finally {
       rodando.delete(client);
     }

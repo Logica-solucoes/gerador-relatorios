@@ -171,10 +171,10 @@ cada chamada roda `core/build.ts --publicar` num processo filho que recebe só
 | Rota | Resposta |
 |---|---|
 | `GET /saude` | `200 ok`, sem token (healthcheck) |
-| `POST /gerar/<cliente>` com `Authorization: Bearer <GERADOR_TOKEN>` e corpo opcional `{"hoje":"AAAA-MM-DD"}` | `200 { ok: true, id, resumo }` ou `500 { ok: false, id, resumo }` |
+| `POST /gerar/<cliente>` com `Authorization: Bearer <GERADOR_TOKEN>` e corpo opcional `{"hoje":"AAAA-MM-DD"}` | `200 { ok: true, id, relatorioId, resumo }` ou `500 { ok: false, id, relatorioId, resumo }` |
 | recusas | `401` token errado · `404` cliente sem pasta ou sem env · `400` `hoje` inválido · `409` o mesmo cliente já está rodando |
 
-O `resumo` é texto curto (cliente, semana, etapa onde parou, erro, duração, id do log) e vira o
+`id` é o do log; `relatorioId` é o id do relatório no portal (`null` se o cliente não publica ou a API não devolveu). O `resumo` é texto curto (cliente, semana, etapa onde parou, erro, duração, id do log) e vira o
 corpo do e-mail de falha. A saída completa de cada execução fica em `out/logs/AAAA-MM-DD.log`,
 uma linha JSON por chamada, com 90 dias de retenção (`core/log.ts`).
 
