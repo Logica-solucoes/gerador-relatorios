@@ -34,6 +34,13 @@
 /* nowrap: "Auditoria de Leads" quebrava em duas linhas e desalinhava o
    cabeçalho inteiro, porque o flex aperta o item da esquerda primeiro. */
 .capa-semanal .logo { white-space: nowrap; }
+/* Logos e título maiores que o core (5mm / 14.5x9mm / 11pt). Cada folha leva o
+   cabeçalho: o ganho de altura sai do preenchimento das 3 páginas, então meça. */
+.capa-semanal .logo { gap: 3.5mm; font-size: 14pt; }
+.capa-semanal .logo .mark { width: 7mm; height: 7mm; }
+.capa-semanal .logo .mark.vw { width: 18.5mm; height: 11.5mm; }
+.capa-semanal .logo .sub { font-size: 14pt; line-height: 1; }
+.capa-semanal { padding-bottom: 2mm; margin-bottom: 2mm; }
 
 .titulo-semanal { font-size: 20pt; margin-bottom: 1.5mm; }
 .sub { font-size: 8.5pt; line-height: 1.45; max-width: 100%; }

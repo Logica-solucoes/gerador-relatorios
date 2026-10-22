@@ -153,7 +153,7 @@ export function documento(d: Dados): string {
   return `
 <div class="page">
   <header class="capa-semanal">
-    <div class="logo"><span class="mark"></span><span class="mark vw"></span>Volkswagen <span class="sub">Auditoria de Leads</span></div>
+    <div class="logo"><span class="mark"></span><span class="mark vw"></span><span class="sub">Auditoria de Leads</span></div>
     <div class="periodo">Semana de <strong>${n.rotuloSemana(d.periodo.atual)}</strong><br>
     <span class="muted">vs. ${n.rotuloSemana(d.periodo.anterior)}</span></div>
   </header>
@@ -198,7 +198,7 @@ export function documento(d: Dados): string {
 
 <div class="page">
   <header class="capa-semanal">
-    <div class="logo"><span class="mark"></span><span class="mark vw"></span>Volkswagen <span class="sub">Auditoria de Leads</span></div>
+    <div class="logo"><span class="mark"></span><span class="mark vw"></span><span class="sub">Auditoria de Leads</span></div>
     <div class="periodo muted">Últimas ${d.periodo.semanasJanela} semanas<br>
     <span>${dia(d.periodo.janelaInicio)} a ${dia(d.periodo.fim)}</span></div>
   </header>
@@ -254,7 +254,7 @@ export function documento(d: Dados): string {
 
 <div class="page">
   <header class="capa-semanal">
-    <div class="logo"><span class="mark"></span><span class="mark vw"></span>Volkswagen <span class="sub">Auditoria de Leads</span></div>
+    <div class="logo"><span class="mark"></span><span class="mark vw"></span><span class="sub">Auditoria de Leads</span></div>
     <div class="periodo">Mês até <strong>${dia(d.mes.fim)}</strong><br>
     <span class="muted">${temMesAnterior ? `vs. ${n.rotuloIntervalo(d.mes.antInicio, d.mes.antFim)}` : "sem comparação com o mês anterior"}</span></div>
   </header>
