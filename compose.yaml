@@ -16,6 +16,7 @@ services:
     #   docker compose run --rm --env-from-file clients/basf/.env -e CLIENT=basf -e DB_HOST=host.docker.internal relatorio
     extra_hosts:
       - "host.docker.internal:host-gateway"
+      - "host.containers.internal:host-gateway"
 
     volumes:
       - ./out:/app/out
@@ -39,3 +40,4 @@ services:
     cpus: 2.0
 
     # Sem healthcheck: job em batch, roda e sai. O exit code é o sinal.
+      
