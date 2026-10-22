@@ -15,6 +15,7 @@ function req(nome: string): string {
 export async function conectar() {
   return sql.connect({
     server: req("DB_HOST"),
+    port: Number(process.env.DB_PORT || 1433),
     user: req("DB_USER"),
     password: req("DB_PASS"),
     database: req("DB_NAME"),

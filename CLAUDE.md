@@ -71,7 +71,7 @@ Maior peso real, e o que fazer sobre cada um:
 
 **O alvo de produção é Azure SQL**; o SQL Server local é cópia de trabalho. Setup no README.
 
-Duas coisas que não podem regredir: `queries.ts` **não** tem default para nenhuma variável
+Duas coisas que não podem regredir: `queries.ts` **não** tem default para nenhuma variável (exceto `DB_PORT`, 1433, a porta padrão do SQL Server)
 (conectar no banco errado em silêncio é pior que quebrar), e `DB_TRUST_CERT` só existe para
 cert self-signed local — ligado contra a Azure remove a proteção contra MITM. `encrypt` é
 sempre `true`. `clients/*/.env` está no `.dockerignore`; não remova.

@@ -57,6 +57,7 @@ silêncio.
 | Variável | Para quê |
 |---|---|
 | `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME` | conexão SQL Server. `encrypt` é sempre ligado |
+| `DB_PORT` | opcional, porta do SQL Server (padrão 1433). `host,porta` no `DB_HOST` não funciona |
 | `DB_TRUST_CERT` | **vazio** para Azure (o certificado é validado). `=true` só em instância local com certificado self-signed. Ligado contra a Azure, desativa a proteção contra MITM |
 | `PORTAL_URL`, `PORTAL_LOGIN`, `PORTAL_SENHA` | só `vw_auditoria_semanal`, só usado com `--publicar` |
 | `HOJE` | só `vw_auditoria_semanal`: data que o relatório considera "hoje" (`AAAA-MM-DD`), para reprocessar uma semana antiga |

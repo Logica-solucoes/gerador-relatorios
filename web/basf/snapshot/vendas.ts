@@ -11,7 +11,7 @@ const AQUI = new URL(".", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$
 const req = (n: string) => { const v = process.env[n]; if (!v) throw new Error(`${n} não definida`); return v; };
 
 const pool = await sql.connect({
-  server: req("DB_HOST"), user: req("DB_USER"), password: req("DB_PASS"), database: "Basf",
+  server: req("DB_HOST"), port: Number(process.env.DB_PORT || 1433), user: req("DB_USER"), password: req("DB_PASS"), database: "Basf",
   options: { encrypt: true, trustServerCertificate: process.env.DB_TRUST_CERT === "true" },
   requestTimeout: 120000,
 });
