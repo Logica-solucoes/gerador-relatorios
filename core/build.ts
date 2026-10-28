@@ -1,3 +1,5 @@
+import { rmSync } from "node:fs";
+
 const PESOS = { 400: "normal", 500: "500", 600: "600", 700: "700" } as const;
 
 /** Embute as woff2 em base64 para o HTML rodar offline e o PDF carregar a fonte. */
@@ -50,6 +52,15 @@ ${theme}
 ${documento(dados)}
 </body>
 </html>`;
+
+  // Apaga antes: o servidor devolve este arquivo como contexto, e um resumo de
+  // rodada antiga junto de um build novo seria contexto plausível e errado.
+  rmSync(`out/${client}/resumo.txt`, { force: true });
+  if (await Bun.file(`clients/${client}/resumo.ts`).exists()) {
+    const { resumo } = await import(`../clients/${client}/resumo.ts`);
+    await Bun.write(`out/${client}/resumo.txt`, resumo(dados));
+    console.log(`✓ out/${client}/resumo.txt`);
+  }
 
   await Bun.write(`out/${client}/relatorio.html`, html);
   console.log(`✓ out/${client}/relatorio.html (${(html.length / 1024).toFixed(0)} KB)`);

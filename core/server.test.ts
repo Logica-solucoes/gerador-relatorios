@@ -95,3 +95,17 @@ test("segunda chamada concorrente do mesmo cliente é 409", async () => {
   solta();
   expect((await terceira).status).toBe(200);
 });
+
+test("contexto devolve o resumo.txt do cliente só em sucesso total", async () => {
+  const out = dirLog();
+  mkdirSync(join(out, "_template"));
+  writeFileSync(join(out, "_template", "resumo.txt"), "contexto da semana");
+  const sucesso = await app("t", ok, dirLog(), out)(req("/gerar/_template"));
+  expect((await sucesso.json()).contexto).toBe("contexto da semana");
+
+  const falha = await app("t", async () => ({ exitCode: 1, saida: "error: boom" }), dirLog(), out)(req("/gerar/_template"));
+  expect((await falha.json()).contexto).toBeNull();
+
+  const semArquivo = await app("t", ok, dirLog(), dirLog())(req("/gerar/_template"));
+  expect((await semArquivo.json()).contexto).toBeNull();
+});

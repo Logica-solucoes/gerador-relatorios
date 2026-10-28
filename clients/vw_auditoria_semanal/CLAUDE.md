@@ -34,6 +34,15 @@ que já era publicado à mão. N e o mês saem do **domingo** da semana lida: 28
 `Outubro/2026` Semana 1. Mesmo título + referência já no portal → não envia de novo, então o n8n pode
 repetir a chamada. O portal devolve erro com HTTP 200 e `status: 1`; `publicar.ts` checa o corpo.
 
+## Contexto para o chatbot
+
+`resumo.ts` gera um texto único (~3 mil caracteres) com as manchetes da semana e as definições dos
+números. `core/build.ts` grava em `out/vw_auditoria_semanal/resumo.txt` (apagando o anterior antes) e
+`core/server.ts` o devolve no campo `contexto` do response — só com exit code 0, senão `null`. Serve de
+ponto de partida para "como estamos essa semana?"; o chatbot consulta o banco para o resto, por isso o
+texto repete o recorte (data da auditoria, corte de 17/08, piso de amostra). Nunca é renderizado.
+Mudou uma definição de métrica? Atualize o bloco "COMO OS NÚMEROS SÃO CALCULADOS" de `resumo.ts`.
+
 ## O que este relatório é
 
 **Três páginas, densidade alta, sem capa e sem índice.** Página 1 = o pulso da semana (comparativo).

@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { gravar, limpar, novoId, resumir, textoResumo } from "./log";
 
 type Saida = { exitCode: number; saida: string };
@@ -19,7 +19,7 @@ async function rodarBuild(client: string, hoje?: string): Promise<Saida> {
   return { exitCode, saida: (out + err).trim() };
 }
 
-export function app(token: string, rodar: Rodar = rodarBuild, dirLog = "out/logs") {
+export function app(token: string, rodar: Rodar = rodarBuild, dirLog = "out/logs", dirOut = "out") {
   const rodando = new Set<string>(); // ponytail: lock em memória, basta com uma réplica
   return async (req: Request) => {
     const url = new URL(req.url);
@@ -59,7 +59,10 @@ export function app(token: string, rodar: Rodar = rodarBuild, dirLog = "out/logs
       }
       console.log(`[${client}] ${id} exit ${exitCode}${r.erro ? ` — ${r.erro}` : ""}`);
       const resumo = textoResumo({ cliente: client, id, arquivo, duracaoMs, exitCode, resumo: r });
-      return Response.json({ ok: exitCode === 0, id, relatorioId: r.relatorioId ?? null, resumo }, { status: exitCode === 0 ? 200 : 500 });
+      // Só com sucesso total: o build apaga o resumo.txt antigo antes de gerar, mas
+      // numa falha o arquivo pode ser de uma rodada que não terminou.
+      const contexto = exitCode === 0 && existsSync(`${dirOut}/${client}/resumo.txt`) ? readFileSync(`${dirOut}/${client}/resumo.txt`, "utf8") : null;
+      return Response.json({ ok: exitCode === 0, id, relatorioId: r.relatorioId ?? null, resumo, contexto }, { status: exitCode === 0 ? 200 : 500 });
     } finally {
       rodando.delete(client);
     }

@@ -1,0 +1,133 @@
+import type { Dados } from "./queries";
+
+// Dados de exemplo compartilhados pelos testes de narrativa e de resumo.
+
+export const semana = (over: Partial<Dados["atual"]> = {}): Dados["atual"] => ({
+  inicio: "2026-07-27",
+  txContato: 56.1,
+  nContato: 123,
+  semContato: 54,
+  npsGeral: 16.7,
+  nNps: 54,
+  auditados: 280,
+  vendas: 7,
+  txVendas: 2.5,
+  perdas: 3,
+  perdasAtendimento: 1,
+  perdasConcorrencia: 2,
+  faturamentoPerdido: 390_000,
+  naoFoiALoja: 19,
+  ...over,
+});
+
+export const base: Dados = {
+  periodo: { atual: "2026-07-27", anterior: "2026-07-20", janelaInicio: "2026-06-01", fim: "2026-08-02", semanasJanela: 8, inicioQuestionario: "2026-06-01" },
+  atual: semana(),
+  anterior: semana({ inicio: "2026-07-20", txContato: 53.3, nContato: 92, semContato: 43, npsGeral: -5.6, nNps: 36, txVendas: 2.4, perdas: 6 }),
+  serie: [
+    { inicio: "2026-06-29", tx: 45.6, n: 844, nps: 17.4, nNps: 281 },
+    { inicio: "2026-07-06", tx: 51.6, n: 91, nps: 8.6, nNps: 35 },
+    { inicio: "2026-07-13", tx: 56.0, n: 84, nps: 26.9, nNps: 26 },
+    { inicio: "2026-07-20", tx: 53.3, n: 92, nps: -5.6, nNps: 36 },
+    { inicio: "2026-07-27", tx: 56.1, n: 123, nps: 16.7, nNps: 54 },
+  ],
+  motivo: [
+    { motivo: "Não fui à concessionária", n: 171, pct: 35.3 },
+    { motivo: "Desisti de comprar", n: 108, pct: 22.3 },
+    { motivo: "Comprei um VW Zero", n: 71, pct: 14.7 },
+    { motivo: "Comprei de outra marca", n: 39, pct: 8.1 },
+  ],
+  totalMotivo: 484,
+  tempo: [
+    { tempo: "Até 30 minutos", n: 87, pct: 21.4 },
+    { tempo: "Até duas horas", n: 60, pct: 15.6 },
+    { tempo: "Até um dia", n: 95, pct: 24.7 },
+    { tempo: "Mais de um dia", n: 134, pct: 33.7 },
+  ],
+  totalTempo: 376,
+  npsTempo: [
+    { tempo: "Até 30 minutos", nps: 50.6, n: 87 },
+    { tempo: "Até duas horas", nps: 38.3, n: 60 },
+    { tempo: "Até um dia", nps: 22.1, n: 95 },
+    { tempo: "Mais de um dia", nps: -17.2, n: 134 },
+  ],
+  regional: [1, 2, 3, 4, 5, 6].map((r) => ({
+    regional: String(r),
+    atual: { tx: 50 + r, n: 20, semContato: 10, perdas: 1 },
+    anterior: { tx: 48 + r, n: 18, semContato: 9, perdas: 2 },
+  })),
+  piores: [
+    { nome: "Amazon", dn: "1305", tx: 10, n: 10, semContato: 9 },
+    { nome: "Vega", dn: "0045", tx: 16.7, n: 12, semContato: 10 },
+  ],
+  origem: [
+    { origem: "Site Ofertas", tx: 47.7, n: 700, semContato: 366 },
+    { origem: "Whatsapp", tx: 47.3, n: 237, semContato: 125 },
+  ],
+  mes: {
+    inicio: "2026-08-01",
+    fim: "2026-08-23",
+    antInicio: "2026-07-01",
+    antFim: "2026-07-23",
+    dias: 23,
+    diasAnt: 23,
+    atual: {
+      txContato: 54.6,
+      nContato: 620,
+      semContato: 281,
+      npsGeral: 12.8,
+      nNps: 240,
+      auditados: 1100,
+      vendas: 24,
+      txVendas: 2.2,
+      perdas: 31,
+      perdasAtendimento: 6,
+      perdasConcorrencia: 25,
+      faturamentoPerdido: 4_030_000,
+      naoFoiALoja: 213,
+    },
+    anterior: {
+      txContato: 51.1,
+      nContato: 494,
+      semContato: 242,
+      npsGeral: 4.2,
+      nNps: 190,
+      auditados: 900,
+      vendas: 24,
+      txVendas: 2.7,
+      perdas: 38,
+      perdasAtendimento: 7,
+      perdasConcorrencia: 31,
+      faturamentoPerdido: 4_940_000,
+      naoFoiALoja: 188,
+    },
+    regional: [1, 2, 3, 4, 5, 6].map((r) => ({
+      regional: String(r),
+      atual: { tx: 45 + r * 3, n: 100 + r, semContato: 40, perdas: 5 },
+      anterior: { tx: 44 + r * 3, n: 90 + r, semContato: 42, perdas: 6 },
+    })),
+    desfecho: [
+      { motivo: "Não fui à concessionária", n: 213, pct: 35.3, pctAnt: 38.1, dif: -2.8, nAnt: 188 },
+      { motivo: "Desisti de comprar", n: 130, pct: 21.5, pctAnt: 22.0, dif: -0.5, nAnt: 109 },
+      { motivo: "Comprei um VW Zero", n: 92, pct: 15.2, pctAnt: 13.1, dif: 2.1, nAnt: 65 },
+      { motivo: "Comprei de outra marca", n: 48, pct: 8.0, pctAnt: 7.4, dif: 0.6, nAnt: 37 },
+    ],
+    totalDesfecho: 604,
+  },
+  concorrencia: {
+    janela: [
+      { marca: "Chevrolet", n: 9 },
+      { marca: "Fiat", n: 7 },
+      { marca: "BYD", n: 5 },
+      { marca: "Hyundai", n: 4 },
+      { marca: "Jeep", n: 2 },
+      { marca: "Leapmotor", n: 1 },
+    ],
+    novasSemana: ["Leapmotor"],
+    mes: [
+      { marca: "Chevrolet", n: 4, nAnt: 2 },
+      { marca: "Leapmotor", n: 1, nAnt: 0 },
+    ],
+  },
+};
+
