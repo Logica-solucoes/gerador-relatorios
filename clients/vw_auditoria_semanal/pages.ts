@@ -15,8 +15,10 @@ function kpi(
   valor: string,
   nota: string,
   delta?: { atual: number; anterior: number; maiorEhMelhor?: boolean; unidade?: string; casas?: number },
+  /** Valor em texto (não número): fonte menor para caber no card, mesma altura de linha. */
+  textual?: { comparacao: string },
 ) {
-  let seta = "";
+  let seta = textual ? `<span class="delta flat">${textual.comparacao}</span>` : "";
   if (delta) {
     const dif = delta.atual - delta.anterior;
     const bom = (delta.maiorEhMelhor ?? true) ? dif > 0 : dif < 0;
@@ -26,10 +28,24 @@ function kpi(
   }
   return `<div class="card kpi">
     <div class="label">${label}</div>
-    <div class="value">${valor}</div>
+    <div class="value${textual ? " texto" : ""}">${valor}</div>
     ${seta}
     <div class="small muted" style="margin-top:1mm">${nota}</div>
   </div>`;
+}
+
+/** Faixa de tempo de atendimento mais citada na semana. Categoria não tem seta: a comparação
+ *  com a semana anterior vai por extenso, no mesmo lugar onde os outros KPIs põem o delta. */
+function kpiTempo(a: Dados["atual"], b: Dados["anterior"]) {
+  if (!a.tempoTop) return kpi("Tempo médio de atendimento", "—", "nenhuma resposta de tempo na semana", undefined, { comparacao: "&nbsp;" });
+  const ant = b.tempoTop ? `ant.: ${b.tempoTop.tempo}` : "ant.: sem respostas";
+  return kpi(
+    "Tempo médio de atendimento",
+    a.tempoTop.tempo,
+    `faixa mais citada · ${pct(a.tempoTop.pct, 0)} de ${num(a.tempoTop.total)} respostas`,
+    undefined,
+    { comparacao: ant },
+  );
 }
 
 /** Teto de 4 itens: as duas páginas são fechadas, e a 5ª bala empurra o rodapé
@@ -165,7 +181,7 @@ export function documento(d: Dados): string {
     ${kpi("Taxa de contato", pct(a.txContato), `${num(a.nContato)} respostas · ${num(a.semContato)} sem contato`, { atual: a.txContato, anterior: b.txContato })}
     ${kpi("Vendas perdidas", num(a.perdas), `na amostra ouvida · R$ ${num(a.faturamentoPerdido / 1e6, 1)} mi a ticket médio`, { atual: a.perdas, anterior: b.perdas, maiorEhMelhor: false, unidade: "", casas: 0 })}
     ${kpi("NPS", num(a.npsGeral, 1), `${num(a.nNps)} avaliações na semana`, { atual: a.npsGeral, anterior: b.npsGeral, unidade: " pts" })}
-    ${kpi("Conversão", pct(a.txVendas), `${num(a.vendas)} vendas em ${num(a.auditados)} auditados`, { atual: a.txVendas, anterior: b.txVendas })}
+    ${kpiTempo(a, b)}
   </section>
 
   <section style="margin-top:5mm">

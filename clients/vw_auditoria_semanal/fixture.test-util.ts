@@ -17,6 +17,7 @@ export const semana = (over: Partial<Dados["atual"]> = {}): Dados["atual"] => ({
   perdasConcorrencia: 2,
   faturamentoPerdido: 390_000,
   naoFoiALoja: 19,
+  tempoTop: { tempo: "Até um dia", n: 30, pct: 38.5, total: 78 },
   ...over,
 });
 

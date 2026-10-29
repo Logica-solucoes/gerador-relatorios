@@ -1,6 +1,6 @@
 import { expect, test, describe } from "bun:test";
 import type { Dados } from "./queries";
-import { janela, mesAteData, semanaPassada, SEMANAS_JANELA } from "./queries";
+import { janela, maisComum, mesAteData, semanaPassada, SEMANAS_JANELA } from "./queries";
 import * as n from "./narrativa";
 import { base, semana } from "./fixture.test-util";
 
@@ -316,5 +316,22 @@ describe("rótulos", () => {
   test("subtitulo dá o volume de auditorias das duas semanas", () => {
     expect(n.subtitulo(base)).toBe("280 auditorias realizadas nesta semana, 280 na anterior.");
     expect(n.subtitulo(com({ atual: semana({ auditados: 519 }) }))).toContain("519 auditorias");
+  });
+});
+
+describe("faixa de tempo mais citada", () => {
+  test("pega a de maior contagem e informa a participação", () => {
+    const t = maisComum([{ rotulo: "Até um dia", n: 30 }, { rotulo: "Mais de um dia", n: 50 }, { rotulo: "Até 30 minutos", n: 20 }]);
+    expect(t).toEqual({ tempo: "Mais de um dia", n: 50, pct: 50, total: 100 });
+  });
+
+  test("empate é determinístico, não depende da ordem de chegada", () => {
+    const a = maisComum([{ rotulo: "Até um dia", n: 5 }, { rotulo: "Até 30 minutos", n: 5 }]);
+    const b = maisComum([{ rotulo: "Até 30 minutos", n: 5 }, { rotulo: "Até um dia", n: 5 }]);
+    expect(a).toEqual(b);
+  });
+
+  test("sem resposta devolve null", () => {
+    expect(maisComum([])).toBeNull();
   });
 });

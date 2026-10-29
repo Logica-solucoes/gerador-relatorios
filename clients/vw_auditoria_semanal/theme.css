@@ -50,6 +50,9 @@
    dentro dele empurrava o número para fora do card em rótulo longo. */
 .kpi .label { line-height: 1.25; min-height: 2.4em; }
 .kpi .value { font-size: 17pt; }
+/* Valor em texto ("Até 30 minutos"): mesma altura de linha do número (17pt × 1.15), fonte menor para caber. */
+.kpi .value.texto + .delta { white-space: nowrap; }
+.kpi .value.texto { font-size: 11.5pt; line-height: calc(17pt * 1.15); letter-spacing: -0.01em; }
 .kpi .delta { font-size: 8pt; font-weight: 600; display: block; margin-top: 0.5mm; }
 .kpi .delta.flat { color: var(--muted-foreground); }
 

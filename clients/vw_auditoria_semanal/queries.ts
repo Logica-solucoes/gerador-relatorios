@@ -187,6 +187,14 @@ const CONTAGEM = `
   SUM(CASE WHEN status LIKE '%outra marca%' THEN 1 ELSE 0 END) AS conc,
   SUM(CASE WHEN status LIKE '%Não fui%' THEN 1 ELSE 0 END) AS naoFoi`;
 
+/** Faixa de tempo de atendimento mais citada, com a participação dela. `null` sem nenhuma resposta.
+ *  Empate resolve pela ordem alfabética — determinístico, e o `n` e o `pct` ficam visíveis ao leitor. */
+export function maisComum(linhas: { rotulo: string; n: number }[]) {
+  const total = linhas.reduce((a, r) => a + r.n, 0);
+  const topo = [...linhas].sort((x, y) => y.n - x.n || x.rotulo.localeCompare(y.rotulo))[0];
+  return topo ? { tempo: topo.rotulo, n: topo.n, pct: (topo.n / total) * 100, total } : null;
+}
+
 /**
  * Vendas perdidas, fórmula do dashboard: conversão × quem respondeu "não houve
  * contato", somada a quem declarou compra na concorrência.
@@ -266,7 +274,7 @@ export async function carregar(pool: sql.ConnectionPool) {
   `);
   const run = q(pool);
 
-  const [serie, statusJanela, tempoJanela, npsTempo, regiaoSem, dnJanela, origemJanela, mes, regiaoMes, desfechoMes, marcasRaw] =
+  const [serie, statusJanela, tempoJanela, tempoSemana, npsTempo, regiaoSem, dnJanela, origemJanela, mes, regiaoMes, desfechoMes, marcasRaw] =
     await Promise.all([
       // Série semanal: responde "as taxas estão crescendo?" sem depender de dois
       // pontos. As duas últimas linhas são também o comparativo.
@@ -288,6 +296,14 @@ export async function carregar(pool: sql.ConnectionPool) {
         SELECT tempo AS rotulo, COUNT(*) AS n FROM #aud
         WHERE tempo IS NOT NULL AND tempo <> 'Não recebi contato' AND ${JANELA}
         GROUP BY tempo`),
+
+      // Mesma exclusão de "Não recebi contato" da janela acima, pelo mesmo motivo.
+      // vw_volks_auditoria tem a mesma coluna `tempo` (conferido: 0 divergências em
+      // 4.458 contatos), mas não tem `data` — o recorte da semana só existe aqui.
+      run<{ semana: Date; rotulo: string; n: number }>(`
+        SELECT ${SEM} AS semana, tempo AS rotulo, COUNT(*) AS n FROM #aud
+        WHERE tempo IS NOT NULL AND tempo <> 'Não recebi contato' AND ${SEM} IN (${A}, ${B})
+        GROUP BY ${SEM}, tempo`),
 
       run<{ rotulo: string; prom: number; detr: number; n: number }>(`
         SELECT tempo AS rotulo,
@@ -357,7 +373,11 @@ export async function carregar(pool: sql.ConnectionPool) {
   const kA = iso(s.atual);
   const kB = iso(s.anterior);
 
-  const semana = (k: string) => ({ inicio: k, ...bloco(serie.find((r) => chave(r.semana) === k)) });
+  const semana = (k: string) => ({
+    inicio: k,
+    ...bloco(serie.find((r) => chave(r.semana) === k)),
+    tempoTop: maisComum(tempoSemana.filter((r) => chave(r.semana) === k)),
+  });
   const atual = semana(kA);
 
   // Sem auditoria na semana passada o relatório sairia com todo KPI em 0,0% —
