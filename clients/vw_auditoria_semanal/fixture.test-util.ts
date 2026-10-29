@@ -86,6 +86,7 @@ export const base: Dados = {
       perdasConcorrencia: 25,
       faturamentoPerdido: 4_030_000,
       naoFoiALoja: 213,
+      tempoTop: { tempo: "Mais de um dia", n: 140, pct: 36.1, total: 388 },
     },
     anterior: {
       txContato: 51.1,
@@ -101,6 +102,7 @@ export const base: Dados = {
       perdasConcorrencia: 31,
       faturamentoPerdido: 4_940_000,
       naoFoiALoja: 188,
+      tempoTop: { tempo: "Até um dia", n: 90, pct: 33.0, total: 273 },
     },
     regional: [1, 2, 3, 4, 5, 6].map((r) => ({
       regional: String(r),

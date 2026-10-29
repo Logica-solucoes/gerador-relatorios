@@ -274,7 +274,7 @@ export async function carregar(pool: sql.ConnectionPool) {
   `);
   const run = q(pool);
 
-  const [serie, statusJanela, tempoJanela, tempoSemana, npsTempo, regiaoSem, dnJanela, origemJanela, mes, regiaoMes, desfechoMes, marcasRaw] =
+  const [serie, statusJanela, tempoJanela, tempoSemana, tempoMes, npsTempo, regiaoSem, dnJanela, origemJanela, mes, regiaoMes, desfechoMes, marcasRaw] =
     await Promise.all([
       // Série semanal: responde "as taxas estão crescendo?" sem depender de dois
       // pontos. As duas últimas linhas são também o comparativo.
@@ -304,6 +304,11 @@ export async function carregar(pool: sql.ConnectionPool) {
         SELECT ${SEM} AS semana, tempo AS rotulo, COUNT(*) AS n FROM #aud
         WHERE tempo IS NOT NULL AND tempo <> 'Não recebi contato' AND ${SEM} IN (${A}, ${B})
         GROUP BY ${SEM}, tempo`),
+
+      run<{ bucket: string; rotulo: string; n: number }>(`
+        SELECT ${MES} AS bucket, tempo AS rotulo, COUNT(*) AS n FROM #aud
+        WHERE tempo IS NOT NULL AND tempo <> 'Não recebi contato' AND ${MES} IS NOT NULL
+        GROUP BY ${MES}, tempo`),
 
       run<{ rotulo: string; prom: number; detr: number; n: number }>(`
         SELECT tempo AS rotulo,
@@ -479,8 +484,8 @@ export async function carregar(pool: sql.ConnectionPool) {
       antFim: iso(m.antFim),
       dias: m.dias,
       diasAnt: m.diasAnt,
-      atual: bloco(mes.find((r) => r.bucket === "atual")),
-      anterior: bloco(mes.find((r) => r.bucket === "anterior")),
+      atual: { ...bloco(mes.find((r) => r.bucket === "atual")), tempoTop: maisComum(tempoMes.filter((r) => r.bucket === "atual")) },
+      anterior: { ...bloco(mes.find((r) => r.bucket === "anterior")), tempoTop: maisComum(tempoMes.filter((r) => r.bucket === "anterior")) },
       regional: porRegional(regiaoMes, (r) => r.bucket === "atual", (r) => r.bucket === "anterior"),
       /** Em p.p. e não em contagem: os dois recortes têm total de respostas
        *  diferente, e "213 contra 188" leria volume de auditoria como mudança. */

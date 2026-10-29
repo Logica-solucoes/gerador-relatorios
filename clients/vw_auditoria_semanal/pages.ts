@@ -16,9 +16,9 @@ function kpi(
   nota: string,
   delta?: { atual: number; anterior: number; maiorEhMelhor?: boolean; unidade?: string; casas?: number },
   /** Valor em texto (não número): fonte menor para caber no card, mesma altura de linha. */
-  textual?: { comparacao: string },
+  textual?: { comparacao?: string },
 ) {
-  let seta = textual ? `<span class="delta flat">${textual.comparacao}</span>` : "";
+  let seta = textual?.comparacao ? `<span class="delta flat">${textual.comparacao}</span>` : "";
   if (delta) {
     const dif = delta.atual - delta.anterior;
     const bom = (delta.maiorEhMelhor ?? true) ? dif > 0 : dif < 0;
@@ -34,18 +34,17 @@ function kpi(
   </div>`;
 }
 
-/** Faixa de tempo de atendimento mais citada na semana. Categoria não tem seta: a comparação
- *  com a semana anterior vai por extenso, no mesmo lugar onde os outros KPIs põem o delta. */
-function kpiTempo(a: Dados["atual"], b: Dados["anterior"]) {
-  if (!a.tempoTop) return kpi("Tempo médio de atendimento", "—", "nenhuma resposta de tempo na semana", undefined, { comparacao: "&nbsp;" });
-  const ant = b.tempoTop ? `ant.: ${b.tempoTop.tempo}` : "ant.: sem respostas";
-  return kpi(
-    "Tempo médio de atendimento",
-    a.tempoTop.tempo,
-    `faixa mais citada · ${pct(a.tempoTop.pct, 0)} de ${num(a.tempoTop.total)} respostas`,
-    undefined,
-    { comparacao: ant },
-  );
+type TempoTop = Dados["atual"]["tempoTop"];
+
+/** Faixa de tempo de atendimento mais citada no período. Categoria não tem seta: a comparação
+ *  com o período anterior vai por extenso, no mesmo lugar onde os outros KPIs põem o delta.
+ *  `anterior` undefined = sem base comparável (mês anterior vazio ou de antes do questionário):
+ *  a linha some, como a seta dos demais KPIs. */
+function kpiTempo(periodo: "semana" | "mês", atual: TempoTop, anterior: TempoTop | undefined, comparavel = true) {
+  const rotulo = "Tempo médio de atendimento";
+  const comparacao = !comparavel ? undefined : anterior ? `ant.: ${anterior.tempo}` : "ant.: sem respostas";
+  if (!atual) return kpi(rotulo, "—", `nenhuma resposta de tempo no ${periodo}`, undefined, { comparacao: comparavel ? "&nbsp;" : undefined });
+  return kpi(rotulo, atual.tempo, `faixa mais citada · ${pct(atual.pct, 0)} de ${num(atual.total)} respostas`, undefined, { comparacao });
 }
 
 /** Teto de 4 itens: as duas páginas são fechadas, e a 5ª bala empurra o rodapé
@@ -181,7 +180,7 @@ export function documento(d: Dados): string {
     ${kpi("Taxa de contato", pct(a.txContato), `${num(a.nContato)} respostas · ${num(a.semContato)} sem contato`, { atual: a.txContato, anterior: b.txContato })}
     ${kpi("Vendas perdidas", num(a.perdas), `na amostra ouvida · R$ ${num(a.faturamentoPerdido / 1e6, 1)} mi a ticket médio`, { atual: a.perdas, anterior: b.perdas, maiorEhMelhor: false, unidade: "", casas: 0 })}
     ${kpi("NPS", num(a.npsGeral, 1), `${num(a.nNps)} avaliações na semana`, { atual: a.npsGeral, anterior: b.npsGeral, unidade: " pts" })}
-    ${kpiTempo(a, b)}
+    ${kpiTempo("semana", a.tempoTop, b.tempoTop)}
   </section>
 
   <section style="margin-top:5mm">
@@ -282,7 +281,7 @@ export function documento(d: Dados): string {
     ${kpi("Taxa de contato", pct(mes.txContato), `${num(mes.nContato)} respostas · ${num(mes.semContato)} sem contato`, mesDelta({ atual: mes.txContato, anterior: mesAnt.txContato }))}
     ${kpi("Vendas perdidas", num(mes.perdas), `na amostra ouvida · R$ ${num(mes.faturamentoPerdido / 1e6, 1)} mi a ticket médio`, mesDelta({ atual: mes.perdas, anterior: mesAnt.perdas, maiorEhMelhor: false, unidade: "", casas: 0 }))}
     ${kpi("NPS", num(mes.npsGeral, 1), `${num(mes.nNps)} avaliações no mês`, mesDelta({ atual: mes.npsGeral, anterior: mesAnt.npsGeral, unidade: " pts" }))}
-    ${kpi("Conversão", pct(mes.txVendas), `${num(mes.vendas)} vendas em ${num(mes.auditados)} auditados`, mesDelta({ atual: mes.txVendas, anterior: mesAnt.txVendas }))}
+    ${kpiTempo("mês", mes.tempoTop, mesAnt.tempoTop, temMesAnterior)}
   </section>
 
   <section style="margin-top:5mm">
