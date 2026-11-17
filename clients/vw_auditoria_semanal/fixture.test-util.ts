@@ -70,6 +70,7 @@ export const base: Dados = {
     fim: "2026-08-23",
     antInicio: "2026-07-01",
     antFim: "2026-07-23",
+    fechado: false,
     dias: 23,
     diasAnt: 23,
     atual: {

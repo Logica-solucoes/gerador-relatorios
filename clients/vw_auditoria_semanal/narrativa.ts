@@ -237,7 +237,7 @@ const semComparacao = (d: Dados) =>
 
 export function subtituloMes(d: Dados) {
   const m = d.mes;
-  const base = `Auditorias realizadas de ${rotuloIntervalo(m.inicio, m.fim)} — ${num(m.dias)} dias, até o domingo da semana acima.`;
+  const base = `Auditorias realizadas de ${rotuloIntervalo(m.inicio, m.fim)} — ${num(m.dias)} dias, ${m.fechado ? "o mês fechado, porque a semana lida é a primeira do mês seguinte" : "até o domingo da semana acima"}.`;
   return mesComparavel(d)
     ? `${base} Comparado com ${rotuloIntervalo(m.antInicio, m.antFim)}, o mesmo recorte de dias do mês anterior${
         m.dias === m.diasAnt ? "" : ` (${num(m.diasAnt)} dias — o mês anterior é mais curto)`

@@ -270,7 +270,7 @@ export function documento(d: Dados): string {
 <div class="page">
   <header class="capa-semanal">
     <div class="logo"><span class="mark"></span><span class="mark vw"></span><span class="sub">Auditoria de Leads</span></div>
-    <div class="periodo">Mês até <strong>${dia(d.mes.fim)}</strong><br>
+    <div class="periodo">${d.mes.fechado ? "Mês fechado em" : "Mês até"} <strong>${dia(d.mes.fim)}</strong><br>
     <span class="muted">${temMesAnterior ? `vs. ${n.rotuloIntervalo(d.mes.antInicio, d.mes.antFim)}` : "sem comparação com o mês anterior"}</span></div>
   </header>
 

@@ -66,15 +66,21 @@ describe("semana passada do calendário", () => {
 });
 
 describe("janela do mês", () => {
-  test("vai do dia 1 até o domingo da semana atual, contra o mesmo recorte do mês anterior", () => {
-    // 20/08 → semana atual 27/07 a 02/08 → mês = 01/08 a 02/08, contra 01/07 a 02/07
+  test("primeira semana do mês fecha o mês anterior inteiro, contra o retrasado", () => {
+    // semana 27/07–02/08: domingo dia 2 → mês de referência é julho fechado
     const m = mesAteData(janela(seg("2026-07-27")));
-    expect(iso(m.inicio)).toBe("2026-08-01");
-    expect(iso(m.fim)).toBe("2026-08-02");
-    expect(iso(m.antInicio)).toBe("2026-07-01");
-    expect(iso(m.antFim)).toBe("2026-07-02");
-    expect(m.dias).toBe(2);
-    expect(m.diasAnt).toBe(2);
+    expect(iso(m.inicio)).toBe("2026-07-01");
+    expect(iso(m.fim)).toBe("2026-07-31");
+    expect(iso(m.antInicio)).toBe("2026-06-01");
+    expect(iso(m.antFim)).toBe("2026-06-30");
+    expect(m.fechado).toBe(true);
+    expect(m.dias).toBe(31);
+    expect(m.diasAnt).toBe(30);
+  });
+
+  test("domingo no dia 7 ainda é primeira semana; no dia 8 não é", () => {
+    expect(mesAteData(janela(seg("2026-09-28"))).fechado).toBe(true); // dom 04/10
+    expect(mesAteData(janela(seg("2026-10-05"))).fechado).toBe(false); // dom 11/10
   });
 
   test("o recorte do mês anterior tem o mesmo número de dias", () => {

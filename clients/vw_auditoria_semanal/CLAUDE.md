@@ -70,7 +70,10 @@ Consequências:
 
 - **Semana = última semana fechada do calendário**, segunda a domingo (`semanaPassada()`). Gerando
   na terça 22/09: 14–20/09 contra 07–13/09. A semana corrente nunca entra, nem gerando no domingo.
-- **Mês = auditorias de dia 1 até o domingo da semana lida.** Em 22/09: 01–20/09.
+- **Mês = auditorias de dia 1 até o domingo da semana lida.** Em 22/09: 01–20/09. **Exceção — primeira
+  semana do mês** (domingo entre os dias 1 e 7, mesma regra do "Semana N" da publicação): o acumulado
+  é o **mês anterior fechado** (01→último dia), contra o mês retrasado no mesmo recorte de dias.
+  Gerando em 06/10 (semana 28/09–04/10): página 3 = 01–30/09 contra 01–30/08.
 - **Não existe maturação.** Auditoria feita é fato consumado; a semana fecha no domingo e está
   completa. A versão anterior (por `dt_criacao`) precisava esperar ~4 semanas a esteira alcançar o
   lead e escolhia a semana consultando o banco. Isso tudo sumiu — `DIAS_LAG`, `semanaMadura()`.

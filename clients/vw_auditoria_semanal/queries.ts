@@ -105,16 +105,27 @@ export const semanaPassada = (hoje = referencia()) => maisSemanas(segunda(hoje),
  * o mesmo erro que o deslocamento semanal existe para evitar. Mês anterior mais
  * curto (fev) trunca no último dia dele, e `dias` sai diferente entre os dois —
  * por isso o cabeçalho imprime as duas contagens.
+ *
+ * **Primeira semana do mês** (domingo caindo entre os dias 1 e 7 — a mesma regra
+ * do "Semana N" de `publicar.ts`): o acumulado do mês corrente teria 1 a 7 dias,
+ * sem amostra para nada. Então o relatório fecha o **mês anterior inteiro**
+ * (01→último dia), contra o mês retrasado no mesmo recorte de dias.
  */
+export const primeiraSemanaDoMes = (fim: Date) => fim.getUTCDate() <= 7;
+
 export function mesAteData(s: { fim: Date }) {
-  const y = s.fim.getUTCFullYear();
-  const m = s.fim.getUTCMonth();
-  const d = s.fim.getUTCDate();
+  const fim = primeiraSemanaDoMes(s.fim)
+    ? new Date(Date.UTC(s.fim.getUTCFullYear(), s.fim.getUTCMonth(), 0))
+    : s.fim;
+  const y = fim.getUTCFullYear();
+  const m = fim.getUTCMonth();
+  const d = fim.getUTCDate();
   const ultimoAnt = new Date(Date.UTC(y, m, 0)).getUTCDate();
   const antFim = new Date(Date.UTC(y, m - 1, Math.min(d, ultimoAnt)));
   return {
     inicio: new Date(Date.UTC(y, m, 1)),
-    fim: s.fim,
+    fim,
+    fechado: fim !== s.fim,
     dias: d,
     antInicio: new Date(Date.UTC(y, m - 1, 1)),
     antFim,
@@ -482,6 +493,7 @@ export async function carregar(pool: sql.ConnectionPool) {
       fim: iso(m.fim),
       antInicio: iso(m.antInicio),
       antFim: iso(m.antFim),
+      fechado: m.fechado,
       dias: m.dias,
       diasAnt: m.diasAnt,
       atual: { ...bloco(mes.find((r) => r.bucket === "atual")), tempoTop: maisComum(tempoMes.filter((r) => r.bucket === "atual")) },
